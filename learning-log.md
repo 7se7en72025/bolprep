@@ -138,3 +138,9 @@
 
 - STT status now reports elapsed time from recognition start to the first final transcript event. Interim text remains available for review; if no final result arrives, the UI offers typing as a fallback. Recognition errors keep their specific message.
 - This is an individual browser timing diagnostic, not an aggregate latency benchmark. Verification: `node --check web/app.js` and `git diff --check` pass; event behavior still needs manual testing with browser microphone permission.
+
+
+## Preserve full speech transcript across events - 2026-10-05
+
+- SpeechRecognition exposes the full result list on each result event; the UI now rebuilds the transcript from all current results instead of dropping earlier segments when `resultIndex` advances.
+- Verification: `node --check web/app.js` and `git diff --check` pass. Incremental event behavior still needs manual browser/microphone verification.
