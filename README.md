@@ -36,6 +36,16 @@ Without an API key, the tutor starts in offline practice mode and clearly says i
 python step0.py
 ```
 
+## Continue repo work in the background
+
+With the Codex CLI installed and signed in, start the bounded roadmap loop:
+
+```powershell
+.\tools\start-work-loop.ps1
+```
+
+By default it runs for up to eight hours and up to 24 focused tasks. Each run uses the `workspace-write` sandbox, checks the repository roadmap, verifies its change locally, and may create a local commit. It does not push or publish changes. The loop retries failed CLI runs with a capped delay and stops when a task reports that it needs your input. Use `tools\stop-work-loop.ps1` to request a graceful stop after the current task. Status and per-run logs go under `.codex\overnight\`, which Git ignores. The task boundaries are in [AUTONOMOUS_WORK.md](AUTONOMOUS_WORK.md).
+
 ## Intended voice tutor
 
 The planned end-to-end experience is a student asking in Hindi, English, or Hinglish for a short explanation, then asking the tutor to quiz them. The target system will speak its answer, ground explanations in a small checked corpus, score spoken answers against a rubric, and save progress.
