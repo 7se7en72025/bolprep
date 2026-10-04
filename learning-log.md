@@ -132,3 +132,9 @@
 
 - Browser TTS status now reports time from `speak()` enqueue to the synthesis `start` event and duration from `start` to `end`. Superseded utterance callbacks remain guarded by the active speech-turn token.
 - These are single playback diagnostics, not p50/p95 measurements or subjective pronunciation scores. Verification: `node --check web/app.js` and `git diff --check` pass; browser event timings need manual confirmation on supported devices.
+
+
+## Per-turn speech recognition timing - 2026-10-05
+
+- STT status now reports elapsed time from recognition start to the first final transcript event. Interim text remains available for review; if no final result arrives, the UI offers typing as a fallback. Recognition errors keep their specific message.
+- This is an individual browser timing diagnostic, not an aggregate latency benchmark. Verification: `node --check web/app.js` and `git diff --check` pass; event behavior still needs manual testing with browser microphone permission.

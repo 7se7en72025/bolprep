@@ -29,6 +29,8 @@ const history = [];
 let activeRequest = null;
 let recognition = null;
 let recognitionAvailable = false;
+let recognitionStartedAt = null;
+let recognitionHadFinalResult = false;
 let matchingSpeechVoices = [];
 let turn = 0;
 let speechTurn = 0;
@@ -398,14 +400,31 @@ if (SpeechRecognition) {
   recognition.lang = speechLanguage.value;
   recognition.interimResults = true;
   recognition.continuous = false;
-  recognition.onstart = () => { micButton.disabled = true; statusLine.textContent = "Listening… speak now."; };
+  recognition.onstart = () => {
+    micButton.disabled = true;
+    recognitionStartedAt = performance.now();
+    recognitionHadFinalResult = false;
+    statusLine.textContent = "Listening… speak now.";
+  };
   recognition.onresult = (event) => {
     let transcript = "";
-    for (let i = event.resultIndex; i < event.results.length; i += 1) transcript += event.results[i][0].transcript;
+    for (let i = event.resultIndex; i < event.results.length; i += 1) {
+      transcript += event.results[i][0].transcript;
+      if (event.results[i].isFinal && !recognitionHadFinalResult) {
+        recognitionHadFinalResult = true;
+        const elapsed = ((performance.now() - recognitionStartedAt) / 1000).toFixed(2);
+        statusLine.textContent = `Final transcript received in ${elapsed}s. Review it, then ask.`;
+      }
+    }
     input.value = transcript.trim();
   };
   recognition.onerror = (event) => { statusLine.textContent = `Microphone issue: ${event.error}. You can type instead.`; };
-  recognition.onend = () => { micButton.disabled = false; if (statusLine.textContent === "Listening… speak now.") statusLine.textContent = "Transcript ready. Review it, then ask."; };
+  recognition.onend = () => {
+    micButton.disabled = false;
+    if (!recognitionHadFinalResult && statusLine.textContent === "Listening… speak now.") {
+      statusLine.textContent = "No final transcript was received. You can type instead.";
+    }
+  };
   speechLanguage.addEventListener("change", () => { recognition.lang = speechLanguage.value; });
 }
 
