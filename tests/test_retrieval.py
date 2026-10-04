@@ -54,6 +54,24 @@ class RetrievalTests(unittest.TestCase):
         self.assertIn("Offline study notes", answer)
         self.assertIn("Article 14", answer)
 
+    def test_offline_answer_uses_devanagari_for_hindi_input(self):
+        answer = offline_answer(retrieve("समानता का अधिकार"), "hi-IN", "समानता का अधिकार")
+        self.assertIn("ऑफलाइन अध्ययन नोट्स", answer)
+        self.assertIn("कानून के समक्ष समानता", answer)
+
+    def test_offline_answer_uses_roman_hinglish_for_roman_input(self):
+        answer = offline_answer(retrieve("Article 21 jeevan liberty"), "hi-IN", "Article 21 jeevan liberty")
+        self.assertIn("Offline study notes", answer)
+        self.assertIn("har person ke jeevan", answer)
+
+    def test_unsupported_offline_answer_matches_selected_language(self):
+        hindi = offline_answer([], "hi-IN", "मौलिक अधिकार का नया सवाल")
+        hinglish = offline_answer([], "hi-IN", "Mera new sawal")
+        english = offline_answer([], "en-IN", "A new question")
+        self.assertIn("जाँचे हुए", hindi)
+        self.assertIn("Mere checked", hinglish)
+        self.assertIn("My checked", english)
+
     def test_model_request_contains_retrieved_evidence(self):
         captured = {}
 

@@ -59,3 +59,10 @@
 - Without a configured key, the same route uses the offline notes and a small explicit quiz/revision intent fallback. This keeps the local demo runnable and labels the mode rather than pretending it used a model.
 - Verification: all 27 unit tests pass, including mocked Responses tool-call/continuation flow, invalid-argument rejection, server-rubric scoring, and offline quiz starts. Python compilation and browser JavaScript syntax checks pass.
 - Limitations: the OpenAI SDK and API key are absent from this environment, so provider serialization and a live model-selected tool call could not be exercised. Tool-generated answer scores still use the deterministic lexical rubric; no browser was available for visual interaction checks.
+
+## Hindi and Hinglish offline notes — 2026-10-04
+
+- Added Devanagari Hindi and Roman Hinglish titles and summaries for the three checked starter notes. Offline responses now select Hindi script when the learner typed Hindi and Roman Hinglish when they typed in Latin script; English stays English. Unsupported-topic messages also follow the selected input style.
+- Rechecked Articles 14, 19, and 21 against the [Legislative Department's official Constitution of India PDF](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), including each article's core text and the Article 19(2) reference to restrictions.
+- Verification: 30 unit tests pass; added checks for each offline language style and unsupported responses. Local HTTP checks returned Devanagari for Hindi-script input, Roman Hinglish for Latin-script input, and English insufficiency text for an unsupported question. The 17-example retrieval evaluation remains 100% exact match; Python compilation and JavaScript syntax checks pass.
+- Limitations: the translations are authored summaries, not official Hindi translations. Browser pronunciation and the live model path remain untested here.

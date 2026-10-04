@@ -31,7 +31,10 @@ def load_corpus(path: Path = CORPUS_PATH) -> list[dict[str, Any]]:
     documents = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(documents, list) or not documents:
         raise ValueError("Study corpus must be a non-empty JSON list.")
-    required = {"id", "title", "summary", "keywords", "source"}
+    required = {
+        "id", "title", "title_hi", "title_hinglish", "summary", "summary_hi",
+        "summary_hinglish", "keywords", "source",
+    }
     for document in documents:
         if not isinstance(document, dict) or not required.issubset(document):
             raise ValueError("Each study note needs an id, title, summary, keywords, and source.")
@@ -47,7 +50,10 @@ def load_corpus(path: Path = CORPUS_PATH) -> list[dict[str, Any]]:
         if (
             not isinstance(document["id"], str)
             or not isinstance(document["title"], str)
-            or not isinstance(document["summary"], str)
+            or not all(
+                isinstance(document[field], str)
+                for field in ("summary", "summary_hi", "summary_hinglish", "title_hi", "title_hinglish")
+            )
             or not isinstance(document["keywords"], list)
             or not all(isinstance(keyword, str) for keyword in document["keywords"])
         ):

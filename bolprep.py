@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 import sys
 
 from retrieval import retrieve
@@ -32,14 +33,32 @@ INSTRUCTIONS = (
 )
 
 
-def offline_answer(documents: list[dict[str, object]]) -> str:
-    """Return matching checked-note summaries without implying an LLM was used."""
+def offline_answer(
+    documents: list[dict[str, object]], language: str = "en-IN", question: str = ""
+) -> str:
+    """Return a checked-note summary in English, Hindi, or Hinglish without implying AI was used."""
+    if language == "hi-IN":
+        style = "hi" if re.search(r"[\u0900-\u097F]", question) else "hinglish"
+    else:
+        style = "en"
     if not documents:
-        return "Mere checked study notes mein is question ka jawab abhi nahi hai."
-    notes = "\n".join(
-        f"- {document['title']}: {document['summary']}" for document in documents
-    )
-    return f"Offline study notes (AI-generated explanation nahi):\n{notes}"
+        if style == "hi":
+            return "जाँचे हुए अध्ययन नोट्स में अभी इस प्रश्न का उत्तर नहीं है।"
+        if style == "hinglish":
+            return "Mere checked study notes mein abhi is question ka answer nahi hai."
+        return "My checked study notes do not cover this question yet."
+    notes = []
+    for document in documents:
+        title = document.get(f"title_{style}", document["title"])
+        summary = document.get(f"summary_{style}", document["summary"])
+        notes.append(f"- {title}: {summary}")
+    if style == "hi":
+        heading = "ऑफलाइन अध्ययन नोट्स (AI से बना हुआ जवाब नहीं):"
+    elif style == "hinglish":
+        heading = "Offline study notes (AI-generated explanation nahi):"
+    else:
+        heading = "Offline study notes (not an AI-generated explanation):"
+    return f"{heading}\n" + "\n".join(notes)
 
 
 def ask_model(

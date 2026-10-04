@@ -234,7 +234,7 @@ def _offline_turn(
         else:
             answer = "Abhi saved weak topics nahi hain. Ek quiz complete karke progress dekho." if language == "hi-IN" else "There are no saved weak topics yet. Complete a quiz to build your progress history."
     else:
-        answer = offline_answer(documents)
+        answer = offline_answer(documents, language, question)
     return {
         "answer": answer,
         "sources": [_source(document) for document in documents],

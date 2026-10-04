@@ -85,8 +85,12 @@ class BolPrepHandler(BaseHTTPRequestHandler):
 
         question = body.get("question")
         history = body.get("history", [])
+        language = body.get("language", "en-IN")
         if not isinstance(question, str) or not question.strip() or len(question) > 1200:
             self._send_json(400, {"error": "Enter a question under 1,200 characters."})
+            return
+        if not isinstance(language, str) or language not in {"hi-IN", "en-IN"}:
+            self._send_json(400, {"error": "Choose Hindi/Hinglish or English."})
             return
         if not isinstance(history, list) or len(history) > 20:
             self._send_json(400, {"error": "Conversation history is invalid."})
@@ -107,11 +111,11 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             prior_questions = [item["content"] for item in cleaned_history if item["role"] == "user"][-4:]
             documents = retrieve(" ".join([*prior_questions, question.strip()]))
             if not documents:
-                answer = "Mere checked study notes mein is question ka jawab abhi nahi hai."
+                answer = offline_answer([], language, question)
             elif api_is_configured():
                 answer = ask_model(question.strip(), cleaned_history, documents)
             else:
-                answer = offline_answer(documents)
+                answer = offline_answer(documents, language, question)
         except Exception as exc:
             print(f"Tutor request failed: {exc}")
             self._send_json(502, {"error": "Tutor request failed. Check the server terminal and try again."})
