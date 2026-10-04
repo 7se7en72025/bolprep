@@ -161,8 +161,9 @@ function refreshSpeechVoices() {
   ) ? savedVoices[speechLanguage.value] : "";
   speechVoice.disabled = matchingSpeechVoices.length === 0;
   if (!matchingSpeechVoices.length) {
-    automatic.textContent = "No matching voice";
-    speechVoice.title = `No installed ${speechLanguage.value} voice was found; the browser will use its default.`;
+    const languageName = targetLanguage === "hi" ? "Hindi" : "English";
+    automatic.textContent = `Browser default (${languageName} voice unavailable)`;
+    speechVoice.title = `No installed ${languageName} voice was found; the browser may use another default voice.`;
   } else {
     speechVoice.title = "Choose an installed voice or use the browser default.";
   }

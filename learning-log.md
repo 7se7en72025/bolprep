@@ -285,3 +285,9 @@
 
 - JSON and static response bodies now ignore the socket errors associated with a client that disconnected before the server finished writing. This keeps normal browser cancellation from producing a server traceback; it does not stop an in-flight provider request.
 - Verification: parsed `server.py` with Python's AST parser and ran `git diff --check`. A real network-abort check was not run.
+
+
+## Clarify browser-default TTS fallback - 2026-10-05
+
+- When no installed voice matches the selected language, the voice selector now labels Browser default with the unavailable language. Its helper text explains that the browser may use a voice for another language instead of implying a matching voice was found.
+- Verification: `node --check web/app.js` and `git diff --check` pass. Actual voice availability and browser fallback behavior still need device testing.
