@@ -2,7 +2,7 @@ param(
     [ValidateRange(1, 24)]
     [int]$DurationHours = 8,
     [ValidateRange(1, 100)]
-    [int]$MaxRuns = 4
+    [int]$MaxRuns = 24
 )
 
 $ErrorActionPreference = 'Stop'
@@ -90,7 +90,12 @@ try {
         if ($remainingSeconds -gt 0 -and -not (Test-Path $stopPath)) {
             $waitSeconds = if ($exitCode -eq 0) { $taskIntervalSeconds } else { $retryDelaySeconds }
             Write-Status "Waiting $waitSeconds second(s) before the next task."
-            Start-Sleep -Seconds ([Math]::Min($waitSeconds, $remainingSeconds))
+            $waitRemaining = [Math]::Min($waitSeconds, $remainingSeconds)
+            while ($waitRemaining -gt 0 -and -not (Test-Path $stopPath)) {
+                $sleepSlice = [Math]::Min(30, $waitRemaining)
+                Start-Sleep -Seconds $sleepSlice
+                $waitRemaining -= $sleepSlice
+            }
         }
     }
 
