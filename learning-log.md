@@ -236,3 +236,9 @@
 - When a pending tutor request is stopped, the browser now retains the user's question and an explicit assistant interruption note in the bounded conversation history. A follow-up can still refer to the interrupted topic without suggesting the model finished its answer.
 - This preserves client context and stale-turn guards; the server-side provider request may continue until its configured timeout because provider cancellation is not implemented.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Interrupt/follow-up behavior needs browser verification with a pending request.
+
+
+## Keep health checks out of learner progress storage - 2026-10-05
+
+- The `/health` route now skips browser-session creation and does not issue a progress cookie. This prevents cookie-free uptime checks from inserting unused session rows into SQLite.
+- Verification: parsed `server.py` with Python's AST parser and ran `git diff --check`. A live HTTP check was not run in this turn.

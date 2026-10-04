@@ -25,6 +25,15 @@ MAX_BODY_BYTES = 256 * 1024
 
 class BolPrepHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
+        if self.path == "/health":
+            mode = "model" if api_is_configured() else "offline"
+            self._send_json(
+                200,
+                {"ok": True, "mode": mode, "study_notes": len(load_corpus())},
+                include_session_cookie=False,
+            )
+            return
+
         self._ensure_browser_session()
         if self.path == "/api/progress":
             self._send_json(200, get_progress(self.session_id))
@@ -34,10 +43,6 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             "/app.js": (WEB_ROOT / "app.js", "text/javascript; charset=utf-8"),
             "/styles.css": (WEB_ROOT / "styles.css", "text/css; charset=utf-8"),
         }
-        if self.path == "/health":
-            mode = "model" if api_is_configured() else "offline"
-            self._send_json(200, {"ok": True, "mode": mode, "study_notes": len(load_corpus())})
-            return
         route = routes.get(self.path)
         if route is None:
             self.send_error(404, "Not found")
@@ -256,14 +261,17 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 f"bolprep_session={self.session_id}; HttpOnly; SameSite=Lax; Path=/; Max-Age=31536000",
             )
 
-    def _send_json(self, status: int, payload: dict[str, Any]) -> None:
+    def _send_json(
+        self, status: int, payload: dict[str, Any], include_session_cookie: bool = True
+    ) -> None:
         encoded = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(encoded)))
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
-        self._send_session_cookie_if_needed()
+        if include_session_cookie:
+            self._send_session_cookie_if_needed()
         self.end_headers()
         self.wfile.write(encoded)
 
