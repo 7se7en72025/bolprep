@@ -5,9 +5,9 @@ BolPrep is a beginner-built portfolio project for learning how to make a Hindi a
 
 ## Current status
 
-**Implemented:** Step 0's fixed-answer Python exercise and a local browser tutor prototype. It accepts typed questions, retrieves a matching note from a checked three-article corpus, links the Constitution source, can use a configured OpenAI model through a small Python server, and speaks answers with the browser's built-in speech synthesis. Where the browser supports it, speech recognition can fill the question box. It also has a three-question quiz using checked questions and deterministic rubric scoring. Without an API key, the tutor summarizes retrieved notes in a clearly labeled offline mode.
+**Implemented:** Step 0's fixed-answer Python exercise and a local browser tutor prototype. It accepts typed questions, retrieves a matching note from a checked three-article corpus, links the Constitution source, can use a configured OpenAI model through a small Python server, and speaks answers with the browser's built-in speech synthesis. Where the browser supports it, speech recognition can fill the question box. The quiz uses checked questions and deterministic rubric scoring, saves progress locally, and exposes quiz and weak-topic functions to the optional Responses API tool loop. Without an API key, the tutor remains usable in a clearly labeled offline mode, including a simple quiz-intent fallback.
 
-**Not implemented yet:** LLM-directed tool calling, streaming voice, robust interruption/cancellation at the model provider, and speech quality/latency benchmarks. Quiz scoring matches rubric phrases and does not interpret meaning. Browser speech recognition support varies by browser and device. The starter corpus covers only Articles 14, 19, and 21; unsupported questions should receive an insufficient-evidence response.
+**Not implemented yet:** streamed voice, robust interruption/cancellation at the model provider, and speech quality/latency benchmarks. Quiz scoring matches rubric phrases and does not interpret meaning. The Responses API tool loop has mocked tests but has not been exercised against a live model; model mode needs the optional SDK and an API key. Browser speech recognition support varies by browser and device. The starter corpus covers only Articles 14, 19, and 21; unsupported questions should receive an insufficient-evidence response.
 
 For the original input/function/output exercise, see [step0.py](step0.py). For the current learning notes, see [learning-log.md](learning-log.md).
 
@@ -87,12 +87,12 @@ Quiz scores are stored in a local SQLite database at `.codex/bolprep.sqlite3`, s
 3. **STT input:** browser speech recognition is an optional transcript helper; compare Hindi, English, and Hinglish transcripts and provide a robust backend option.
 4. **Browser prototype:** improve interaction states and check behavior across supported browsers and devices.
 5. **Grounded answers:** lexical retrieval, source links, and an insufficient-evidence response are implemented for three articles; expand coverage and evaluate retrieval quality.
-6. **Quiz tools and progress:** deterministic quiz/scoring tools and local, session-scoped idempotent progress storage are implemented; connect model tool selection and validate a durable progress flow across app restarts.
+6. **Quiz tools and progress:** deterministic quiz/scoring tools, local session-scoped idempotent progress storage, and a Responses API tool loop are implemented; run a live model tool-call session when an API key is available.
 7. **Live turn-taking:** stream speech, support interruptions and cancellation, and reject stale turn events.
 8. **Evaluation:** compare configurations on documented examples; report language-specific errors, TTS listener feedback, p50/p95 latency, and failures.
 9. **Portfolio demo:** document setup, architecture, limitations, measured results, and a short walkthrough.
 
-Each phase should be small enough to run, inspect, and explain before moving on. The next task is to try the browser tutor in Hindi, English, and Hinglish, then begin a small checked study corpus for grounded answers.
+Each phase should be small enough to run, inspect, and explain before moving on. Next, exercise the tutor's Hindi/English speech in a supported browser, expand the checked corpus beyond the three starter articles, and verify model-selected tool calls with a configured key.
 
 ## Portfolio context
 
@@ -103,6 +103,7 @@ The intended story is to pair multilingual speech infrastructure work with a sep
 ## Development notes
 
 - Keep provider credentials on the server and out of Git.
+- The optional function-call loop follows the [OpenAI function-calling guide](https://developers.openai.com/api/docs/guides/function-calling); local tests use a mocked Responses client and do not spend API credits.
 - Use consented, legally usable study material and evaluation recordings.
 - Document the evaluation sample, configuration, results, and known limitations.
 - Add features incrementally and record experiments in [learning-log.md](learning-log.md).

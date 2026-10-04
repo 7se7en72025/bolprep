@@ -89,10 +89,10 @@ async function sendQuestion(question) {
   addMessage("user", question);
 
   try {
-    const response = await fetch("/api/answer", {
+    const response = await fetch("/api/agent/turn", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question, history: history.slice(-20) }),
+      body: JSON.stringify({ question, history: history.slice(-20), language: speechLanguage.value }),
       signal: controller.signal,
     });
     const payload = await response.json();
@@ -102,7 +102,26 @@ async function sendQuestion(question) {
     history.push({ role: "user", content: question }, { role: "assistant", content: payload.answer });
     history.splice(0, Math.max(0, history.length - 20));
     statusLine.textContent = "Answer ready.";
-    speak(payload.answer);
+    const startedQuiz = (payload.tool_events || []).find((event) => event.name === "start_quiz" && event.ok);
+    const scoredAnswer = (payload.tool_events || []).find((event) => event.name === "score_answer" && event.ok);
+    if (startedQuiz && startedQuiz.result.questions?.length) {
+      quizSession = {
+        quizId: startedQuiz.result.quiz_id,
+        questions: startedQuiz.result.questions,
+        index: 0,
+        results: [],
+        awaitingAnswer: false,
+      };
+      showQuizQuestion(false);
+      speak(`${payload.answer} ${quizSession.questions[0].prompt}`, "Your answer is ready when you are.");
+    } else if (scoredAnswer) {
+      const score = scoredAnswer.result;
+      addMessage("assistant", `${score.feedback} Score: ${score.score}%.`, [score.source]);
+      speak(`${payload.answer} ${score.feedback}`, "Answer ready.");
+      loadProgress();
+    } else {
+      speak(payload.answer);
+    }
   } catch (error) {
     if (error.name !== "AbortError" && requestTurn === turn) {
       addMessage("assistant", error.message);
@@ -143,7 +162,7 @@ async function startQuiz() {
   }
 }
 
-function showQuizQuestion() {
+function showQuizQuestion(speakPrompt = true) {
   if (!quizSession || quizSession.index >= quizSession.questions.length) return;
   const current = quizSession.questions[quizSession.index];
   quizSession.awaitingAnswer = true;
@@ -154,7 +173,7 @@ function showQuizQuestion() {
   addMessage("assistant", `Question ${quizSession.index + 1} of ${quizSession.questions.length}: ${current.prompt}`, [current.source]);
   const readyText = "Your answer is ready when you are.";
   statusLine.textContent = readyText;
-  speak(current.prompt, readyText);
+  if (speakPrompt) speak(current.prompt, readyText);
 }
 
 async function submitQuizAnswer(answer) {
@@ -184,13 +203,14 @@ async function submitQuizAnswer(answer) {
     const isLast = quizSession.index >= quizSession.questions.length;
     const completeCount = quizSession.results.filter((item) => item.complete).length;
     if (isLast) {
+      const totalQuestions = quizSession.questions.length;
       quizSession = null;
       sendLabel.textContent = "Ask tutor";
       input.placeholder = "Type a question… e.g. Right to Equality kya hai?";
-      statusLine.textContent = `Quiz complete: ${completeCount} of 3 answers covered the rubric. Results are saved for this browser.`;
+      statusLine.textContent = `Quiz complete: ${completeCount} of ${totalQuestions} answers covered the rubric. Results are saved for this browser.`;
       speak(feedback, statusLine.textContent);
     } else {
-      statusLine.textContent = `Answer checked. ${quizSession.index} of 3 complete; tap Next question when ready.`;
+      statusLine.textContent = `Answer checked. ${quizSession.index} of ${quizSession.questions.length} complete; tap Next question when ready.`;
       nextQuestionButton.hidden = false;
       speak(feedback, statusLine.textContent);
     }

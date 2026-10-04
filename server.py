@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from bolprep import api_is_configured, ask_model, offline_answer
+from agent import run_agent_turn
 from progress import ProgressConflict, clear_progress, create_quiz_run, ensure_session, get_progress, save_answer
 from quiz import score_answer, start_quiz
 from retrieval import load_corpus, retrieve
@@ -66,7 +67,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         self._ensure_browser_session()
-        if self.path not in {"/api/answer", "/api/quiz/start", "/api/quiz/score"}:
+        if self.path not in {"/api/answer", "/api/agent/turn", "/api/quiz/start", "/api/quiz/score"}:
             self.send_error(404, "Not found")
             return
         body = self._read_json_body()
@@ -77,6 +78,9 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             return
         if self.path == "/api/quiz/score":
             self._handle_quiz_score(body)
+            return
+        if self.path == "/api/agent/turn":
+            self._handle_agent_turn(body)
             return
 
         question = body.get("question")
@@ -121,6 +125,38 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             for document in documents
         ]
         self._send_json(200, {"answer": answer, "sources": sources})
+
+    def _handle_agent_turn(self, body: dict[str, Any]) -> None:
+        question = body.get("question")
+        history = body.get("history", [])
+        language = body.get("language", "hi-IN")
+        if not isinstance(question, str) or not question.strip() or len(question) > 1200:
+            self._send_json(400, {"error": "Enter a question under 1,200 characters."})
+            return
+        if not isinstance(history, list) or len(history) > 20:
+            self._send_json(400, {"error": "Conversation history is invalid."})
+            return
+        if not isinstance(language, str) or language not in {"hi-IN", "en-IN"}:
+            self._send_json(400, {"error": "Choose Hindi/Hinglish or English."})
+            return
+        cleaned_history: list[dict[str, str]] = []
+        for item in history:
+            if (
+                not isinstance(item, dict)
+                or item.get("role") not in {"user", "assistant"}
+                or not isinstance(item.get("content"), str)
+                or len(item["content"]) > 3000
+            ):
+                self._send_json(400, {"error": "Conversation history is invalid."})
+                return
+            cleaned_history.append({"role": item["role"], "content": item["content"]})
+        try:
+            result = run_agent_turn(question.strip(), cleaned_history, self.session_id, language)
+        except Exception as exc:
+            print(f"Tutor agent request failed: {exc}")
+            self._send_json(502, {"error": "Tutor request failed. Check the server terminal and try again."})
+            return
+        self._send_json(200, result)
 
     def _read_json_body(self) -> dict[str, Any] | None:
         try:
