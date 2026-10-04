@@ -21,6 +21,46 @@
     }
   },
   {
+    "id": "article-15",
+    "title": "Article 15 — Prohibition of discrimination",
+    "title_hi": "अनुच्छेद 15 — भेदभाव का निषेध",
+    "title_hinglish": "Article 15 — bhedbhaav par rok",
+    "summary": "Article 15(1) says the State must not discriminate against a citizen solely on grounds of religion, race, caste, sex, or place of birth. Other clauses in the article contain additional protections and exceptions that this short note does not explain.",
+    "summary_hi": "अनुच्छेद 15(1) के अनुसार राज्य किसी नागरिक के साथ केवल धर्म, मूलवंश, जाति, लिंग या जन्मस्थान के आधार पर भेदभाव नहीं कर सकता। इस अनुच्छेद के अन्य खंडों में अतिरिक्त संरक्षण और अपवाद हैं, जिन्हें यह छोटा नोट विस्तार से नहीं बताता।",
+    "summary_hinglish": "Article 15(1) ke mutabik State kisi citizen ke saath sirf religion, race, caste, sex ya place of birth ke basis par discrimination nahi kar sakta. Is article ke doosre clauses mein kuchh extra protections aur exceptions hain, jinhe yeh short note detail mein cover nahi karta.",
+    "keywords": [
+      "fundamental rights", "discrimination", "prohibition of discrimination", "religion", "race",
+      "caste", "sex", "place of birth", "article 15", "art 15", "bhedbhav", "bhedbhaav",
+      "dharm", "jaati", "jati", "ling", "janm sthan", "भेदभाव", "धर्म", "जाति", "लिंग", "जन्मस्थान"
+    ],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 15",
+      "checked_on": "2026-10-04"
+    }
+  },
+  {
+    "id": "article-16",
+    "title": "Article 16 — Equality in public employment",
+    "title_hi": "अनुच्छेद 16 — सार्वजनिक रोजगार में समान अवसर",
+    "title_hinglish": "Article 16 — public jobs mein equal opportunity",
+    "summary": "Article 16(1) guarantees equality of opportunity for citizens in matters of employment or appointment to an office under the State. Further clauses set out qualifications and exceptions; this short note does not describe them.",
+    "summary_hi": "अनुच्छेद 16(1) राज्य के अधीन रोजगार या पद पर नियुक्ति के मामलों में नागरिकों के लिए अवसर की समानता सुनिश्चित करता है। आगे के खंड कुछ योग्यताएँ और अपवाद बताते हैं; यह छोटा नोट उनका विवरण नहीं देता।",
+    "summary_hinglish": "Article 16(1) State ke under job ya office mein appointment ke mamle mein citizens ko equal opportunity deta hai. Aage ke clauses kuchh qualifications aur exceptions batate hain; yeh short note unki details nahi deta.",
+    "keywords": [
+      "fundamental rights", "equality of opportunity", "public employment", "government job", "public job",
+      "employment under the state", "appointment", "article 16", "art 16", "reservation",
+      "sarkari naukri", "sarkari rozgar", "avsar ki samanata", "अवसर की समानता", "सरकारी नौकरी", "रोजगार"
+    ],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 16",
+      "checked_on": "2026-10-04"
+    }
+  },
+  {
     "id": "article-19",
     "title": "Article 19 — Certain freedoms",
     "title_hi": "अनुच्छेद 19 — कुछ स्वतंत्रताएँ",
@@ -59,6 +99,26 @@
       "title": "The Constitution of India — Legislative Department, Government of India",
       "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
       "section": "Part III, Article 21",
+      "checked_on": "2026-10-04"
+    }
+  },
+  {
+    "id": "article-21a",
+    "title": "Article 21A — Right to education",
+    "title_hi": "अनुच्छेद 21A — शिक्षा का अधिकार",
+    "title_hinglish": "Article 21A — education ka right",
+    "summary": "Article 21A directs the State to provide free and compulsory education to all children aged six to fourteen, in the manner determined by law.",
+    "summary_hi": "अनुच्छेद 21A के अनुसार राज्य को छह से चौदह वर्ष की आयु के सभी बच्चों को कानून द्वारा तय तरीके से निःशुल्क और अनिवार्य शिक्षा देनी है।",
+    "summary_hinglish": "Article 21A ke mutabik State ko 6 se 14 saal ke sabhi bachchon ko law ke mutabik free aur compulsory education deni hai.",
+    "keywords": [
+      "fundamental rights", "right to education", "education", "free education", "compulsory education",
+      "children six to fourteen", "school", "article 21a", "art 21a", "article 21 a", "art 21 a",
+      "shiksha ka adhikar", "nishulk shiksha", "muft padhai", "शिक्षा का अधिकार", "निःशुल्क शिक्षा", "अनिवार्य शिक्षा"
+    ],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 21A",
       "checked_on": "2026-10-04"
     }
   }

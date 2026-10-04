@@ -4,26 +4,39 @@ from __future__ import annotations
 
 import json
 import re
+import unicodedata
 from pathlib import Path
 from typing import Any
 
 
 CORPUS_PATH = Path(__file__).resolve().parent / "data" / "fundamental_rights.json"
+HINDI_STOPWORDS = {
+    "\u0905\u0927\u093f\u0915\u093e\u0930",
+    "\u0905\u0928\u0941\u091a\u094d\u091b\u0947\u0926",
+}
 STOPWORDS = {
     "a", "about", "an", "and", "are", "can", "explain", "for", "hai", "hain",
     "ho", "how", "in", "is", "ka", "ke", "ki", "kya", "me", "mein", "of",
     "article", "art", "does", "please", "tell", "the", "to", "what", "who", "which", "why", "ya", "ye", "your",
     "right", "rights", "fundamental", "freedom", "freedoms", "adhikar", "adhikaar",
+    *HINDI_STOPWORDS,
 }
 GENERIC_ARTICLE_QUERY_TOKENS = {"cover", "protect", "guarantee", "list", "mean", "say", "karta", "karti"}
 
 
 def _tokens(text: str) -> set[str]:
-    return {
-        token
-        for token in re.findall(r"[\w]+", text.casefold(), flags=re.UNICODE)
-        if token not in STOPWORDS and len(token) > 1
-    }
+    """Split words while keeping Devanagari combining marks attached."""
+    tokens: set[str] = set()
+    current: list[str] = []
+    for character in unicodedata.normalize("NFC", text.casefold()):
+        if character.isalnum() or unicodedata.category(character).startswith("M"):
+            current.append(character)
+        elif current:
+            tokens.add("".join(current))
+            current.clear()
+    if current:
+        tokens.add("".join(current))
+    return {token for token in tokens if token not in STOPWORDS and len(token) > 1}
 
 
 def load_corpus(path: Path = CORPUS_PATH) -> list[dict[str, Any]]:
@@ -61,15 +74,20 @@ def load_corpus(path: Path = CORPUS_PATH) -> list[dict[str, Any]]:
     return documents
 
 
-def retrieve(question: str, limit: int = 3) -> list[dict[str, Any]]:
+def retrieve(question: str, limit: int | None = None) -> list[dict[str, Any]]:
     """Rank notes with a transparent keyword overlap score and article-number boost."""
-    if not isinstance(question, str) or not question.strip() or limit < 1:
+    if (
+        not isinstance(question, str)
+        or not question.strip()
+        or (limit is not None and (not isinstance(limit, int) or isinstance(limit, bool) or limit < 1))
+    ):
         return []
 
     query_tokens = {token for token in _tokens(question) if not token.isdigit()}
     normalized_question = question.casefold()
     if any(phrase in normalized_question for phrase in ("fundamental rights", "मौलिक अधिकार", "maulik adhikar")):
-        return load_corpus()[:limit]
+        documents = load_corpus()
+        return documents if limit is None else documents[:limit]
 
     informative_tokens = {
         token for token in query_tokens
@@ -92,4 +110,5 @@ def retrieve(question: str, limit: int = 3) -> list[dict[str, Any]]:
     if not scored:
         return []
     relevance_floor = max(2, scored[0][0] * 0.6)
-    return [document for score, document in scored if score >= relevance_floor][:limit]
+    result_limit = 3 if limit is None else limit
+    return [document for score, document in scored if score >= relevance_floor][:result_limit]

@@ -30,21 +30,29 @@ class RetrievalTests(unittest.TestCase):
         results = retrieve("समानता का अधिकार")
         self.assertEqual(results[0]["id"], "article-14")
 
+    def test_explicit_limit_caps_broad_results(self):
+        self.assertEqual(len(retrieve("fundamental rights", limit=3)), 3)
+
+    def test_new_articles_retrieve_by_english_topic(self):
+        self.assertEqual(retrieve("Article 15 discrimination", limit=1)[0]["id"], "article-15")
+        self.assertEqual(retrieve("Article 16 public employment", limit=1)[0]["id"], "article-16")
+        self.assertEqual(retrieve("Article 21A education", limit=1)[0]["id"], "article-21a")
+
     def test_uncovered_question_returns_no_notes(self):
         self.assertEqual(retrieve("Who is the current prime minister?"), [])
 
     def test_explicit_article_does_not_cover_missing_topic(self):
         self.assertEqual(retrieve("Does Article 21 guarantee privacy?"), [])
 
-    def test_broad_hindi_fundamental_rights_returns_starter_notes(self):
+    def test_broad_hindi_fundamental_rights_returns_all_notes(self):
         self.assertEqual(
             {document["id"] for document in retrieve("मौलिक अधिकार क्या हैं?")},
-            {"article-14", "article-19", "article-21"},
+            {"article-14", "article-15", "article-16", "article-19", "article-21", "article-21a"},
         )
 
     def test_corpus_sources_are_linkable_and_checked(self):
         documents = load_corpus()
-        self.assertEqual(len(documents), 3)
+        self.assertEqual(len(documents), 6)
         for document in documents:
             self.assertTrue(document["source"]["url"].startswith("https://"))
             self.assertEqual(document["source"]["checked_on"], "2026-10-04")
