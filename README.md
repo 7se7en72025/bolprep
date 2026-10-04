@@ -5,9 +5,9 @@ BolPrep is a beginner-built portfolio project for learning how to make a Hindi a
 
 ## Current status
 
-**Implemented:** Step 0's fixed-answer Python exercise and a local browser tutor prototype. It accepts typed questions, can use a configured OpenAI model through a small Python server, and speaks answers with the browser's built-in speech synthesis. Where the browser supports it, speech recognition can fill the question box. Without an API key, the tutor starts in a clearly labeled offline mode.
+**Implemented:** Step 0's fixed-answer Python exercise and a local browser tutor prototype. It accepts typed questions, retrieves a matching note from a checked three-article corpus, links the Constitution source, can use a configured OpenAI model through a small Python server, and speaks answers with the browser's built-in speech synthesis. Where the browser supports it, speech recognition can fill the question box. Without an API key, the tutor summarizes retrieved notes in a clearly labeled offline mode.
 
-**Not implemented yet:** verified retrieval, quiz tools, progress storage, streaming voice, robust interruption/cancellation at the model provider, and benchmarks. Browser speech recognition support varies by browser and device. There are no measured voice-quality or latency results, and the tutor has no checked study corpus or source citations.
+**Not implemented yet:** improved retrieval beyond the lexical baseline, quiz tools, progress storage, streaming voice, robust interruption/cancellation at the model provider, and benchmarks. Browser speech recognition support varies by browser and device. There are no measured voice-quality or latency results. The starter corpus covers only Articles 14, 19, and 21; unsupported questions should receive an insufficient-evidence response.
 
 For the original input/function/output exercise, see [step0.py](step0.py). For the current learning notes, see [learning-log.md](learning-log.md).
 
@@ -30,7 +30,7 @@ python server.py
 
 Open <http://127.0.0.1:8000>. The server binds to localhost and keeps the model key on the server. Browser microphone permission is requested only after you click **Speak**. Press Ctrl+C to stop the web server.
 
-Without an API key, the tutor starts in offline practice mode and clearly says it cannot generate an answer. Type `/quit` to leave. The smaller Step 0 example can still be run with:
+Without an API key, the tutor returns matching local study-note summaries and source links; it labels these as notes rather than generated explanations. Questions outside the three-note corpus receive an insufficient-evidence response. The smaller Step 0 example can still be run with:
 
 ```powershell
 python step0.py
@@ -68,13 +68,17 @@ Evaluation runner -> fixed examples, comparisons, and reports
 
 The current prototype uses a Python standard-library HTTP server and plain HTML, CSS, and JavaScript. OpenAI Responses API is the optional text model; speech recognition and speech synthesis use browser-provided features. This keeps setup small while making browser and device support a known limitation. A database and streaming speech providers remain future choices; compare language support, streaming behavior, quality, and cost before selecting them.
 
+## Starter study corpus
+
+The first corpus contains short summaries for Articles 14, 19, and 21, each with article-level source metadata. The source is the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-04. Retrieval uses keyword overlap with a boost for an explicitly named article number. Hindi and Hinglish aliases are included. This is a transparent lexical baseline; retrieval recall and answer quality have not yet been evaluated.
+
 ## Roadmap
 
-1. **Text tutor:** first local prototype is implemented; improve prompt behavior and add checked study sources.
+1. **Text tutor:** first local prototype is implemented; improve prompt behavior and expand the checked study corpus.
 2. **TTS output:** browser speech synthesis is wired to answers; compare Hindi, English, and Hinglish pronunciation and consider streaming TTS.
 3. **STT input:** browser speech recognition is an optional transcript helper; compare Hindi, English, and Hinglish transcripts and provide a robust backend option.
 4. **Browser prototype:** improve interaction states and check behavior across supported browsers and devices.
-5. **Grounded answers:** retrieve checked notes with source metadata and indicate when evidence is insufficient.
+5. **Grounded answers:** lexical retrieval, source links, and an insufficient-evidence response are implemented for three articles; expand coverage and evaluate retrieval quality.
 6. **Quiz tools and progress:** implement validated quiz/scoring tools and idempotent progress storage.
 7. **Live turn-taking:** stream speech, support interruptions and cancellation, and reject stale turn events.
 8. **Evaluation:** compare configurations on documented examples; report language-specific errors, TTS listener feedback, p50/p95 latency, and failures.

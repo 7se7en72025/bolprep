@@ -28,6 +28,10 @@ h1 { font: 700 clamp(31px, 5vw, 43px)/1.12 'Segoe UI', sans-serif; letter-spacin
 .user-message { align-self: flex-end; background: #315b48; color: white; border-top-right-radius: 4px; }
 .speaker { color: #76867a; font-size: 9px; }
 .user-message .speaker { color: #c8d9ca; }
+.sources { border-top: 1px solid #dfe6dc; display: grid; gap: 5px; margin-top: 10px; padding-top: 8px; }
+.sources-label { color: #77877b; font-size: 9px; font-weight: 700; letter-spacing: .8px; }
+.sources a { color: #39684f; font-size: 11px; line-height: 1.4; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+.sources a:hover { color: #1e482f; }
 .composer { margin: 7px 16px 0; padding: 11px 13px 10px; border: 1px solid #dcdfd7; border-radius: 12px; background: #fff; transition: border-color .2s, box-shadow .2s; }
 .composer:focus-within { border-color: #7b9d82; box-shadow: 0 0 0 3px #70977718; }
 textarea { border: 0; background: transparent; resize: vertical; width: 100%; min-height: 48px; outline: 0; color: var(--ink); line-height: 1.5; font-size: 14px; }

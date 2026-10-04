@@ -15,7 +15,7 @@ let recognitionAvailable = false;
 let turn = 0;
 let speechTurn = 0;
 
-function addMessage(role, text) {
+function addMessage(role, text, sources = []) {
   const article = document.createElement("article");
   article.className = `message ${role === "user" ? "user-message" : "tutor-message"}`;
   const speaker = document.createElement("span");
@@ -24,6 +24,23 @@ function addMessage(role, text) {
   const paragraph = document.createElement("p");
   paragraph.textContent = text;
   article.append(speaker, paragraph);
+  if (sources.length) {
+    const sourceList = document.createElement("div");
+    sourceList.className = "sources";
+    const label = document.createElement("span");
+    label.className = "sources-label";
+    label.textContent = "STUDY SOURCE";
+    sourceList.append(label);
+    for (const source of sources) {
+      const link = document.createElement("a");
+      link.href = source.url;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.textContent = `${source.section} · ${source.title}`;
+      sourceList.append(link);
+    }
+    article.append(sourceList);
+  }
   conversation.append(article);
   conversation.scrollTop = conversation.scrollHeight;
 }
@@ -75,7 +92,7 @@ async function sendQuestion(question) {
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || "Tutor request failed.");
     if (requestTurn !== turn) return;
-    addMessage("assistant", payload.answer);
+    addMessage("assistant", payload.answer, payload.sources || []);
     history.push({ role: "user", content: question }, { role: "assistant", content: payload.answer });
     history.splice(0, Math.max(0, history.length - 20));
     statusLine.textContent = "Answer ready.";

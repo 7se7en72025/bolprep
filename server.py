@@ -7,14 +7,15 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
-from bolprep import ask_model, offline_answer
+from bolprep import api_is_configured, ask_model, offline_answer
+from retrieval import load_corpus, retrieve
 
 
 ROOT = Path(__file__).resolve().parent
 WEB_ROOT = ROOT / "web"
 HOST = "127.0.0.1"
 PORT = 8000
-MAX_BODY_BYTES = 64 * 1024
+MAX_BODY_BYTES = 256 * 1024
 
 
 class BolPrepHandler(BaseHTTPRequestHandler):
@@ -25,10 +26,8 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             "/styles.css": (WEB_ROOT / "styles.css", "text/css; charset=utf-8"),
         }
         if self.path == "/health":
-            from bolprep import api_is_configured
-
             mode = "model" if api_is_configured() else "offline"
-            self._send_json(200, {"ok": True, "mode": mode})
+            self._send_json(200, {"ok": True, "mode": mode, "study_notes": len(load_corpus())})
             return
         route = routes.get(self.path)
         if route is None:
@@ -89,18 +88,27 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             cleaned_history.append({"role": item["role"], "content": item["content"]})
 
         try:
-            from bolprep import api_is_configured
-
-            answer = (
-                ask_model(question.strip(), cleaned_history)
-                if api_is_configured()
-                else offline_answer(question.strip())
-            )
+            prior_questions = [item["content"] for item in cleaned_history if item["role"] == "user"][-4:]
+            documents = retrieve(" ".join([*prior_questions, question.strip()]))
+            if not documents:
+                answer = "Mere checked study notes mein is question ka jawab abhi nahi hai."
+            elif api_is_configured():
+                answer = ask_model(question.strip(), cleaned_history, documents)
+            else:
+                answer = offline_answer(documents)
         except Exception as exc:
             print(f"Tutor request failed: {exc}")
             self._send_json(502, {"error": "Tutor request failed. Check the server terminal and try again."})
             return
-        self._send_json(200, {"answer": answer})
+        sources = [
+            {
+                "title": document["source"]["title"],
+                "url": document["source"]["url"],
+                "section": document["source"]["section"],
+            }
+            for document in documents
+        ]
+        self._send_json(200, {"answer": answer, "sources": sources})
 
     def _send_json(self, status: int, payload: dict[str, Any]) -> None:
         encoded = json.dumps(payload, ensure_ascii=False).encode("utf-8")

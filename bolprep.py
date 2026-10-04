@@ -5,6 +5,8 @@ from __future__ import annotations
 import os
 import sys
 
+from retrieval import retrieve
+
 try:
     from dotenv import load_dotenv
 except ImportError:
@@ -23,23 +25,29 @@ INSTRUCTIONS = (
     "You are BolPrep, a patient study tutor for Indian Polity. "
     "Reply in the language the learner uses (Hindi, English, or Hinglish). "
     "Keep explanations short, define difficult terms, and say when you are unsure. "
-    "This early version has no verified study corpus, so do not claim citations "
-    "or pretend facts were retrieved from project notes."
+    "Use only the checked local notes attached to the current question for factual claims. "
+    "If those notes do not support an answer, say so instead of filling gaps from memory. "
+    "Sources are displayed separately by the app; never invent source details or URLs. "
+    "These short notes are for study and are not a full legal explanation."
 )
 
 
-def offline_answer(question: str) -> str:
-    """Return a transparent practice response when no model key is configured."""
-    del question  # This exercise intentionally does not interpret the question.
-    return (
-        "Offline practice mode: abhi AI model configured nahi hai, isliye main "
-        "question ka jawab generate nahi kar sakta. Model connect karne ke liye "
-        "README ke setup steps follow karo."
+def offline_answer(documents: list[dict[str, object]]) -> str:
+    """Return matching checked-note summaries without implying an LLM was used."""
+    if not documents:
+        return "Mere checked study notes mein is question ka jawab abhi nahi hai."
+    notes = "\n".join(
+        f"- {document['title']}: {document['summary']}" for document in documents
     )
+    return f"Offline study notes (AI-generated explanation nahi):\n{notes}"
 
 
-def ask_model(question: str, history: list[dict[str, str]]) -> str:
-    """Send one turn and the current conversation to the OpenAI Responses API."""
+def ask_model(
+    question: str,
+    history: list[dict[str, str]],
+    documents: list[dict[str, object]],
+) -> str:
+    """Answer one turn using recent context and retrieved local study notes."""
     try:
         from openai import OpenAI
     except ImportError as exc:
@@ -48,11 +56,21 @@ def ask_model(question: str, history: list[dict[str, str]]) -> str:
         ) from exc
 
     model = os.getenv("OPENAI_MODEL", "gpt-6-astra")
-    client = OpenAI()
+    client = OpenAI(timeout=45.0, max_retries=1)
+    evidence = "\n\n".join(
+        f"{document['title']} ({document['source']['section']}): {document['summary']}"
+        for document in documents
+    )
     response = client.responses.create(
         model=model,
         instructions=INSTRUCTIONS,
-        input=[*history, {"role": "user", "content": question}],
+        input=[
+            *history,
+            {
+                "role": "user",
+                "content": f"Question: {question}\n\nChecked study notes:\n{evidence}",
+            },
+        ],
     )
     answer = response.output_text.strip()
     if not answer:
@@ -85,21 +103,30 @@ def run() -> int:
             return 0
 
         try:
-            answer = ask_model(question, history) if has_api_key else offline_answer(question)
+            prior_questions = [item["content"] for item in history if item["role"] == "user"][-4:]
+            documents = retrieve(" ".join([*prior_questions, question]))
+            if not documents:
+                answer = "Mere checked study notes mein is question ka jawab abhi nahi hai."
+            elif has_api_key:
+                answer = ask_model(question, history, documents)
+            else:
+                answer = offline_answer(documents)
         except Exception as exc:  # Keep the interactive process alive on provider errors.
             print(f"BolPrep: Request failed: {exc}", file=sys.stderr)
             continue
 
         print(f"BolPrep: {answer}")
-        if has_api_key:
-            history.extend(
-                [
-                    {"role": "user", "content": question},
-                    {"role": "assistant", "content": answer},
-                ]
-            )
-            # Bound prompt growth in a long-running session while retaining recent turns.
-            history = history[-20:]
+        for document in documents:
+            source = document["source"]
+            print(f"Source: {source['title']} - {source['section']} - {source['url']}")
+        history.extend(
+            [
+                {"role": "user", "content": question},
+                {"role": "assistant", "content": answer},
+            ]
+        )
+        # Bound prompt growth in a long-running session while retaining recent turns.
+        history = history[-20:]
 
 
 if __name__ == "__main__":
