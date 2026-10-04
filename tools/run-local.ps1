@@ -4,24 +4,48 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 Set-Location -LiteralPath $repoRoot
 
+$pythonCandidates = @()
 $pythonCommand = Get-Command python -ErrorAction SilentlyContinue
-$pythonArguments = @()
-if (-not $pythonCommand) {
-    $pythonCommand = Get-Command py -ErrorAction SilentlyContinue
-    $pythonArguments = @('-3')
+if ($pythonCommand) {
+    $pythonCandidates += [pscustomobject]@{ Path = $pythonCommand.Source; Arguments = @() }
 }
-if (-not $pythonCommand) {
+$pyCommand = Get-Command py -ErrorAction SilentlyContinue
+if ($pyCommand) {
+    $pythonCandidates += [pscustomobject]@{ Path = $pyCommand.Source; Arguments = @('-3') }
+}
+if (-not $pythonCandidates.Count) {
     throw 'Python 3.11 or later was not found. Install Python or its Windows py launcher, then run this command again.'
 }
-$pythonVersionText = & $pythonCommand.Source @pythonArguments -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
-if ($LASTEXITCODE -ne 0 -or [version]$pythonVersionText -lt [version]'3.11') {
-    throw "Python 3.11 or later is required; found Python $pythonVersionText."
+$pythonPath = $null
+$pythonArguments = @()
+$pythonVersionText = $null
+foreach ($candidate in $pythonCandidates) {
+    $candidateArguments = @($candidate.Arguments)
+    $candidateVersionText = & $candidate.Path @candidateArguments -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>$null
+    if ($LASTEXITCODE -ne 0) { continue }
+    $pythonVersionText = $candidateVersionText
+    try {
+        $candidateVersion = [version]$candidateVersionText
+    }
+    catch {
+        continue
+    }
+    if ($candidateVersion -ge [version]'3.11') {
+        $pythonPath = $candidate.Path
+        $pythonArguments = $candidateArguments
+        $pythonVersionText = $candidateVersionText
+        break
+    }
+}
+if (-not $pythonPath) {
+    $foundVersion = if ($pythonVersionText) { "Found Python $pythonVersionText." } else { 'No usable Python version was reported.' }
+    throw "Python 3.11 or later is required. Checked python and the py launcher. $foundVersion"
 }
 
 $venvPython = Join-Path $repoRoot '.venv\Scripts\python.exe'
 if (-not (Test-Path -LiteralPath $venvPython)) {
     Write-Output 'Creating the project virtual environment...'
-    & $pythonCommand.Source @pythonArguments -m venv (Join-Path $repoRoot '.venv')
+    & $pythonPath @pythonArguments -m venv (Join-Path $repoRoot '.venv')
     if ($LASTEXITCODE -ne 0) { throw 'Could not create the virtual environment.' }
 }
 

@@ -1,5 +1,11 @@
 # Learning log
 
+## Select a supported Windows Python launcher — 2026-10-05
+
+- Changed: the one-command Windows setup now probes `python` and the `py` launcher and uses the first interpreter at Python 3.11 or later. An older `python` on PATH no longer blocks a supported `py` runtime.
+- Verification: PowerShell parser reports no syntax errors and `git diff --check` passes. The launcher was not executed against multiple installed Python versions.
+- Limitation: the selection path is statically checked here; Windows installation combinations still need a direct setup run.
+
 ## Honor retry backoff when a run omits its marker — 2026-10-05
 
 - Changed: the work loop now chooses retry delay from the run's retry state. A successful `[CONTINUE]` waits for the normal task interval; a failed run or missing marker uses the capped backoff even if the CLI returned exit code zero.
