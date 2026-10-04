@@ -58,7 +58,7 @@ By default it runs for up to eight hours and up to 24 focused tasks, spaced abou
 
 The planned end-to-end experience is a student asking in Hindi, English, or Hinglish for a short explanation, then asking the tutor to quiz them. The target system will speak its answer, ground explanations in a small checked corpus, score spoken answers against a rubric, and save progress.
 
-A central voice-engineering challenge is interruption handling. When a student speaks while audio is playing, the tutor should stop playback, cancel the old generation, preserve conversation context, and ignore late results from the interrupted turn. The project also aims to compare speech configurations on the same examples and report measured quality and latency, including failure cases.
+A central voice-engineering challenge is interruption handling. When a student speaks while audio is playing, the tutor should stop playback, cancel the old generation, preserve conversation context, and ignore late results from the interrupted turn. The current client keeps an interrupted pending question with an explicit interruption note for the next turn; provider-side generation cancellation remains incomplete. The project also aims to compare speech configurations on the same examples and report measured quality and latency, including failure cases.
 
 ## Target architecture
 
@@ -120,4 +120,5 @@ The intended story is to pair multilingual speech infrastructure work with a sep
 - The microphone control switches to **Stop** while recognition is active, so learners can end capture and review the transcript before sending it.
 - Active microphone capture also has a visible color state and an `aria-pressed` value for assistive technology.
 - Speech transcripts over the active question or quiz-answer limit stay visible for editing; submission now explains the limit instead of sending a request the server will reject.
+- If a learner stops a pending model turn, the client keeps its question and a clear interruption note in the bounded history so follow-ups retain the topic; this does not cancel model generation at the provider.
 - Add features incrementally and record experiments in [learning-log.md](learning-log.md).

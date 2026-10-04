@@ -38,6 +38,7 @@ let recognitionAvailable = false;
 let recognitionListening = false;
 let recognitionStartedAt = null;
 let recognitionHadFinalResult = false;
+let pendingQuestion = null;
 let matchingSpeechVoices = [];
 const speechSamples = [];
 const speechFailures = [];
@@ -99,9 +100,22 @@ function stopRecognition() {
   }
 }
 
+function preserveInterruptedTurn() {
+  if (!activeRequest || !pendingQuestion) return;
+  const interruptionNote = "I stopped before finishing that answer. You can ask a follow-up or try again.";
+  addMessage("assistant", interruptionNote);
+  history.push(
+    { role: "user", content: pendingQuestion },
+    { role: "assistant", content: interruptionNote },
+  );
+  history.splice(0, Math.max(0, history.length - 20));
+  pendingQuestion = null;
+}
+
 function stopTutor() {
   speechTurn += 1;
   window.speechSynthesis?.cancel();
+  preserveInterruptedTurn();
   activeRequest?.abort();
   activeRequest = null;
   stopRecognition();
@@ -247,9 +261,11 @@ previewVoiceButton.addEventListener("click", () => {
 
 async function sendQuestion(question) {
   const requestTurn = ++turn;
+  preserveInterruptedTurn();
   activeRequest?.abort();
   activeRequest = new AbortController();
   const controller = activeRequest;
+  pendingQuestion = question;
   sendButton.disabled = true;
   statusLine.textContent = "Thinking…";
   addMessage("user", question);
@@ -267,6 +283,7 @@ async function sendQuestion(question) {
     addMessage("assistant", payload.answer, payload.sources || []);
     history.push({ role: "user", content: question }, { role: "assistant", content: payload.answer });
     history.splice(0, Math.max(0, history.length - 20));
+    pendingQuestion = null;
     statusLine.textContent = "Answer ready.";
     const startedQuiz = (payload.tool_events || []).find((event) => event.name === "start_quiz" && event.ok);
     const scoredAnswer = (payload.tool_events || []).find((event) => event.name === "score_answer" && event.ok);
@@ -290,6 +307,7 @@ async function sendQuestion(question) {
     }
   } catch (error) {
     if (error.name !== "AbortError" && requestTurn === turn) {
+      pendingQuestion = null;
       addMessage("assistant", error.message);
       statusLine.textContent = "Request failed. Your conversation is still open.";
     }

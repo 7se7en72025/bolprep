@@ -229,3 +229,10 @@
 
 - Styled the listening control with a high-contrast active color that remains visible on mobile when its text label is hidden. The button also exposes `aria-pressed` while recognition is active.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Visual contrast and screen-reader behavior still need browser review.
+
+
+## Preserve context when a pending turn is interrupted - 2026-10-05
+
+- When a pending tutor request is stopped, the browser now retains the user's question and an explicit assistant interruption note in the bounded conversation history. A follow-up can still refer to the interrupted topic without suggesting the model finished its answer.
+- This preserves client context and stale-turn guards; the server-side provider request may continue until its configured timeout because provider cancellation is not implemented.
+- Verification: `node --check web/app.js` and `git diff --check` pass. Interrupt/follow-up behavior needs browser verification with a pending request.
