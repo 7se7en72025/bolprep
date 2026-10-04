@@ -21,5 +21,5 @@
 ## Voice status callback fix — 2026-10-04
 
 - Changed: browser speech callbacks now update the status only while they belong to the latest speech turn. Stopping speech or starting a newer tutor action invalidates older callbacks, so a late browser event cannot replace the current status.
-- Verification: `node --check web/app.js` passed. Python checks could not run because `python` is unavailable and the `py` launcher reports that no Python installation is present.
+- Verification: `node --check web/app.js` passed. Python files were unchanged by this fix; the isolated Codex runner did not have the Python executable on its PATH.
 - Limitation: this check does not exercise actual browser speech playback or its event timing; browser/device behavior still needs a manual check.
