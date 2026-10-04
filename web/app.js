@@ -40,6 +40,7 @@ let recognitionStartedAt = null;
 let recognitionHadFinalResult = false;
 let matchingSpeechVoices = [];
 const speechSamples = [];
+const speechFailures = [];
 const recognitionSamples = [];
 let turn = 0;
 let speechTurn = 0;
@@ -143,12 +144,19 @@ function speechTimingSummary(sample) {
   const matchingSamples = speechSamples.filter((item) =>
     item.language === sample.language && item.voice === sample.voice && item.kind === sample.kind
   );
-  const startTimes = matchingSamples.map((item) => item.startMs);
-  const playbackTimes = matchingSamples.map((item) => item.playbackMs);
-  const seconds = (milliseconds) => (milliseconds / 1000).toFixed(2);
-  return `${sample.kind} ${sample.language} / ${sample.voice} (n=${matchingSamples.length}): `
-    + `start p50/p95 ${seconds(percentile(startTimes, 0.5))}/${seconds(percentile(startTimes, 0.95))}s, `
-    + `playback p50/p95 ${seconds(percentile(playbackTimes, 0.5))}/${seconds(percentile(playbackTimes, 0.95))}s.`;
+  const matchingFailures = speechFailures.filter((item) =>
+    item.language === sample.language && item.voice === sample.voice && item.kind === sample.kind
+  );
+  let summary = "no completed utterances";
+  if (matchingSamples.length) {
+    const startTimes = matchingSamples.map((item) => item.startMs);
+    const playbackTimes = matchingSamples.map((item) => item.playbackMs);
+    const seconds = (milliseconds) => (milliseconds / 1000).toFixed(2);
+    summary = `n=${matchingSamples.length}, start p50/p95 `
+      + `${seconds(percentile(startTimes, 0.5))}/${seconds(percentile(startTimes, 0.95))}s, `
+      + `playback p50/p95 ${seconds(percentile(playbackTimes, 0.5))}/${seconds(percentile(playbackTimes, 0.95))}s`;
+  }
+  return `${sample.kind} ${sample.language} / ${sample.voice}: ${summary}, failures=${matchingFailures.length}.`;
 }
 
 function recognitionTimingSummary(language) {
@@ -204,7 +212,10 @@ function speak(text, completionText = "Ready when you are.", kind = "tutor") {
       + speechTimingSummary(sample);
   };
   utterance.onerror = () => {
-    if (requestSpeechTurn === speechTurn) statusLine.textContent = "Audio playback stopped.";
+    if (requestSpeechTurn !== speechTurn) return;
+    speechFailures.push({ ...sample });
+    if (speechFailures.length > 500) speechFailures.shift();
+    statusLine.textContent = `Speech playback failed. Read the answer above. ${speechTimingSummary(sample)}`;
   };
   window.speechSynthesis.speak(utterance);
 }
