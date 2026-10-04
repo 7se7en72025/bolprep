@@ -1,0 +1,94 @@
+[
+  {
+    "id": "art14_equality",
+    "topic": "fundamental rights",
+    "prompt": "Article 14 ke do key ideas kya hain?",
+    "prompt_en": "What two ideas does Article 14 protect?",
+    "minimum_concepts": 2,
+    "concepts": [
+      {
+        "label": "equality before the law",
+        "label_hi": "कानून के सामने समानता",
+        "aliases": ["equality before the law", "equality before law", "samanata", "samanta", "barabari", "समानता", "बराबरी"]
+      },
+      {
+        "label": "equal protection of the laws",
+        "label_hi": "कानूनों का समान संरक्षण",
+        "aliases": ["equal protection", "equal protection of the laws", "barabari before law", "कानून के सामने बराबरी"]
+      }
+    ],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 14"
+    }
+  },
+  {
+    "id": "art19_freedoms",
+    "topic": "fundamental rights",
+    "prompt": "Article 19(1) mein listed koi bhi do freedoms batao.",
+    "prompt_en": "Name any two freedoms listed in Article 19(1).",
+    "minimum_concepts": 2,
+    "concepts": [
+      {
+        "label": "speech and expression",
+        "label_hi": "बोलने और अभिव्यक्ति की स्वतंत्रता",
+        "aliases": ["speech", "freedom of speech", "speech and expression", "bolne ki azadi", "bolne ki azaadi", "अभिव्यक्ति", "बोलने की आज़ादी"]
+      },
+      {
+        "label": "peaceful assembly without arms",
+        "label_hi": "बिना हथियार शांतिपूर्ण सभा",
+        "aliases": ["peaceful assembly", "assemble peaceably", "assembly without arms", "shaantipurna sabha", "शांतिपूर्ण सभा"]
+      },
+      {
+        "label": "forming associations",
+        "label_hi": "संघ बनाने की स्वतंत्रता",
+        "aliases": ["form associations", "forming associations", "associations or unions", "sangathan", "संघ बनाना"]
+      },
+      {
+        "label": "movement within India",
+        "label_hi": "भारत में आवागमन",
+        "aliases": ["move freely", "freedom of movement", "movement", "aana jaana", "आवागमन"]
+      },
+      {
+        "label": "residence within India",
+        "label_hi": "भारत में बसना",
+        "aliases": ["reside and settle", "residence", "settle anywhere", "rehna", "बसना"]
+      },
+      {
+        "label": "profession or trade",
+        "label_hi": "पेशा या व्यापार",
+        "aliases": ["profession", "occupation", "trade", "business", "pesha", "व्यवसाय"]
+      }
+    ],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 19(1)"
+    }
+  },
+  {
+    "id": "art21_protection",
+    "topic": "fundamental rights",
+    "prompt": "Article 21 kin do cheezon ko protect karta hai?",
+    "prompt_en": "Which two interests does Article 21 protect?",
+    "minimum_concepts": 2,
+    "concepts": [
+      {
+        "label": "life",
+        "label_hi": "जीवन",
+        "aliases": ["life", "right to life", "jeevan", "jivan", "जीवन"]
+      },
+      {
+        "label": "personal liberty",
+        "label_hi": "व्यक्तिगत स्वतंत्रता",
+        "aliases": ["personal liberty", "liberty", "vyaktigat swatantrata", "व्यक्तिगत स्वतंत्रता"]
+      }
+    ],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 21"
+    }
+  }
+]

@@ -5,9 +5,9 @@ BolPrep is a beginner-built portfolio project for learning how to make a Hindi a
 
 ## Current status
 
-**Implemented:** Step 0's fixed-answer Python exercise and a local browser tutor prototype. It accepts typed questions, retrieves a matching note from a checked three-article corpus, links the Constitution source, can use a configured OpenAI model through a small Python server, and speaks answers with the browser's built-in speech synthesis. Where the browser supports it, speech recognition can fill the question box. Without an API key, the tutor summarizes retrieved notes in a clearly labeled offline mode.
+**Implemented:** Step 0's fixed-answer Python exercise and a local browser tutor prototype. It accepts typed questions, retrieves a matching note from a checked three-article corpus, links the Constitution source, can use a configured OpenAI model through a small Python server, and speaks answers with the browser's built-in speech synthesis. Where the browser supports it, speech recognition can fill the question box. It also has a three-question quiz using checked questions and deterministic rubric scoring. Without an API key, the tutor summarizes retrieved notes in a clearly labeled offline mode.
 
-**Not implemented yet:** improved retrieval beyond the lexical baseline, quiz tools, progress storage, streaming voice, robust interruption/cancellation at the model provider, and benchmarks. Browser speech recognition support varies by browser and device. There are no measured voice-quality or latency results. The starter corpus covers only Articles 14, 19, and 21; unsupported questions should receive an insufficient-evidence response.
+**Not implemented yet:** retrieval evaluation, LLM-directed tool calling, permanent progress storage, streaming voice, robust interruption/cancellation at the model provider, and benchmarks. Quiz scoring matches rubric phrases and does not interpret meaning; scores are not saved. Browser speech recognition support varies by browser and device. There are no measured voice-quality or latency results. The starter corpus covers only Articles 14, 19, and 21; unsupported questions should receive an insufficient-evidence response.
 
 For the original input/function/output exercise, see [step0.py](step0.py). For the current learning notes, see [learning-log.md](learning-log.md).
 
@@ -79,7 +79,7 @@ The first corpus contains short summaries for Articles 14, 19, and 21, each with
 3. **STT input:** browser speech recognition is an optional transcript helper; compare Hindi, English, and Hinglish transcripts and provide a robust backend option.
 4. **Browser prototype:** improve interaction states and check behavior across supported browsers and devices.
 5. **Grounded answers:** lexical retrieval, source links, and an insufficient-evidence response are implemented for three articles; expand coverage and evaluate retrieval quality.
-6. **Quiz tools and progress:** implement validated quiz/scoring tools and idempotent progress storage.
+6. **Quiz tools and progress:** deterministic quiz/scoring tools are implemented; connect model tool selection and add idempotent progress storage.
 7. **Live turn-taking:** stream speech, support interruptions and cancellation, and reject stale turn events.
 8. **Evaluation:** compare configurations on documented examples; report language-specific errors, TTS listener feedback, p50/p95 latency, and failures.
 9. **Portfolio demo:** document setup, architecture, limitations, measured results, and a short walkthrough.

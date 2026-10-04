@@ -23,7 +23,11 @@
       <section class="tutor-card" aria-label="Tutor conversation">
         <div class="card-head">
           <div class="tutor-id"><span class="status-dot" aria-hidden="true"></span><div><strong>Your tutor</strong><small id="mode-label">Checking setup…</small></div></div>
-          <button class="text-button" id="clear-button" type="button">New session</button>
+          <div class="head-actions">
+            <button class="quiz-button" id="quiz-button" type="button">Quiz me</button>
+            <button class="text-button" id="next-question" type="button" hidden>Next question</button>
+            <button class="text-button" id="clear-button" type="button">New session</button>
+          </div>
         </div>
 
         <div class="conversation" id="conversation" aria-live="polite" aria-relevant="additions text">

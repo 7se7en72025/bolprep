@@ -7,6 +7,9 @@ const micButton = document.querySelector("#mic-button");
 const stopButton = document.querySelector("#stop-button");
 const modeLabel = document.querySelector("#mode-label");
 const speechLanguage = document.querySelector("#speech-language");
+const quizButton = document.querySelector("#quiz-button");
+const nextQuestionButton = document.querySelector("#next-question");
+const sendLabel = document.querySelector("#send-label");
 
 const history = [];
 let activeRequest = null;
@@ -14,6 +17,7 @@ let recognition = null;
 let recognitionAvailable = false;
 let turn = 0;
 let speechTurn = 0;
+let quizSession = null;
 
 function addMessage(role, text, sources = []) {
   const article = document.createElement("article");
@@ -54,7 +58,7 @@ function stopTutor() {
   sendButton.disabled = false;
 }
 
-function speak(text) {
+function speak(text, completionText = "Ready when you are.") {
   if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
   const requestSpeechTurn = ++speechTurn;
   window.speechSynthesis.cancel();
@@ -65,7 +69,7 @@ function speak(text) {
     if (requestSpeechTurn === speechTurn) statusLine.textContent = "Tutor is speaking. Tap Stop audio or Speak to interrupt.";
   };
   utterance.onend = () => {
-    if (requestSpeechTurn === speechTurn) statusLine.textContent = "Ready when you are.";
+    if (requestSpeechTurn === speechTurn) statusLine.textContent = completionText;
   };
   utterance.onerror = () => {
     if (requestSpeechTurn === speechTurn) statusLine.textContent = "Audio playback stopped.";
@@ -110,10 +114,110 @@ async function sendQuestion(question) {
   }
 }
 
+async function startQuiz() {
+  stopTutor();
+  const requestTurn = turn;
+  quizButton.disabled = true;
+  nextQuestionButton.hidden = true;
+  statusLine.textContent = "Preparing a three-question Fundamental Rights quiz…";
+  try {
+    const response = await fetch("/api/quiz/start", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ topic: "fundamental rights", question_count: 3, language: speechLanguage.value }),
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || "Could not start the quiz.");
+    if (requestTurn !== turn) return;
+    quizSession = { questions: payload.questions, index: 0, results: [], awaitingAnswer: false };
+    showQuizQuestion();
+  } catch (error) {
+    if (requestTurn === turn) {
+      addMessage("assistant", error.message);
+      statusLine.textContent = "Quiz could not start. Your conversation is still open.";
+    }
+  } finally {
+    quizButton.disabled = false;
+  }
+}
+
+function showQuizQuestion() {
+  if (!quizSession || quizSession.index >= quizSession.questions.length) return;
+  const current = quizSession.questions[quizSession.index];
+  quizSession.awaitingAnswer = true;
+  nextQuestionButton.hidden = true;
+  sendLabel.textContent = "Submit answer";
+  input.maxLength = 1000;
+  input.placeholder = "Speak or type your answer…";
+  addMessage("assistant", `Question ${quizSession.index + 1} of ${quizSession.questions.length}: ${current.prompt}`, [current.source]);
+  const readyText = "Your answer is ready when you are.";
+  statusLine.textContent = readyText;
+  speak(current.prompt, readyText);
+}
+
+async function submitQuizAnswer(answer) {
+  if (!quizSession || !quizSession.awaitingAnswer) return;
+  const current = quizSession.questions[quizSession.index];
+  quizSession.awaitingAnswer = false;
+  const requestTurn = ++turn;
+  sendButton.disabled = true;
+  micButton.disabled = true;
+  statusLine.textContent = "Checking your answer against the rubric…";
+  addMessage("user", answer);
+  try {
+    const response = await fetch("/api/quiz/score", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question_id: current.id, answer, language: speechLanguage.value }),
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || "Could not score the answer.");
+    if (requestTurn !== turn) return;
+    quizSession.results.push(result);
+    const feedback = `${result.feedback} Score: ${result.score}%.`;
+    addMessage("assistant", feedback, [result.source]);
+    quizSession.index += 1;
+    const isLast = quizSession.index >= quizSession.questions.length;
+    const completeCount = quizSession.results.filter((item) => item.complete).length;
+    if (isLast) {
+      quizSession = null;
+      sendLabel.textContent = "Ask tutor";
+      input.placeholder = "Type a question… e.g. Right to Equality kya hai?";
+      statusLine.textContent = `Quiz complete: ${completeCount} of 3 answers covered the rubric. Scores are not saved after this session.`;
+      speak(feedback, statusLine.textContent);
+    } else {
+      statusLine.textContent = `Answer checked. ${quizSession.index} of 3 complete; tap Next question when ready.`;
+      nextQuestionButton.hidden = false;
+      speak(feedback, statusLine.textContent);
+    }
+  } catch (error) {
+    if (requestTurn === turn) {
+      quizSession.awaitingAnswer = true;
+      addMessage("assistant", error.message);
+      statusLine.textContent = "Scoring failed. You can try submitting the answer again.";
+    }
+  } finally {
+    if (requestTurn === turn) {
+      sendButton.disabled = false;
+      micButton.disabled = !recognitionAvailable;
+    }
+  }
+}
+
 form.addEventListener("submit", (event) => {
   event.preventDefault();
   const question = input.value.trim();
   if (!question || sendButton.disabled) return;
+  if (quizSession) {
+    if (!quizSession.awaitingAnswer) {
+      statusLine.textContent = "Tap Next question to continue the quiz, or start a new session.";
+      return;
+    }
+    input.value = "";
+    stopTutor();
+    submitQuizAnswer(question);
+    return;
+  }
   stopTutor();
   input.value = "";
   sendQuestion(question);
@@ -127,11 +231,19 @@ stopButton.addEventListener("click", () => {
 
 document.querySelector("#clear-button").addEventListener("click", () => {
   stopTutor();
+  quizSession = null;
   history.length = 0;
   conversation.replaceChildren();
   addMessage("assistant", "Namaste! Fundamental Rights ke baare mein kya jaan-na hai?");
+  nextQuestionButton.hidden = true;
+  sendLabel.textContent = "Ask tutor";
+  input.maxLength = 1200;
+  input.placeholder = "Type a question… e.g. Right to Equality kya hai?";
   statusLine.textContent = "New session started.";
 });
+
+quizButton.addEventListener("click", startQuiz);
+nextQuestionButton.addEventListener("click", showQuizQuestion);
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 if (SpeechRecognition) {
@@ -153,7 +265,7 @@ if (SpeechRecognition) {
 
 micButton.disabled = !recognitionAvailable;
 if (!recognitionAvailable) micButton.title = "Speech recognition is not available in this browser. You can still type your question.";
-  micButton.addEventListener("click", () => {
+micButton.addEventListener("click", () => {
   if (!recognition) return;
   stopTutor();
   window.speechSynthesis?.cancel();

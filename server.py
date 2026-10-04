@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from bolprep import api_is_configured, ask_model, offline_answer
+from quiz import score_answer, start_quiz
 from retrieval import load_corpus, retrieve
 
 
@@ -47,24 +48,17 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
     def do_POST(self) -> None:
-        if self.path != "/api/answer":
+        if self.path not in {"/api/answer", "/api/quiz/start", "/api/quiz/score"}:
             self.send_error(404, "Not found")
             return
-        try:
-            length = int(self.headers.get("Content-Length", "0"))
-        except ValueError:
-            self._send_json(400, {"error": "Invalid request length."})
+        body = self._read_json_body()
+        if body is None:
             return
-        if length <= 0 or length > MAX_BODY_BYTES:
-            self._send_json(413, {"error": "Request is empty or too large."})
+        if self.path == "/api/quiz/start":
+            self._handle_quiz_start(body)
             return
-        try:
-            body = json.loads(self.rfile.read(length))
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            self._send_json(400, {"error": "Request must contain valid JSON."})
-            return
-        if not isinstance(body, dict):
-            self._send_json(400, {"error": "Request body must be an object."})
+        if self.path == "/api/quiz/score":
+            self._handle_quiz_score(body)
             return
 
         question = body.get("question")
@@ -109,6 +103,50 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             for document in documents
         ]
         self._send_json(200, {"answer": answer, "sources": sources})
+
+    def _read_json_body(self) -> dict[str, Any] | None:
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            self._send_json(400, {"error": "Invalid request length."})
+            return None
+        if length <= 0 or length > MAX_BODY_BYTES:
+            self._send_json(413, {"error": "Request is empty or too large."})
+            return None
+        try:
+            body = json.loads(self.rfile.read(length))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            self._send_json(400, {"error": "Request must contain valid JSON."})
+            return None
+        if not isinstance(body, dict):
+            self._send_json(400, {"error": "Request body must be an object."})
+            return None
+        return body
+
+    def _handle_quiz_start(self, body: dict[str, Any]) -> None:
+        topic = body.get("topic", "fundamental rights")
+        question_count = body.get("question_count", 3)
+        language = body.get("language", "hi-IN")
+        try:
+            quiz = start_quiz(topic, question_count, language)
+        except ValueError as exc:
+            self._send_json(400, {"error": str(exc)})
+            return
+        self._send_json(200, quiz)
+
+    def _handle_quiz_score(self, body: dict[str, Any]) -> None:
+        question_id = body.get("question_id")
+        answer = body.get("answer")
+        language = body.get("language", "en-IN")
+        if not isinstance(language, str) or language not in {"hi-IN", "en-IN"}:
+            self._send_json(400, {"error": "Choose Hindi/Hinglish or English feedback."})
+            return
+        try:
+            result = score_answer(question_id, answer, language)
+        except ValueError as exc:
+            self._send_json(400, {"error": str(exc)})
+            return
+        self._send_json(200, result)
 
     def _send_json(self, status: int, payload: dict[str, Any]) -> None:
         encoded = json.dumps(payload, ensure_ascii=False).encode("utf-8")
