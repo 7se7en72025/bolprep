@@ -89,7 +89,10 @@ function refreshSpeechVoices() {
 }
 
 function speak(text, completionText = "Ready when you are.") {
-  if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+  if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+    statusLine.textContent = "Speech playback is not available in this browser. Read the answer above.";
+    return;
+  }
   const requestSpeechTurn = ++speechTurn;
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
