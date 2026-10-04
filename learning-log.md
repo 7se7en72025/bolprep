@@ -116,6 +116,11 @@
 - The selected speech language and browser voice now persist in local browser storage across page reloads. Stored values are presentation settings only; no answers or audio are saved. When storage is blocked, voice controls continue to work for the current page.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Reload persistence still needs a manual browser check.
 
+## Bound the OpenAI SDK major version - 2026-10-05
+
+- Capped the declared OpenAI SDK below version 4 while retaining the minimum version required by the project. The local setup had installed SDK 3.24.0; direct introspection confirmed it exposes `OpenAI.responses.create`, the interface used by both model paths.
+- Verification: inspected the installed client and method signature without making an API request; no test suite was run in this turn.
+
 
 ## Script-aware quiz feedback - 2026-10-05
 
