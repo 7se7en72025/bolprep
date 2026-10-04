@@ -110,3 +110,9 @@
 
 - Added a user-triggered preview for the selected browser voice, with separate English and Hindi/Hinglish sample phrases. Preview uses the same language and voice selection as tutor answers.
 - Verification: JavaScript syntax and diff checks pass. Preview audio and available voice lists still need manual verification in a supported browser.
+
+
+## Script-aware quiz feedback - 2026-10-05
+
+- Added Roman Hinglish labels for each checked quiz rubric concept. Hindi-mode feedback now uses Devanagari labels for Devanagari answers and Roman Hinglish labels for Latin-script answers; English mode continues to use English labels.
+- Updated rubric validation to check the optional Hinglish label field. Verification: JSON parsing and Python compilation pass; no test suite was run in this turn.

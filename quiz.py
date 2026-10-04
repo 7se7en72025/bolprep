@@ -38,6 +38,7 @@ def _load_questions() -> list[dict[str, Any]]:
                 isinstance(concept, dict)
                 and isinstance(concept.get("label"), str)
                 and ("label_hi" not in concept or isinstance(concept["label_hi"], str))
+                and ("label_hinglish" not in concept or isinstance(concept["label_hinglish"], str))
                 and isinstance(concept.get("aliases"), list)
                 and concept["aliases"]
                 and all(isinstance(alias, str) for alias in concept["aliases"])
@@ -130,8 +131,14 @@ def score_answer(question_id: str, answer: str, language: str = "en-IN") -> dict
     answer_tokens = _answer_tokens(answer)
     matched: list[str] = []
     missing: list[str] = []
+    hindi_script_answer = any("\u0900" <= character <= "\u097f" for character in answer)
     for concept in question["concepts"]:
-        label = concept.get("label_hi", concept["label"]) if language == "hi-IN" else concept["label"]
+        if language == "hi-IN" and hindi_script_answer:
+            label = concept.get("label_hi", concept["label"])
+        elif language == "hi-IN":
+            label = concept.get("label_hinglish", concept["label"])
+        else:
+            label = concept["label"]
         if any(_contains_phrase(answer_tokens, alias) for alias in concept["aliases"]):
             matched.append(label)
         else:
