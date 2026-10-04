@@ -34,8 +34,8 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             )
             return
 
-        self._ensure_browser_session()
         if self.path == "/api/progress":
+            self._ensure_browser_session()
             self._send_json(200, get_progress(self.session_id))
             return
         routes = {
@@ -47,6 +47,8 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         if route is None:
             self.send_error(404, "Not found")
             return
+        if self.path == "/":
+            self._ensure_browser_session()
         path, content_type = route
         try:
             payload = path.read_bytes()
@@ -57,7 +59,8 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(payload)))
         self.send_header("X-Content-Type-Options", "nosniff")
-        self._send_session_cookie_if_needed()
+        if self.path == "/":
+            self._send_session_cookie_if_needed()
         self.end_headers()
         self.wfile.write(payload)
 

@@ -260,3 +260,9 @@
 
 - Added specific recovery guidance for browsers reporting no detected speech or an unsupported recognition language, instead of exposing those common error codes as generic messages.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Browser-specific event behavior still requires a manual voice session.
+
+
+## Avoid session storage for static assets - 2026-10-05
+
+- Session initialization now runs only for the app document and progress/API requests. Health probes, JavaScript/CSS assets, and unknown routes no longer initialize or touch a learner session in SQLite.
+- Verification: parsed `server.py` with Python's AST parser and ran `git diff --check`. No live HTTP session/cookie check was run in this turn.
