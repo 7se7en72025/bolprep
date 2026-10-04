@@ -16,7 +16,7 @@ For the original input/function/output exercise, see [step0.py](step0.py). For t
 On Windows with Python 3.11 or later (`python` or the Windows `py` launcher), start the complete local setup with one command from the project folder:
 
 ```powershell
-.\tools\run-local.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\run-local.ps1
 ```
 
 The launcher creates `.venv` if needed, installs `requirements.txt`, copies `.env.example` to `.env` only when `.env` does not already exist, and starts the server. Open <http://127.0.0.1:8000>; press Ctrl+C in PowerShell to stop. Add an API key to `.env` before starting if you want model answers. Offline mode works without a key.
@@ -25,15 +25,14 @@ For manual setup, create and activate the environment, then install dependencies
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
 Put your API key in `.env` to enable model answers. Keep that file private; it is excluded from Git. The default model can be changed with `OPENAI_MODEL` in `.env`. Start the local server, then open its address in a browser:
 
 ```powershell
-python server.py
+.\.venv\Scripts\python.exe server.py
 ```
 
 Open <http://127.0.0.1:8000>. The server binds to localhost and keeps the model key on the server. Its `/health` check reports setup mode and corpus size without creating a browser progress session; static JS and CSS requests also avoid session storage. Browser microphone permission is requested only after you click **Speak**. While listening, the same button changes to **Stop** so you can end capture without sending the transcript; you can review the text before submitting it. Press Ctrl+C to stop the web server.
@@ -49,10 +48,10 @@ python step0.py
 With the Codex CLI installed and signed in, start the bounded roadmap loop:
 
 ```powershell
-.\tools\start-work-loop.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\start-work-loop.ps1
 ```
 
-By default it runs for up to eight hours and up to 24 focused tasks, spaced about 20 minutes apart. Each run uses the Codex CLI's workspace-write auto-approval mode, checks the repository roadmap, verifies its change locally, and may create a local commit. It does not push or publish changes. Failed CLI invocations are retried on the next loop pass with a capped delay. The runner checks for stop requests at least every 30 seconds while waiting and stops when a task reports that it needs your input. Use `tools\stop-work-loop.ps1` to request a graceful stop after the current task. Status and per-run logs go under `.codex\overnight\`, which Git ignores. The task boundaries are in [AUTONOMOUS_WORK.md](AUTONOMOUS_WORK.md).
+By default it runs for up to eight hours and up to 24 focused tasks, spaced about 20 minutes apart. Each run uses the Codex CLI's workspace-write auto-approval mode, checks the repository roadmap, verifies its change locally, and may create a local commit. It does not push or publish changes. Failed CLI invocations are retried on the next loop pass with a capped delay. The runner checks for stop requests at least every 30 seconds while waiting and stops when a task reports that it needs your input. Use `powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\stop-work-loop.ps1` to request a graceful stop after the current task. The process-scoped execution-policy option does not change the machine's PowerShell policy. Status and per-run logs go under `.codex\overnight\`, which Git ignores. The task boundaries are in [AUTONOMOUS_WORK.md](AUTONOMOUS_WORK.md).
 
 ## Intended voice tutor
 

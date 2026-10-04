@@ -1,5 +1,11 @@
 # Learning log
 
+## Reliable PowerShell setup commands — 2026-10-05
+
+- Changed: setup examples invoke PowerShell scripts with a process-scoped execution-policy override and use the virtual environment's Python executable directly, avoiding activation-policy failures on Windows.
+- Verification: inspected the README commands and ran `git diff --check`. No test suite was run.
+- Limitation: the commands were not executed on a separate Windows installation.
+
 ## Stop playback when speech language changes — 2026-10-05
 
 - Changed: changing the selected speech language now cancels current or queued browser speech and explains that the new language applies to the next playback. This prevents audio from continuing in the previously selected language after the control changes.
