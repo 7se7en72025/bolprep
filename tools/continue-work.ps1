@@ -2,7 +2,7 @@ param(
     [ValidateRange(1, 24)]
     [int]$DurationHours = 8,
     [ValidateRange(1, 100)]
-    [int]$MaxRuns = 24
+    [int]$MaxRuns = 4
 )
 
 $ErrorActionPreference = 'Stop'
@@ -29,7 +29,8 @@ Set-Content -LiteralPath $pidPath -Value $PID -Encoding ascii
 
 $deadline = [DateTimeOffset]::UtcNow.AddHours($DurationHours)
 $runNumber = 0
-$delaySeconds = 20
+$retryDelaySeconds = 20
+$taskIntervalSeconds = [Math]::Max(300, [int](($DurationHours * 3600) / $MaxRuns))
 
 function Write-Status([string]$Message) {
     $line = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') $Message"
@@ -50,7 +51,7 @@ try {
         $lastMessagePath = Join-Path $statePath "$runTag.final.txt"
         $prompt = Get-Content -Raw -LiteralPath $instructionsPath
         $arguments = @(
-            'exec', '--json', '--sandbox', 'workspace-write', '--approve-for-me',
+            'exec', '--json', '--approve-for-me',
             '-C', $repoRoot, '-o', $lastMessagePath, $prompt
         )
 
@@ -74,20 +75,22 @@ try {
             }
             if ($firstLine -notmatch '^\[CONTINUE\]') {
                 Write-Status "Run $runNumber omitted a recognized marker; retrying after backoff."
-                $delaySeconds = [Math]::Min(300, $delaySeconds * 2)
+                $retryDelaySeconds = [Math]::Min(300, $retryDelaySeconds * 2)
             }
             else {
-                $delaySeconds = 20
+                $retryDelaySeconds = 20
             }
         }
         else {
             Write-Status "Run $runNumber failed with exit code $exitCode; retrying after backoff."
-            $delaySeconds = [Math]::Min(300, $delaySeconds * 2)
+            $retryDelaySeconds = [Math]::Min(300, $retryDelaySeconds * 2)
         }
 
-        $remainingSeconds = [int]([DateTimeOffset]::UtcNow - $deadline).TotalSeconds * -1
+        $remainingSeconds = [int]($deadline - [DateTimeOffset]::UtcNow).TotalSeconds
         if ($remainingSeconds -gt 0 -and -not (Test-Path $stopPath)) {
-            Start-Sleep -Seconds ([Math]::Min($delaySeconds, $remainingSeconds))
+            $waitSeconds = if ($exitCode -eq 0) { $taskIntervalSeconds } else { $retryDelaySeconds }
+            Write-Status "Waiting $waitSeconds second(s) before the next task."
+            Start-Sleep -Seconds ([Math]::Min($waitSeconds, $remainingSeconds))
         }
     }
 

@@ -44,7 +44,7 @@ With the Codex CLI installed and signed in, start the bounded roadmap loop:
 .\tools\start-work-loop.ps1
 ```
 
-By default it runs for up to eight hours and up to 24 focused tasks. Each run uses the `workspace-write` sandbox, checks the repository roadmap, verifies its change locally, and may create a local commit. It does not push or publish changes. The loop retries failed CLI runs with a capped delay and stops when a task reports that it needs your input. Use `tools\stop-work-loop.ps1` to request a graceful stop after the current task. Status and per-run logs go under `.codex\overnight\`, which Git ignores. The task boundaries are in [AUTONOMOUS_WORK.md](AUTONOMOUS_WORK.md).
+By default it runs for up to eight hours and up to four focused tasks, spaced across that window. Each run uses the Codex CLI's workspace-write auto-approval mode, checks the repository roadmap, verifies its change locally, and may create a local commit. It does not push or publish changes. The loop retries failed CLI runs with a capped delay and stops when a task reports that it needs your input. Use `tools\stop-work-loop.ps1` to request a graceful stop after the current task. Status and per-run logs go under `.codex\overnight\`, which Git ignores. The task boundaries are in [AUTONOMOUS_WORK.md](AUTONOMOUS_WORK.md).
 
 ## Intended voice tutor
 

@@ -2,7 +2,7 @@ param(
     [ValidateRange(1, 24)]
     [int]$DurationHours = 8,
     [ValidateRange(1, 100)]
-    [int]$MaxRuns = 24
+    [int]$MaxRuns = 4
 )
 
 $runner = Join-Path $PSScriptRoot 'continue-work.ps1'
