@@ -33,6 +33,7 @@ let recognitionListening = false;
 let recognitionStartedAt = null;
 let recognitionHadFinalResult = false;
 let matchingSpeechVoices = [];
+const speechSamples = [];
 let turn = 0;
 let speechTurn = 0;
 let quizSession = null;
@@ -125,7 +126,24 @@ function saveSpeechPreferences() {
   }
 }
 
-function speak(text, completionText = "Ready when you are.") {
+function percentile(values, fraction) {
+  const sorted = [...values].sort((left, right) => left - right);
+  return sorted[Math.max(0, Math.ceil(sorted.length * fraction) - 1)];
+}
+
+function speechTimingSummary(sample) {
+  const matchingSamples = speechSamples.filter((item) =>
+    item.language === sample.language && item.voice === sample.voice && item.kind === sample.kind
+  );
+  const startTimes = matchingSamples.map((item) => item.startMs);
+  const playbackTimes = matchingSamples.map((item) => item.playbackMs);
+  const seconds = (milliseconds) => (milliseconds / 1000).toFixed(2);
+  return `${sample.kind} ${sample.language} / ${sample.voice} (n=${matchingSamples.length}): `
+    + `start p50/p95 ${seconds(percentile(startTimes, 0.5))}/${seconds(percentile(startTimes, 0.95))}s, `
+    + `playback p50/p95 ${seconds(percentile(playbackTimes, 0.5))}/${seconds(percentile(playbackTimes, 0.95))}s.`;
+}
+
+function speak(text, completionText = "Ready when you are.", kind = "tutor") {
   if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
     statusLine.textContent = "Speech playback is not available in this browser. Read the answer above.";
     return;
@@ -140,6 +158,11 @@ function speak(text, completionText = "Ready when you are.") {
     `${voice.name}|${voice.lang}|${voice.voiceURI}` === speechVoice.value
   );
   if (selectedVoice) utterance.voice = selectedVoice;
+  const sample = {
+    language: speechLanguage.value,
+    voice: selectedVoice ? `${selectedVoice.name} (${selectedVoice.lang})` : "browser default",
+    kind,
+  };
   utterance.rate = 0.96;
   utterance.onstart = () => {
     if (requestSpeechTurn !== speechTurn) return;
@@ -155,7 +178,14 @@ function speak(text, completionText = "Ready when you are.") {
     }
     const startDelay = ((startedAt - queuedAt) / 1000).toFixed(2);
     const playbackDuration = ((performance.now() - startedAt) / 1000).toFixed(2);
-    statusLine.textContent = `${completionText} Speech start: ${startDelay}s; playback: ${playbackDuration}s.`;
+    speechSamples.push({
+      ...sample,
+      startMs: startedAt - queuedAt,
+      playbackMs: performance.now() - startedAt,
+    });
+    if (speechSamples.length > 500) speechSamples.shift();
+    statusLine.textContent = `${completionText} This run: start ${startDelay}s, playback ${playbackDuration}s. `
+      + speechTimingSummary(sample);
   };
   utterance.onerror = () => {
     if (requestSpeechTurn === speechTurn) statusLine.textContent = "Audio playback stopped.";
@@ -167,7 +197,7 @@ previewVoiceButton.addEventListener("click", () => {
   const preview = speechLanguage.value === "en-IN"
     ? "Hello, let's study fundamental rights together."
     : "Namaste, aaj hum maulik adhikar seekhenge.";
-  speak(preview, "Voice preview finished.");
+  speak(preview, "Voice preview finished.", "preview");
 });
 
 async function sendQuestion(question) {
