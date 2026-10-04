@@ -156,3 +156,9 @@
 
 - Aggregated successful browser speech events in page memory by language, installed voice, and preview/tutor sample type. After playback, the UI shows per-run start and playback times plus nearest-rank p50/p95 for the current group. At most 500 events are retained in memory; refreshing clears them.
 - Timing samples contain no spoken text or answers. This is a small diagnostic aid; meaningful voice comparisons still require repeated identical previews and human pronunciation review. Verification: `node --check web/app.js` and `git diff --check` pass; aggregation behavior needs browser verification.
+
+
+## In-page STT timing summaries - 2026-10-05
+
+- Recognition now keeps first-final latency samples in page memory, grouped by STT language, and reports nearest-rank p50/p95 after each final transcript. Samples contain timing and language only; transcript text is not retained by the metric summary.
+- Verification: `node --check web/app.js` and `git diff --check` pass. Repeated microphone sessions and language grouping need browser verification.

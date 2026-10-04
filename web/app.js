@@ -34,6 +34,7 @@ let recognitionStartedAt = null;
 let recognitionHadFinalResult = false;
 let matchingSpeechVoices = [];
 const speechSamples = [];
+const recognitionSamples = [];
 let turn = 0;
 let speechTurn = 0;
 let quizSession = null;
@@ -141,6 +142,14 @@ function speechTimingSummary(sample) {
   return `${sample.kind} ${sample.language} / ${sample.voice} (n=${matchingSamples.length}): `
     + `start p50/p95 ${seconds(percentile(startTimes, 0.5))}/${seconds(percentile(startTimes, 0.95))}s, `
     + `playback p50/p95 ${seconds(percentile(playbackTimes, 0.5))}/${seconds(percentile(playbackTimes, 0.95))}s.`;
+}
+
+function recognitionTimingSummary(language) {
+  const matchingSamples = recognitionSamples.filter((item) => item.language === language);
+  const times = matchingSamples.map((item) => item.firstFinalMs);
+  const seconds = (milliseconds) => (milliseconds / 1000).toFixed(2);
+  return `STT ${language} (n=${matchingSamples.length}): first-final p50/p95 `
+    + `${seconds(percentile(times, 0.5))}/${seconds(percentile(times, 0.95))}s.`;
 }
 
 function speak(text, completionText = "Ready when you are.", kind = "tutor") {
@@ -458,10 +467,14 @@ if (SpeechRecognition) {
     let transcript = "";
     for (let i = 0; i < event.results.length; i += 1) {
       transcript += event.results[i][0].transcript;
-      if (event.results[i].isFinal && !recognitionHadFinalResult) {
+      if (event.results[i].isFinal && !recognitionHadFinalResult && recognitionStartedAt !== null) {
         recognitionHadFinalResult = true;
-        const elapsed = ((performance.now() - recognitionStartedAt) / 1000).toFixed(2);
-        statusLine.textContent = `Final transcript received in ${elapsed}s. Review it, then ask.`;
+        const elapsedMs = performance.now() - recognitionStartedAt;
+        recognitionSamples.push({ language: recognition.lang, firstFinalMs: elapsedMs });
+        if (recognitionSamples.length > 500) recognitionSamples.shift();
+        const elapsed = (elapsedMs / 1000).toFixed(2);
+        statusLine.textContent = `Final transcript received in ${elapsed}s. Review it, then ask. `
+          + recognitionTimingSummary(recognition.lang);
       }
     }
     input.value = transcript.trim();
