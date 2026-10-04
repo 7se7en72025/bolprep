@@ -13,13 +13,21 @@ For the original input/function/output exercise, see [step0.py](step0.py). For t
 
 ## Run the text tutor
 
-Requires Python 3.11 or later. From the project folder:
+On Windows with Python 3.11 or later, start the complete local setup with one command from the project folder:
+
+```powershell
+.\tools\run-local.ps1
+```
+
+The launcher creates `.venv` if needed, installs `requirements.txt`, copies `.env.example` to `.env` only when `.env` does not already exist, and starts the server. Open <http://127.0.0.1:8000>; press Ctrl+C in PowerShell to stop. Add an API key to `.env` before starting if you want model answers. Offline mode works without a key.
+
+For manual setup, create and activate the environment, then install dependencies:
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 ```
 
 Put your API key in `.env` to enable model answers. Keep that file private; it is excluded from Git. The default model can be changed with `OPENAI_MODEL` in `.env`. Start the local server, then open its address in a browser:

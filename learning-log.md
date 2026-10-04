@@ -81,6 +81,12 @@
 - Updated the interface documentation to explain that available voices depend on the browser and device.
 - Verification: JavaScript syntax check passes. Voice availability and pronunciation still need manual checks on target browsers and devices; the repository environment does not provide a browser speech catalog.
 
+## One-command Windows setup - 2026-10-04
+
+- Added `tools/run-local.ps1` to check for Python 3.11+, create the local virtual environment, install declared dependencies, create `.env` only if it is missing, and start the local server.
+- Documented the quick start and the offline-without-a-key path in the README. Existing `.env` values are left intact.
+- Verification: PowerShell parser accepted the launcher; reviewed its version check, dependency exit handling, and non-overwriting `.env` branch. Server startup still depends on locally available Python and package installation.
+
 
 ## Sustained work-loop cadence ? 2026-10-04
 
