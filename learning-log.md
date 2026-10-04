@@ -242,3 +242,9 @@
 
 - The `/health` route now skips browser-session creation and does not issue a progress cookie. This prevents cookie-free uptime checks from inserting unused session rows into SQLite.
 - Verification: parsed `server.py` with Python's AST parser and ran `git diff --check`. A live HTTP check was not run in this turn.
+
+
+## Initialize microphone toggle accessibility state - 2026-10-05
+
+- The microphone control now initializes `aria-pressed="false"` at page load, including when speech recognition is unavailable, so assistive technology receives a consistent toggle state before first use.
+- Verification: `node --check web/app.js` and `git diff --check` pass.

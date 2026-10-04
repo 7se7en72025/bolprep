@@ -568,7 +568,7 @@ if (SpeechRecognition) {
   });
 }
 
-micButton.disabled = !recognitionAvailable;
+updateMicrophoneButton(false);
 if (!recognitionAvailable) micButton.title = "Speech recognition is not available in this browser. You can still type your question.";
 micButton.addEventListener("click", () => {
   if (!recognition) return;
