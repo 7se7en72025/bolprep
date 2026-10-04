@@ -1,8 +1,7 @@
 # BolPrep
 
-The project explores multilingual speech pipelines, turn-taking, retrieval, tool use, backend engineering, and measured evaluation. This README distinguishes the working code from the proposed roadmap; it does not claim that planned features or results already exist.
+BolPrep is a beginner-built portfolio project for learning how to make a Hindi and Hinglish voice study tutor. Its first topic is Indian Polity, starting with Fundamental Rights.
 
-The project is intended to demonstrate skills relevant to SuperKalam's AI Applied Engineer â€” Voice First internship: speech pipelines, multilingual TTS/STT, turn-taking, retrieval, tool use, backend engineering, and measured evaluation. This README distinguishes the working code from the proposed roadmap; it does not claim that planned features or results already exist.
 
 ## Current status
 
