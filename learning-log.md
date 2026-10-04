@@ -1,5 +1,11 @@
 # Learning log
 
+## Split long answers for browser speech — 2026-10-05
+
+- Changed: long TTS answers are divided at sentence boundaries, then word or code-point boundaries when needed, and queued as browser utterances. Interruption checks and speech diagnostics still cover the answer as one turn.
+- Verification: `node --check web/app.js` and `git diff --check` pass. No test suite or browser speech run was performed.
+- Limitation: chunking improves compatibility with browser utterance limits but does not provide streamed audio; browser and installed-voice behavior still needs manual evaluation.
+
 ## Reject blank quiz rubric content — 2026-10-05
 
 - Changed: the quiz-bank loader now rejects blank question IDs and text, blank concept labels or aliases, and blank source titles or sections before exposing a quiz.

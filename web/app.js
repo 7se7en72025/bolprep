@@ -318,6 +318,52 @@ downloadSpeechDiagnosticsButton.addEventListener("click", () => {
   statusLine.textContent = "Current-page speech diagnostics downloaded as JSON. They contain timings and counts only.";
 });
 
+function splitSpeechText(text, maxCodePoints = 500) {
+  const normalized = text.trim();
+  if (!normalized) return [];
+  const sentences = normalized.match(/[^.!?\u0964\u0965\n]+[.!?\u0964\u0965]*/gu) || [normalized];
+  const chunks = [];
+  let current = "";
+  const append = (part) => {
+    const candidate = current ? `${current} ${part}` : part;
+    if ([...candidate].length <= maxCodePoints) {
+      current = candidate;
+      return;
+    }
+    if (current) chunks.push(current);
+    current = "";
+    if ([...part].length <= maxCodePoints) {
+      current = part;
+      return;
+    }
+    const words = part.split(/\s+/u);
+    for (const word of words) {
+      if ([...word].length > maxCodePoints) {
+        if (current) chunks.push(current);
+        current = "";
+        const characters = [...word];
+        for (let index = 0; index < characters.length; index += maxCodePoints) {
+          const fragment = characters.slice(index, index + maxCodePoints).join("");
+          if (index + maxCodePoints < characters.length) chunks.push(fragment);
+          else current = fragment;
+        }
+      } else if (current && [...current, ...word].length + 1 <= maxCodePoints) {
+        current += ` ${word}`;
+      } else {
+        if (current) chunks.push(current);
+        current = word;
+      }
+    }
+  };
+
+  for (const sentence of sentences) {
+    const part = sentence.trim();
+    if (part) append(part);
+  }
+  if (current) chunks.push(current);
+  return chunks;
+}
+
 function speak(text, completionText = "Ready when you are.", kind = "tutor") {
   if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
     statusLine.textContent = "Speech playback is not available in this browser. Read the answer above.";
@@ -325,50 +371,61 @@ function speak(text, completionText = "Ready when you are.", kind = "tutor") {
   }
   const requestSpeechTurn = ++speechTurn;
   window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = speechLanguage.value;
+  const chunks = splitSpeechText(text);
+  if (!chunks.length) {
+    statusLine.textContent = completionText;
+    return;
+  }
   const queuedAt = performance.now();
   let startedAt = null;
+  let failed = false;
   const selectedVoice = matchingSpeechVoices.find((voice) =>
     `${voice.name}|${voice.lang}|${voice.voiceURI}` === speechVoice.value
   );
-  if (selectedVoice) utterance.voice = selectedVoice;
   const sample = {
     language: speechLanguage.value,
     voice: selectedVoice ? `${selectedVoice.name} (${selectedVoice.lang})` : "browser default",
     kind,
   };
-  utterance.rate = 0.96;
-  utterance.onstart = () => {
-    if (requestSpeechTurn !== speechTurn) return;
-    startedAt = performance.now();
-    const startDelay = ((startedAt - queuedAt) / 1000).toFixed(2);
-    statusLine.textContent = `Tutor is speaking (started in ${startDelay}s). Tap Stop audio or Speak to interrupt.`;
-  };
-  utterance.onend = () => {
-    if (requestSpeechTurn !== speechTurn) return;
-    if (startedAt === null) {
-      statusLine.textContent = completionText;
-      return;
-    }
-    const startDelay = ((startedAt - queuedAt) / 1000).toFixed(2);
-    const playbackDuration = ((performance.now() - startedAt) / 1000).toFixed(2);
-    speechSamples.push({
-      ...sample,
-      startMs: startedAt - queuedAt,
-      playbackMs: performance.now() - startedAt,
-    });
-    if (speechSamples.length > 500) speechSamples.shift();
-    statusLine.textContent = `${completionText} This run: start ${startDelay}s, playback ${playbackDuration}s. `
-      + speechTimingSummary(sample);
-  };
-  utterance.onerror = (event) => {
-    if (requestSpeechTurn !== speechTurn) return;
-    speechFailures.push({ ...sample });
-    if (speechFailures.length > 500) speechFailures.shift();
-    statusLine.textContent = `${speechErrorMessage(event.error)} ${speechTimingSummary(sample)}`;
-  };
-  window.speechSynthesis.speak(utterance);
+  chunks.forEach((chunk, index) => {
+    const utterance = new SpeechSynthesisUtterance(chunk);
+    utterance.lang = speechLanguage.value;
+    utterance.rate = 0.96;
+    if (selectedVoice) utterance.voice = selectedVoice;
+    utterance.onstart = () => {
+      if (requestSpeechTurn !== speechTurn || failed || startedAt !== null) return;
+      startedAt = performance.now();
+      const startDelay = ((startedAt - queuedAt) / 1000).toFixed(2);
+      statusLine.textContent = `Tutor is speaking (started in ${startDelay}s). Tap Stop audio or Speak to interrupt.`;
+    };
+    utterance.onend = () => {
+      if (requestSpeechTurn !== speechTurn || failed || index !== chunks.length - 1) return;
+      if (startedAt === null) {
+        statusLine.textContent = completionText;
+        return;
+      }
+      const endedAt = performance.now();
+      const startDelay = ((startedAt - queuedAt) / 1000).toFixed(2);
+      const playbackDuration = ((endedAt - startedAt) / 1000).toFixed(2);
+      speechSamples.push({
+        ...sample,
+        startMs: startedAt - queuedAt,
+        playbackMs: endedAt - startedAt,
+      });
+      if (speechSamples.length > 500) speechSamples.shift();
+      statusLine.textContent = `${completionText} This run: start ${startDelay}s, playback ${playbackDuration}s. `
+        + speechTimingSummary(sample);
+    };
+    utterance.onerror = (event) => {
+      if (requestSpeechTurn !== speechTurn || failed) return;
+      failed = true;
+      speechFailures.push({ ...sample });
+      if (speechFailures.length > 500) speechFailures.shift();
+      statusLine.textContent = `${speechErrorMessage(event.error)} ${speechTimingSummary(sample)}`;
+      window.speechSynthesis.cancel();
+    };
+    window.speechSynthesis.speak(utterance);
+  });
 }
 
 previewVoiceButton.addEventListener("click", () => {
