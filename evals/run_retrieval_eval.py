@@ -12,7 +12,7 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
-from retrieval import retrieve  # noqa: E402
+from retrieval import load_corpus, retrieve  # noqa: E402
 
 
 DATASET_PATH = Path(__file__).with_name("retrieval_examples.json")
@@ -26,6 +26,7 @@ def evaluate(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     per_language: dict[str, list[dict[str, Any]]] = defaultdict(list)
     seen_ids: set[str] = set()
+    corpus_ids = {document["id"] for document in load_corpus()}
     for example in examples:
         if not isinstance(example, dict) or not all(
             key in example for key in ("id", "language", "question", "expected_doc_ids")
@@ -40,6 +41,12 @@ def evaluate(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
             or not all(isinstance(doc_id, str) for doc_id in example["expected_doc_ids"])
         ):
             raise ValueError("Retrieval evaluation example has invalid field types or a duplicate ID.")
+        unknown_expected_ids = set(example["expected_doc_ids"]) - corpus_ids
+        if unknown_expected_ids:
+            raise ValueError(
+                f"Evaluation example {example['id']} references unknown corpus notes: "
+                f"{', '.join(sorted(unknown_expected_ids))}."
+            )
         seen_ids.add(example["id"])
 
         expected = set(example["expected_doc_ids"])
