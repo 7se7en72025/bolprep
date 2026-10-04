@@ -197,3 +197,10 @@
 - Added per-page TTS failure counts grouped by speech language, installed voice, and preview/tutor sample type. Successful p50/p95 timings remain visible alongside the failure count, including when no utterance has completed.
 - Retained only the bounded sample metadata in page memory (up to 500 successful timings and 500 failures); no speech text or audio is recorded. Reloading clears the metrics.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Browser speech errors still need manual confirmation on supported devices.
+
+
+## Count browser STT attempts without a final transcript - 2026-10-05
+
+- Added per-page failed/empty recognition counts grouped by language alongside first-final p50/p95 timings. Browser error details remain visible for the current attempt, while only the language is retained in the bounded diagnostic samples.
+- Deliberate stop and language-change cancellation paths clear the active listening flag before aborting, so they are not counted as recognition failures. Reloading clears the metrics.
+- Verification: `node --check web/app.js` and `git diff --check` pass. Error and cancellation event ordering still needs manual confirmation in supported browsers.

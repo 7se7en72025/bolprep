@@ -42,6 +42,8 @@ let matchingSpeechVoices = [];
 const speechSamples = [];
 const speechFailures = [];
 const recognitionSamples = [];
+const recognitionFailures = [];
+let recognitionLastError = null;
 let turn = 0;
 let speechTurn = 0;
 let quizSession = null;
@@ -161,10 +163,15 @@ function speechTimingSummary(sample) {
 
 function recognitionTimingSummary(language) {
   const matchingSamples = recognitionSamples.filter((item) => item.language === language);
-  const times = matchingSamples.map((item) => item.firstFinalMs);
-  const seconds = (milliseconds) => (milliseconds / 1000).toFixed(2);
-  return `STT ${language} (n=${matchingSamples.length}): first-final p50/p95 `
-    + `${seconds(percentile(times, 0.5))}/${seconds(percentile(times, 0.95))}s.`;
+  const matchingFailures = recognitionFailures.filter((item) => item.language === language);
+  let summary = "no final transcripts";
+  if (matchingSamples.length) {
+    const times = matchingSamples.map((item) => item.firstFinalMs);
+    const seconds = (milliseconds) => (milliseconds / 1000).toFixed(2);
+    summary = `n=${matchingSamples.length}, first-final p50/p95 `
+      + `${seconds(percentile(times, 0.5))}/${seconds(percentile(times, 0.95))}s`;
+  }
+  return `STT ${language}: ${summary}, failures=${matchingFailures.length}.`;
 }
 
 function speak(text, completionText = "Ready when you are.", kind = "tutor") {
@@ -478,6 +485,7 @@ if (SpeechRecognition) {
     micButton.disabled = true;
     recognitionStartedAt = performance.now();
     recognitionHadFinalResult = false;
+    recognitionLastError = null;
     statusLine.textContent = "Listening… speak now.";
   };
   recognition.onresult = (event) => {
@@ -498,13 +506,23 @@ if (SpeechRecognition) {
     input.value = transcript.trim();
   };
   recognition.onerror = (event) => {
-    if (recognitionListening) statusLine.textContent = `Microphone issue: ${event.error}. You can type instead.`;
+    if (recognitionListening) {
+      recognitionLastError = event.error;
+      statusLine.textContent = `Microphone issue: ${event.error}. You can type instead.`;
+    }
   };
   recognition.onend = () => {
+    const wasListening = recognitionListening;
     recognitionListening = false;
     micButton.disabled = false;
-    if (!recognitionHadFinalResult && statusLine.textContent === "Listening… speak now.") {
-      statusLine.textContent = "No final transcript was received. You can type instead.";
+    if (wasListening && !recognitionHadFinalResult) {
+      const language = recognition.lang;
+      recognitionFailures.push({ language });
+      if (recognitionFailures.length > 500) recognitionFailures.shift();
+      const reason = recognitionLastError
+        ? `Microphone issue: ${recognitionLastError}.`
+        : "No final transcript was received.";
+      statusLine.textContent = `${reason} You can type instead. ${recognitionTimingSummary(language)}`;
     }
   };
   speechLanguage.addEventListener("change", () => {
