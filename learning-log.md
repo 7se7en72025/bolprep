@@ -68,7 +68,7 @@
 - Limitations: the translations are authored summaries, not official Hindi translations. Browser pronunciation and the live model path remain untested here.
 
 
-## Corpus expansion and Hindi retrieval check ? 2026-10-04
+## Corpus expansion and Hindi retrieval check: 2026-10-04
 
 - Added checked notes for Articles 15, 16, and 21A, bringing the starter corpus to six articles with English, Hindi, and Hinglish summaries and keywords. The source notes link each summary to the corresponding article in the official Constitution PDF.
 - Expanded the constructed retrieval regression set from 17 to 26 examples. Hindi-aware tokenization now keeps combining marks attached to Devanagari words; generic Hindi words are excluded from scoring so they do not pull in unrelated articles.
@@ -85,17 +85,17 @@
 
 - Added `tools/run-local.ps1` to check for Python 3.11+, create the local virtual environment, install declared dependencies, create `.env` only if it is missing, and start the local server.
 - Documented the quick start and the offline-without-a-key path in the README. Existing `.env` values are left intact.
-- Verification: PowerShell parser accepted the launcher; reviewed its version check, dependency exit handling, and non-overwriting `.env` branch. Server startup still depends on locally available Python and package installation.
+- Verification: PowerShell parser accepted the launcher; invoking it on Python 3.11 created the environment, installed requirements, copied `.env.example` to a new `.env`, and started the server. The non-overwrite branch was reviewed. `/health` returned offline mode with six notes; `curl.exe` received HTTP 200 for `/` and `/app.js`. Server startup still depends on locally available Python and package installation.
 
 
-## Sustained work-loop cadence ? 2026-10-04
+## Sustained work-loop cadence: 2026-10-04
 
 - Increased the default bounded work window from four tasks to 24 tasks over eight hours (about 20 minutes between successful passes), and split idle waits into 30-second slices so a stop request is noticed promptly.
 - Updated the README with the actual schedule and stop behavior. The loop remains bounded by both elapsed time and run count; it does not guarantee uninterrupted active work or recover if its PowerShell supervisor is forcibly terminated.
 - Verification: reviewed the PowerShell parameter and wait-loop changes and confirmed the documented defaults match. Restarted the active loop with the new 24-run setting; it will end at its eight-hour deadline or sooner if it reaches its run cap or receives a stop request.
 
 
-## Speech playback fallback ? 2026-10-04
+## Speech playback fallback: 2026-10-04
 
 - When the browser does not expose speech synthesis, the tutor now leaves the answer readable and says clearly that audio playback is unavailable instead of silently skipping speech.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Actual device support still needs browser QA.
