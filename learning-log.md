@@ -1,5 +1,11 @@
 # Learning log
 
+## Reject blank quiz rubric content — 2026-10-05
+
+- Changed: the quiz-bank loader now rejects blank question IDs and text, blank concept labels or aliases, and blank source titles or sections before exposing a quiz.
+- Verification: Python syntax compilation and `git diff --check` pass. No test suite was run.
+- Limitation: this validates required text presence and shape; it does not verify rubric correctness against the cited Constitution source.
+
 ## Report decision stops accurately — 2026-10-05
 
 - Changed: the bounded work loop now records when it exits because a task requested a user decision, instead of also labeling that exit as a time-limit expiration.

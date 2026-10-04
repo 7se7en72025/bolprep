@@ -25,9 +25,12 @@ def _load_questions() -> list[dict[str, Any]]:
             raise ValueError("Each quiz question must be an object.")
         if not all(key in question for key in ("id", "topic", "prompt", "minimum_concepts", "concepts", "source")):
             raise ValueError("Quiz question is missing required fields.")
-        if not isinstance(question["id"], str) or question["id"] in seen_ids:
+        if not isinstance(question["id"], str) or not question["id"].strip() or question["id"] in seen_ids:
             raise ValueError("Quiz question IDs must be unique strings.")
-        if not all(isinstance(question[key], str) and question[key] for key in ("topic", "prompt", "prompt_en")):
+        if not all(
+            isinstance(question[key], str) and question[key].strip()
+            for key in ("topic", "prompt", "prompt_en")
+        ):
             raise ValueError(f"Quiz question {question['id']} has invalid text fields.")
         seen_ids.add(question["id"])
         concepts = question["concepts"]
@@ -37,11 +40,18 @@ def _load_questions() -> list[dict[str, Any]]:
             or not all(
                 isinstance(concept, dict)
                 and isinstance(concept.get("label"), str)
-                and ("label_hi" not in concept or isinstance(concept["label_hi"], str))
-                and ("label_hinglish" not in concept or isinstance(concept["label_hinglish"], str))
+                and bool(concept["label"].strip())
+                and (
+                    "label_hi" not in concept
+                    or isinstance(concept["label_hi"], str) and bool(concept["label_hi"].strip())
+                )
+                and (
+                    "label_hinglish" not in concept
+                    or isinstance(concept["label_hinglish"], str) and bool(concept["label_hinglish"].strip())
+                )
                 and isinstance(concept.get("aliases"), list)
                 and concept["aliases"]
-                and all(isinstance(alias, str) for alias in concept["aliases"])
+                and all(isinstance(alias, str) and alias.strip() for alias in concept["aliases"])
                 for concept in concepts
             )
         ):
@@ -53,7 +63,9 @@ def _load_questions() -> list[dict[str, Any]]:
         if (
             not isinstance(source, dict)
             or not isinstance(source.get("title"), str)
+            or not source["title"].strip()
             or not isinstance(source.get("section"), str)
+            or not source["section"].strip()
             or not str(source.get("url", "")).startswith("https://")
         ):
             raise ValueError(f"Quiz question {question['id']} has invalid source metadata.")
