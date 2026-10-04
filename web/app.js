@@ -9,6 +9,16 @@ const modeLabel = document.querySelector("#mode-label");
 const speechLanguage = document.querySelector("#speech-language");
 const speechVoice = document.querySelector("#speech-voice");
 const previewVoiceButton = document.querySelector("#preview-voice");
+const speechPreferencesKey = "bolprep-speech-preferences";
+let speechPreferences = {};
+try {
+  speechPreferences = JSON.parse(window.localStorage.getItem(speechPreferencesKey) || "{}") || {};
+} catch {
+  speechPreferences = {};
+}
+if (["hi-IN", "en-IN"].includes(speechPreferences.language)) {
+  speechLanguage.value = speechPreferences.language;
+}
 const quizButton = document.querySelector("#quiz-button");
 const nextQuestionButton = document.querySelector("#next-question");
 const sendLabel = document.querySelector("#send-label");
@@ -76,16 +86,28 @@ function refreshSpeechVoices() {
   speechVoice.append(automatic);
   matchingSpeechVoices.forEach((voice, index) => {
     const option = document.createElement("option");
-    option.value = String(index);
+    option.value = `${voice.name}|${voice.lang}|${voice.voiceURI}`;
     option.textContent = `${voice.name} (${voice.lang})`;
     speechVoice.append(option);
   });
+  speechVoice.value = matchingSpeechVoices.some((voice) =>
+    `${voice.name}|${voice.lang}|${voice.voiceURI}` === speechPreferences.voice
+  ) ? speechPreferences.voice : "";
   speechVoice.disabled = matchingSpeechVoices.length === 0;
   if (!matchingSpeechVoices.length) {
     automatic.textContent = "No matching voice";
     speechVoice.title = `No installed ${speechLanguage.value} voice was found; the browser will use its default.`;
   } else {
     speechVoice.title = "Choose an installed voice or use the browser default.";
+  }
+}
+
+function saveSpeechPreferences() {
+  speechPreferences = { language: speechLanguage.value, voice: speechVoice.value };
+  try {
+    window.localStorage.setItem(speechPreferencesKey, JSON.stringify(speechPreferences));
+  } catch {
+    // Speech settings still work for this page when browser storage is unavailable.
   }
 }
 
@@ -98,10 +120,10 @@ function speak(text, completionText = "Ready when you are.") {
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = speechLanguage.value;
-  const selectedVoiceIndex = Number(speechVoice.value);
-  if (speechVoice.value !== "" && matchingSpeechVoices[selectedVoiceIndex]) {
-    utterance.voice = matchingSpeechVoices[selectedVoiceIndex];
-  }
+  const selectedVoice = matchingSpeechVoices.find((voice) =>
+    `${voice.name}|${voice.lang}|${voice.voiceURI}` === speechVoice.value
+  );
+  if (selectedVoice) utterance.voice = selectedVoice;
   utterance.rate = 0.96;
   utterance.onstart = () => {
     if (requestSpeechTurn === speechTurn) statusLine.textContent = "Tutor is speaking. Tap Stop audio or Speak to interrupt.";
@@ -353,6 +375,8 @@ document.querySelector("#clear-progress").addEventListener("click", async () => 
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 speechLanguage.addEventListener("change", refreshSpeechVoices);
+speechLanguage.addEventListener("change", saveSpeechPreferences);
+speechVoice.addEventListener("change", saveSpeechPreferences);
 window.speechSynthesis?.addEventListener?.("voiceschanged", refreshSpeechVoices);
 refreshSpeechVoices();
 

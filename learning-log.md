@@ -111,6 +111,11 @@
 - Added a user-triggered preview for the selected browser voice, with separate English and Hindi/Hinglish sample phrases. Preview uses the same language and voice selection as tutor answers.
 - Verification: JavaScript syntax and diff checks pass. Preview audio and available voice lists still need manual verification in a supported browser.
 
+## Remember speech preferences - 2026-10-05
+
+- The selected speech language and browser voice now persist in local browser storage across page reloads. Stored values are presentation settings only; no answers or audio are saved. When storage is blocked, voice controls continue to work for the current page.
+- Verification: `node --check web/app.js` and `git diff --check` pass. Reload persistence still needs a manual browser check.
+
 
 ## Script-aware quiz feedback - 2026-10-05
 
