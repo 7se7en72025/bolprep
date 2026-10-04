@@ -100,6 +100,16 @@ function stopRecognition() {
   }
 }
 
+function recognitionErrorMessage(error) {
+  const messages = {
+    "audio-capture": "No microphone was found. Check that one is connected, or type instead.",
+    "network": "Speech recognition could not reach its service. Check your connection, or type instead.",
+    "not-allowed": "Microphone access was denied. Allow it in your browser settings, or type instead.",
+    "service-not-allowed": "This browser does not allow its speech recognition service. You can type instead.",
+  };
+  return messages[error] || `Speech recognition issue (${error}). You can type instead.`;
+}
+
 function preserveInterruptedTurn() {
   if (!activeRequest || !pendingQuestion) return;
   const interruptionNote = "I stopped before finishing that answer. You can ask a follow-up or try again.";
@@ -542,7 +552,7 @@ if (SpeechRecognition) {
   recognition.onerror = (event) => {
     if (recognitionListening) {
       recognitionLastError = event.error;
-      statusLine.textContent = `Microphone issue: ${event.error}. You can type instead.`;
+      statusLine.textContent = recognitionErrorMessage(event.error);
     }
   };
   recognition.onend = () => {
@@ -554,9 +564,9 @@ if (SpeechRecognition) {
       recognitionFailures.push({ language });
       if (recognitionFailures.length > 500) recognitionFailures.shift();
       const reason = recognitionLastError
-        ? `Microphone issue: ${recognitionLastError}.`
+        ? recognitionErrorMessage(recognitionLastError)
         : "No final transcript was received.";
-      statusLine.textContent = `${reason} You can type instead. ${recognitionTimingSummary(language)}`;
+      statusLine.textContent = `${reason} ${recognitionTimingSummary(language)}`;
     }
   };
   speechLanguage.addEventListener("change", () => {

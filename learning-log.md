@@ -1,5 +1,11 @@
 # Learning log
 
+## Clearer microphone error messages — 2026-10-05
+
+- Changed: common browser speech-recognition errors now suggest a next step, such as allowing microphone access or checking for a connected microphone. Unknown errors remain visible with a typing fallback.
+- Verification: `node --check web/app.js` and `git diff --check` pass. No test suite was run.
+- Limitation: actual browser-specific error events were not triggered in this run; messages still depend on the error codes exposed by the browser.
+
 ## Per-language voice preference — 2026-10-05
 
 - Changed: selected browser speech voices are now remembered separately for Hindi and English. Existing saved single-voice preferences are migrated when the app next saves settings.
