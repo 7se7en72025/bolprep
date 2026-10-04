@@ -89,6 +89,14 @@ function addMessage(role, text, sources = []) {
   conversation.scrollTop = conversation.scrollHeight;
 }
 
+function rememberTurn(userMessage, assistantMessage) {
+  history.push(
+    { role: "user", content: userMessage },
+    { role: "assistant", content: assistantMessage },
+  );
+  history.splice(0, Math.max(0, history.length - 20));
+}
+
 function stopRecognition() {
   recognitionListening = false;
   updateMicrophoneButton(false);
@@ -116,11 +124,7 @@ function preserveInterruptedTurn() {
   if (!activeRequest || !pendingQuestion) return;
   const interruptionNote = "I stopped before finishing that answer. You can ask a follow-up or try again.";
   addMessage("assistant", interruptionNote);
-  history.push(
-    { role: "user", content: pendingQuestion },
-    { role: "assistant", content: interruptionNote },
-  );
-  history.splice(0, Math.max(0, history.length - 20));
+  rememberTurn(pendingQuestion, interruptionNote);
   pendingQuestion = null;
 }
 
@@ -293,8 +297,7 @@ async function sendQuestion(question) {
     if (!response.ok) throw new Error(payload.error || "Tutor request failed.");
     if (requestTurn !== turn) return;
     addMessage("assistant", payload.answer, payload.sources || []);
-    history.push({ role: "user", content: question }, { role: "assistant", content: payload.answer });
-    history.splice(0, Math.max(0, history.length - 20));
+    rememberTurn(question, payload.answer);
     pendingQuestion = null;
     statusLine.textContent = "Answer ready.";
     const startedQuiz = (payload.tool_events || []).find((event) => event.name === "start_quiz" && event.ok);
@@ -321,6 +324,7 @@ async function sendQuestion(question) {
     if (error.name !== "AbortError" && requestTurn === turn) {
       pendingQuestion = null;
       addMessage("assistant", error.message);
+      rememberTurn(question, "The tutor request failed before an answer was produced.");
       statusLine.textContent = "Request failed. Your conversation is still open.";
     }
   } finally {

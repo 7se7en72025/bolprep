@@ -121,5 +121,5 @@ The intended story is to pair multilingual speech infrastructure work with a sep
 - Common speech-recognition failures now explain a next step, such as allowing microphone access or checking for a connected microphone; unknown browser errors remain visible with a typing fallback.
 - Active microphone capture also has a visible color state and an `aria-pressed` value for assistive technology.
 - Speech transcripts over the active question or quiz-answer limit stay visible for editing; submission now explains the limit instead of sending a request the server will reject.
-- If a learner stops a pending model turn, the client keeps its question and a clear interruption note in the bounded history so follow-ups retain the topic; this does not cancel model generation at the provider.
+- If a learner stops a pending model turn or a request fails, the client keeps the question and a clear interruption/failure note in the bounded history so follow-ups retain the topic without treating an error as an answer; stopping does not cancel model generation at the provider.
 - Add features incrementally and record experiments in [learning-log.md](learning-log.md).

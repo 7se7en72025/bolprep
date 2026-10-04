@@ -266,3 +266,10 @@
 
 - Session initialization now runs only for the app document and progress/API requests. Health probes, JavaScript/CSS assets, and unknown routes no longer initialize or touch a learner session in SQLite.
 - Verification: parsed `server.py` with Python's AST parser and ran `git diff --check`. No live HTTP session/cookie check was run in this turn.
+
+
+## Keep failed requests in tutor context - 2026-10-05
+
+- Tutor request failures now retain the learner's question and a neutral failure note in the same bounded context used for interrupted turns. Follow-up questions can refer to the failed request without receiving the browser's raw network/provider error as model context.
+- Successful, failed, and interrupted turns now use one helper to keep the context window capped at 20 messages.
+- Verification: `node --check web/app.js` and `git diff --check` pass. Error and retry behavior needs browser verification.
