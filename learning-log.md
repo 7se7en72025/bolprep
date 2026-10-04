@@ -315,3 +315,9 @@
 
 - Added a schema version and UTC generation timestamp to copied speech summaries so exported records can be identified and interpreted consistently.
 - Verification: `node --check web/app.js` and `git diff --check` pass.
+
+
+## Download speech diagnostics without clipboard access - 2026-10-05
+
+- Added a Download JSON action beside Copy JSON. It saves a timestamped file locally, while copy failures now direct the learner to the download option.
+- Verification: `node --check web/app.js` and `git diff --check` pass. Browser download handling and small-screen layout need manual review.

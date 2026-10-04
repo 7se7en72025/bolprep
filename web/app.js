@@ -10,6 +10,7 @@ const speechLanguage = document.querySelector("#speech-language");
 const speechVoice = document.querySelector("#speech-voice");
 const previewVoiceButton = document.querySelector("#preview-voice");
 const copySpeechDiagnosticsButton = document.querySelector("#copy-speech-diagnostics");
+const downloadSpeechDiagnosticsButton = document.querySelector("#download-speech-diagnostics");
 const speechPreferencesKey = "bolprep-speech-preferences";
 let speechPreferences = {};
 try {
@@ -297,8 +298,23 @@ copySpeechDiagnosticsButton.addEventListener("click", async () => {
     await navigator.clipboard.writeText(JSON.stringify(buildSpeechDiagnostics(), null, 2));
     statusLine.textContent = "Current-page speech diagnostics copied. They contain timings and counts only.";
   } catch {
-    statusLine.textContent = "Could not copy speech diagnostics. Use the browser on localhost or HTTPS, then try again.";
+    statusLine.textContent = "Clipboard access was unavailable. Use Download JSON or allow clipboard access and try again.";
   }
+});
+
+downloadSpeechDiagnosticsButton.addEventListener("click", () => {
+  const diagnostics = buildSpeechDiagnostics();
+  const payload = JSON.stringify(diagnostics, null, 2);
+  const timestamp = diagnostics.generated_at_utc.replace(/[:.]/g, "-");
+  const url = URL.createObjectURL(new Blob([payload], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `bolprep-speech-diagnostics-${timestamp}.json`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  statusLine.textContent = "Current-page speech diagnostics downloaded as JSON. They contain timings and counts only.";
 });
 
 function speak(text, completionText = "Ready when you are.", kind = "tutor") {
