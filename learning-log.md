@@ -309,3 +309,9 @@
 
 - Updated the manual run sheet with the JSON field paths for TTS start/playback p50/p95, STT first-final p50/p95, sample counts, and failure counts. It explains that `null` percentiles mean the group has no successful samples.
 - Verification: reviewed the documented field names against `buildSpeechDiagnostics()` in `web/app.js`; no test suite was run.
+
+
+## Version and timestamp diagnostic exports - 2026-10-05
+
+- Added a schema version and UTC generation timestamp to copied speech summaries so exported records can be identified and interpreted consistently.
+- Verification: `node --check web/app.js` and `git diff --check` pass.

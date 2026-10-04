@@ -283,6 +283,8 @@ function buildSpeechDiagnostics() {
       time_to_first_final: percentiles(group.completed.map((sample) => sample.firstFinalMs)),
     }));
   return {
+    schema_version: 1,
+    generated_at_utc: new Date().toISOString(),
     scope: "Current page only",
     privacy: "Timing and failure counts only; no transcript text or audio.",
     tts,
