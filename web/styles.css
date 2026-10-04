@@ -47,7 +47,10 @@ textarea::placeholder { color: #a3aaa2; }
 .icon-button { border: 0; border-radius: 8px; background: #f2f3ef; color: #526459; display: inline-flex; align-items: center; gap: 7px; padding: 8px 10px; cursor: pointer; font-size: 12px; }
 .icon-button:hover:not(:disabled) { background: #e7eee6; color: var(--green); }
 .icon-button:disabled { opacity: .42; cursor: not-allowed; }
+.icon-button.is-listening { background: #fae7e4; color: #8c3028; }
+.icon-button.is-listening:hover:not(:disabled) { background: #f3d7d1; color: #78231e; }
 #mic-button span:first-child { font-size: 10px; color: #699073; }
+#mic-button.is-listening span:first-child { color: #b43d31; }
 #stop-button span:first-child { font-size: 9px; }
 .send-button { border: 0; border-radius: 8px; background: var(--green); color: white; padding: 9px 13px; display: flex; gap: 14px; align-items: center; font-size: 12px; font-weight: 600; cursor: pointer; }
 .send-button:hover:not(:disabled) { background: #244a38; }

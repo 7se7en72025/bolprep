@@ -223,3 +223,9 @@
 
 - The local setup script now falls back to `py -3` when `python` is not on PATH, while keeping the same Python 3.11 minimum check and virtual-environment setup.
 - Verification: parsed the PowerShell script for syntax errors and ran `git diff --check`. End-to-end setup with a py-only installation still needs a Windows machine where that exact configuration is available.
+
+
+## Show the active microphone state - 2026-10-05
+
+- Styled the listening control with a high-contrast active color that remains visible on mobile when its text label is hidden. The button also exposes `aria-pressed` while recognition is active.
+- Verification: `node --check web/app.js` and `git diff --check` pass. Visual contrast and screen-reader behavior still need browser review.

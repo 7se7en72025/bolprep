@@ -52,6 +52,8 @@ function updateMicrophoneButton(listening, disabled = false) {
   const label = listening ? "Stop" : "Speak";
   micButton.querySelector(".button-label").textContent = label;
   micButton.setAttribute("aria-label", listening ? "Stop voice input" : "Start voice input");
+  micButton.setAttribute("aria-pressed", String(listening));
+  micButton.classList.toggle("is-listening", listening);
   micButton.title = listening ? "Stop voice input" : "Start voice input";
   micButton.disabled = disabled || !recognitionAvailable;
 }
