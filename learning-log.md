@@ -73,3 +73,10 @@
 - Added checked notes for Articles 15, 16, and 21A, bringing the starter corpus to six articles with English, Hindi, and Hinglish summaries and keywords. The source notes link each summary to the corresponding article in the official Constitution PDF.
 - Expanded the constructed retrieval regression set from 17 to 26 examples. Hindi-aware tokenization now keeps combining marks attached to Devanagari words; generic Hindi words are excluded from scoring so they do not pull in unrelated articles.
 - Verification: 32 unit tests pass. The 26-example constructed text set reports 100% exact match in English, Hindi, and Hinglish, with no unsupported-question false positives. These figures do not measure real learners or speech recognition.
+
+
+## Browser speech voice selection: 2026-10-04
+
+- Added a voice picker populated from the browser's installed speech voices and filtered it by the selected Hindi/Hinglish or English language. Changing language refreshes the list; playback uses the selected voice when available and keeps the browser-language default as a fallback.
+- Updated the interface documentation to explain that available voices depend on the browser and device.
+- Verification: JavaScript syntax check passes. Voice availability and pronunciation still need manual checks on target browsers and devices; the repository environment does not provide a browser speech catalog.

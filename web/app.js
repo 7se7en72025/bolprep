@@ -7,6 +7,7 @@ const micButton = document.querySelector("#mic-button");
 const stopButton = document.querySelector("#stop-button");
 const modeLabel = document.querySelector("#mode-label");
 const speechLanguage = document.querySelector("#speech-language");
+const speechVoice = document.querySelector("#speech-voice");
 const quizButton = document.querySelector("#quiz-button");
 const nextQuestionButton = document.querySelector("#next-question");
 const sendLabel = document.querySelector("#send-label");
@@ -17,6 +18,7 @@ const history = [];
 let activeRequest = null;
 let recognition = null;
 let recognitionAvailable = false;
+let matchingSpeechVoices = [];
 let turn = 0;
 let speechTurn = 0;
 let quizSession = null;
@@ -60,12 +62,42 @@ function stopTutor() {
   sendButton.disabled = false;
 }
 
+function refreshSpeechVoices() {
+  const speechSynthesis = window.speechSynthesis;
+  const targetLanguage = speechLanguage.value.split("-")[0].toLowerCase();
+  matchingSpeechVoices = (speechSynthesis?.getVoices() || []).filter((voice) =>
+    voice.lang.toLowerCase().startsWith(`${targetLanguage}-`) || voice.lang.toLowerCase() === targetLanguage
+  );
+  speechVoice.replaceChildren();
+  const automatic = document.createElement("option");
+  automatic.value = "";
+  automatic.textContent = "Browser default";
+  speechVoice.append(automatic);
+  matchingSpeechVoices.forEach((voice, index) => {
+    const option = document.createElement("option");
+    option.value = String(index);
+    option.textContent = `${voice.name} (${voice.lang})`;
+    speechVoice.append(option);
+  });
+  speechVoice.disabled = matchingSpeechVoices.length === 0;
+  if (!matchingSpeechVoices.length) {
+    automatic.textContent = "No matching voice";
+    speechVoice.title = `No installed ${speechLanguage.value} voice was found; the browser will use its default.`;
+  } else {
+    speechVoice.title = "Choose an installed voice or use the browser default.";
+  }
+}
+
 function speak(text, completionText = "Ready when you are.") {
   if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
   const requestSpeechTurn = ++speechTurn;
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = speechLanguage.value;
+  const selectedVoiceIndex = Number(speechVoice.value);
+  if (speechVoice.value !== "" && matchingSpeechVoices[selectedVoiceIndex]) {
+    utterance.voice = matchingSpeechVoices[selectedVoiceIndex];
+  }
   utterance.rate = 0.96;
   utterance.onstart = () => {
     if (requestSpeechTurn === speechTurn) statusLine.textContent = "Tutor is speaking. Tap Stop audio or Speak to interrupt.";
@@ -309,6 +341,10 @@ document.querySelector("#clear-progress").addEventListener("click", async () => 
 });
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+speechLanguage.addEventListener("change", refreshSpeechVoices);
+window.speechSynthesis?.addEventListener?.("voiceschanged", refreshSpeechVoices);
+refreshSpeechVoices();
+
 if (SpeechRecognition) {
   recognitionAvailable = true;
   recognition = new SpeechRecognition();
