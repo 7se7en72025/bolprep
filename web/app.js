@@ -8,6 +8,7 @@ const stopButton = document.querySelector("#stop-button");
 const modeLabel = document.querySelector("#mode-label");
 const speechLanguage = document.querySelector("#speech-language");
 const speechVoice = document.querySelector("#speech-voice");
+const previewVoiceButton = document.querySelector("#preview-voice");
 const quizButton = document.querySelector("#quiz-button");
 const nextQuestionButton = document.querySelector("#next-question");
 const sendLabel = document.querySelector("#send-label");
@@ -113,6 +114,13 @@ function speak(text, completionText = "Ready when you are.") {
   };
   window.speechSynthesis.speak(utterance);
 }
+
+previewVoiceButton.addEventListener("click", () => {
+  const preview = speechLanguage.value === "en-IN"
+    ? "Hello, let's study fundamental rights together."
+    : "Namaste, aaj hum maulik adhikar seekhenge.";
+  speak(preview, "Voice preview finished.");
+});
 
 async function sendQuestion(question) {
   const requestTurn = ++turn;

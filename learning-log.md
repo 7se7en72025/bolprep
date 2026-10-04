@@ -105,3 +105,8 @@
 
 - Changed answer tokenization to preserve Unicode combining marks and normalize text before phrase matching. This keeps Devanagari words intact during quiz scoring; added the Hindi label for Article 14's equal-protection concept as an accepted answer phrase.
 - A direct pre-change diagnostic showed a Hindi word being split into partial tokens by the previous `\w` expression. Reviewed the new tokenizer path and the JSON rubric change; no test suite was run in this turn.
+
+## Browser voice preview - 2026-10-05
+
+- Added a user-triggered preview for the selected browser voice, with separate English and Hindi/Hinglish sample phrases. Preview uses the same language and voice selection as tutor answers.
+- Verification: JavaScript syntax and diff checks pass. Preview audio and available voice lists still need manual verification in a supported browser.
