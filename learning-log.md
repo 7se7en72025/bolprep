@@ -17,3 +17,9 @@
 - Verification: Python files compile hue; browser JavaScript syntax check pass hua; local `/health` aur home page ne HTTP 200 diya; offline `/api/answer` ne expected transparent reply diya; malformed JSON ko HTTP 400 mila.
 - Limitations: retrieval, source citations, server-side provider cancellation, streamed audio, and browser-level microphone/playback behavior abhi verify nahi hain.
 - Next: supported browser mein Hindi, English, aur Hinglish mic/playback try karo; phir checked source notes ka first retrieval baseline banao.
+
+## Voice status callback fix — 2026-10-04
+
+- Changed: browser speech callbacks now update the status only while they belong to the latest speech turn. Stopping speech or starting a newer tutor action invalidates older callbacks, so a late browser event cannot replace the current status.
+- Verification: `node --check web/app.js` passed. Python checks could not run because `python` is unavailable and the `py` launcher reports that no Python installation is present.
+- Limitation: this check does not exercise actual browser speech playback or its event timing; browser/device behavior still needs a manual check.

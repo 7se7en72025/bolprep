@@ -13,6 +13,7 @@ let activeRequest = null;
 let recognition = null;
 let recognitionAvailable = false;
 let turn = 0;
+let speechTurn = 0;
 
 function addMessage(role, text) {
   const article = document.createElement("article");
@@ -28,6 +29,7 @@ function addMessage(role, text) {
 }
 
 function stopTutor() {
+  speechTurn += 1;
   window.speechSynthesis?.cancel();
   activeRequest?.abort();
   activeRequest = null;
@@ -37,13 +39,20 @@ function stopTutor() {
 
 function speak(text) {
   if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return;
+  const requestSpeechTurn = ++speechTurn;
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = speechLanguage.value;
   utterance.rate = 0.96;
-  utterance.onstart = () => { statusLine.textContent = "Tutor is speaking. Tap Stop audio or Speak to interrupt."; };
-  utterance.onend = () => { statusLine.textContent = "Ready when you are."; };
-  utterance.onerror = () => { statusLine.textContent = "Audio playback stopped."; };
+  utterance.onstart = () => {
+    if (requestSpeechTurn === speechTurn) statusLine.textContent = "Tutor is speaking. Tap Stop audio or Speak to interrupt.";
+  };
+  utterance.onend = () => {
+    if (requestSpeechTurn === speechTurn) statusLine.textContent = "Ready when you are.";
+  };
+  utterance.onerror = () => {
+    if (requestSpeechTurn === speechTurn) statusLine.textContent = "Audio playback stopped.";
+  };
   window.speechSynthesis.speak(utterance);
 }
 
