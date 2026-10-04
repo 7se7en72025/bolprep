@@ -2,7 +2,7 @@
 
 BolPrep is a beginner-built portfolio project for learning how to make a Hindi and Hinglish voice study tutor. Its first topic is Indian Polity, starting with Fundamental Rights.
 
-The project is intended to demonstrate skills relevant to SuperKalam's AI Applied Engineer — Voice First internship: speech pipelines, multilingual TTS/STT, turn-taking, retrieval, tool use, backend engineering, and measured evaluation. This README distinguishes the working code from the proposed roadmap; it does not claim that planned features or results already exist.
+The project is intended to demonstrate skills relevant to SuperKalam's AI Applied Engineer â€” Voice First internship: speech pipelines, multilingual TTS/STT, turn-taking, retrieval, tool use, backend engineering, and measured evaluation. This README distinguishes the working code from the proposed roadmap; it does not claim that planned features or results already exist.
 
 ## Current status
 
@@ -58,7 +58,7 @@ React/TypeScript, a Python backend, and PostgreSQL are proposed starting points,
 
 Each phase should be small enough to run, inspect, and explain before moving on. The next task is to explain the Step 0 input/function/output flow, then continue to the text tutor.
 
-## Role relevance and portfolio context
+## Portfolio context
 
 This project is planned as an end-to-end application counterpart to the author's Speak AI contributions. The preparation notes in [BOLPREP.md](../Chronicle/BOLPREP.md) list five related pull requests: #148 (TTS language/engine tiers), #151 (startup, normalization, and code-switching), #152 (speech evaluation), #153 (downloads and offline model handling), and #154 (tests and CI). Those notes record that the pull requests were open when checked on 2026-10-03. Confirm current status and describe personal contributions accurately before using them in an application; this repository does not validate their implementation details or results.
 
