@@ -19,6 +19,12 @@ try {
 if (["hi-IN", "en-IN"].includes(speechPreferences.language)) {
   speechLanguage.value = speechPreferences.language;
 }
+const savedVoices = speechPreferences.voices && typeof speechPreferences.voices === "object"
+  ? speechPreferences.voices
+  : {};
+if (speechPreferences.language && speechPreferences.voice && !savedVoices[speechPreferences.language]) {
+  savedVoices[speechPreferences.language] = speechPreferences.voice;
+}
 const quizButton = document.querySelector("#quiz-button");
 const nextQuestionButton = document.querySelector("#next-question");
 const sendLabel = document.querySelector("#send-label");
@@ -107,8 +113,8 @@ function refreshSpeechVoices() {
     speechVoice.append(option);
   });
   speechVoice.value = matchingSpeechVoices.some((voice) =>
-    `${voice.name}|${voice.lang}|${voice.voiceURI}` === speechPreferences.voice
-  ) ? speechPreferences.voice : "";
+    `${voice.name}|${voice.lang}|${voice.voiceURI}` === savedVoices[speechLanguage.value]
+  ) ? savedVoices[speechLanguage.value] : "";
   speechVoice.disabled = matchingSpeechVoices.length === 0;
   if (!matchingSpeechVoices.length) {
     automatic.textContent = "No matching voice";
@@ -119,7 +125,8 @@ function refreshSpeechVoices() {
 }
 
 function saveSpeechPreferences() {
-  speechPreferences = { language: speechLanguage.value, voice: speechVoice.value };
+  savedVoices[speechLanguage.value] = speechVoice.value;
+  speechPreferences = { language: speechLanguage.value, voices: savedVoices };
   try {
     window.localStorage.setItem(speechPreferencesKey, JSON.stringify(speechPreferences));
   } catch {
