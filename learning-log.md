@@ -162,3 +162,9 @@
 
 - Recognition now keeps first-final latency samples in page memory, grouped by STT language, and reports nearest-rank p50/p95 after each final transcript. Samples contain timing and language only; transcript text is not retained by the metric summary.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Repeated microphone sessions and language grouping need browser verification.
+
+## Manual browser speech run sheet - 2026-10-05
+
+- Added fixed Hindi, Hinglish, and English prompts for manual STT/TTS checks, setup fields, listener rating columns, failure notes, and a repeat-count guideline for reading p50/p95 summaries.
+- Documented consent and limits: timing is browser-event diagnostics, listener ratings are subjective, and these small runs do not support population-level claims.
+- Verification: reviewed all three reference prompts against the app's supported languages and linked the run sheet from the README. No browser speech session was available here.

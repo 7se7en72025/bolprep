@@ -114,4 +114,5 @@ The intended story is to pair multilingual speech infrastructure work with a sep
 - The optional function-call loop follows the [OpenAI function-calling guide](https://developers.openai.com/api/docs/guides/function-calling); local tests use a mocked Responses client and do not spend API credits.
 - Use consented, legally usable study material and evaluation recordings.
 - Document the evaluation sample, configuration, results, and known limitations.
+- Use the [browser voice run sheet](evals/voice-run-sheet.md) for repeatable manual STT/TTS checks; its timing and listener notes are diagnostics, not broad performance claims.
 - Add features incrementally and record experiments in [learning-log.md](learning-log.md).
