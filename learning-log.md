@@ -211,3 +211,9 @@
 - The Speak control now becomes an enabled Stop control while the browser is listening. It aborts capture, restores the normal button label, and leaves any transcript available for review before submission.
 - Shared stop paths restore the control as well, and deliberate cancellation remains excluded from failed/empty STT metrics.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Microphone permission and event timing need manual browser verification.
+
+
+## Explain overlong speech transcripts before submission - 2026-10-05
+
+- Browser recognition can place more text in the composer than its manual-entry `maxlength`, particularly because transcripts are assigned from JavaScript. Form submission now checks the active question/quiz-answer limit and keeps overlong text available for editing with a clear status message.
+- Verification: `node --check web/app.js` and `git diff --check` pass. Transcript editing behavior needs manual browser confirmation.

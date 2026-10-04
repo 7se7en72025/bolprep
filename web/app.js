@@ -396,6 +396,11 @@ form.addEventListener("submit", (event) => {
   event.preventDefault();
   const question = input.value.trim();
   if (!question || sendButton.disabled) return;
+  if (question.length > input.maxLength) {
+    const responseName = quizSession ? "answer" : "question";
+    statusLine.textContent = `This ${responseName} is over the ${input.maxLength}-character limit. Edit it before sending.`;
+    return;
+  }
   if (quizSession) {
     if (!quizSession.awaitingAnswer) {
       statusLine.textContent = "Tap Next question to continue the quiz, or start a new session.";
