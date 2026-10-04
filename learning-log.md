@@ -1,5 +1,11 @@
 # Learning log
 
+## Honor retry backoff when a run omits its marker — 2026-10-05
+
+- Changed: the work loop now chooses retry delay from the run's retry state. A successful `[CONTINUE]` waits for the normal task interval; a failed run or missing marker uses the capped backoff even if the CLI returned exit code zero.
+- Verification: PowerShell parser reports no syntax errors and `git diff --check` passes. The active loop was not restarted to exercise retry timing.
+- Limitation: a future loop run is needed to observe the missing-marker branch in operation.
+
 ## Split long answers for browser speech — 2026-10-05
 
 - Changed: long TTS answers are divided at sentence boundaries, then word or code-point boundaries when needed, and queued as browser utterances. Interruption checks and speech diagnostics still cover the answer as one turn.

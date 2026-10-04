@@ -58,6 +58,7 @@ try {
 
         Write-Status "Run $runNumber started."
         $exitCode = 1
+        $retryNeeded = $true
         try {
             & $codexPath @arguments 1> $stdoutPath 2> $stderrPath
             $exitCode = $LASTEXITCODE
@@ -81,6 +82,7 @@ try {
             }
             else {
                 $retryDelaySeconds = 20
+                $retryNeeded = $false
             }
         }
         else {
@@ -90,7 +92,7 @@ try {
 
         $remainingSeconds = [int]($deadline - [DateTimeOffset]::UtcNow).TotalSeconds
         if ($remainingSeconds -gt 0 -and -not (Test-Path $stopPath)) {
-            $waitSeconds = if ($exitCode -eq 0) { $taskIntervalSeconds } else { $retryDelaySeconds }
+            $waitSeconds = if ($retryNeeded) { $retryDelaySeconds } else { $taskIntervalSeconds }
             Write-Status "Waiting $waitSeconds second(s) before the next task."
             $waitRemaining = [Math]::Min($waitSeconds, $remainingSeconds)
             while ($waitRemaining -gt 0 -and -not (Test-Path $stopPath)) {
