@@ -103,8 +103,10 @@ function stopRecognition() {
 function recognitionErrorMessage(error) {
   const messages = {
     "audio-capture": "No microphone was found. Check that one is connected, or type instead.",
+    "language-not-supported": "This browser cannot recognize the selected speech language. Choose another language, or type instead.",
     "network": "Speech recognition could not reach its service. Check your connection, or type instead.",
     "not-allowed": "Microphone access was denied. Allow it in your browser settings, or type instead.",
+    "no-speech": "No speech was heard. Tap Speak and try again, or type instead.",
     "service-not-allowed": "This browser does not allow its speech recognition service. You can type instead.",
   };
   return messages[error] || `Speech recognition issue (${error}). You can type instead.`;

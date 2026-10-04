@@ -254,3 +254,9 @@
 
 - The microphone control now initializes `aria-pressed="false"` at page load, including when speech recognition is unavailable, so assistive technology receives a consistent toggle state before first use.
 - Verification: `node --check web/app.js` and `git diff --check` pass.
+
+
+## Explain empty and unsupported-language STT errors - 2026-10-05
+
+- Added specific recovery guidance for browsers reporting no detected speech or an unsupported recognition language, instead of exposing those common error codes as generic messages.
+- Verification: `node --check web/app.js` and `git diff --check` pass. Browser-specific event behavior still requires a manual voice session.
