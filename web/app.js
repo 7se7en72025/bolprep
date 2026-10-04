@@ -529,7 +529,15 @@ document.querySelector("#clear-progress").addEventListener("click", async () => 
 });
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-speechLanguage.addEventListener("change", refreshSpeechVoices);
+speechLanguage.addEventListener("change", () => {
+  refreshSpeechVoices();
+  const speechSynthesis = window.speechSynthesis;
+  if (speechSynthesis?.speaking || speechSynthesis?.pending) {
+    speechTurn += 1;
+    speechSynthesis.cancel();
+    statusLine.textContent = "Speech language changed. Current playback stopped; the new language applies next time.";
+  }
+});
 speechLanguage.addEventListener("change", saveSpeechPreferences);
 speechVoice.addEventListener("change", saveSpeechPreferences);
 window.speechSynthesis?.addEventListener?.("voiceschanged", refreshSpeechVoices);

@@ -118,6 +118,7 @@ The intended story is to pair multilingual speech infrastructure work with a sep
 - TTS timing summaries include failed browser playback events grouped by language, voice, and sample type. Common browser error codes show a suggested next step. Counts and timings stay in page memory and clear on reload; error details, speech text, and audio are not retained in the metrics.
 - STT timing summaries include failed or empty recognition attempts grouped by language. Deliberate stops and language-change cancellations are excluded; transcript text is not retained by the metrics.
 - The microphone control switches to **Stop** while recognition is active, so learners can end capture and review the transcript before sending it.
+- Changing the speech language stops any current or queued tutor audio; the new language and voice selection apply to the next playback. Real browser behavior still depends on its installed speech voices.
 - Common speech-recognition failures now explain a next step, such as allowing microphone access or checking for a connected microphone; unknown browser errors remain visible with a typing fallback.
 - Active microphone capture also has a visible color state and an `aria-pressed` value for assistive technology.
 - Speech transcripts over the active question or quiz-answer limit stay visible for editing; submission now explains the limit instead of sending a request the server will reject.

@@ -1,5 +1,11 @@
 # Learning log
 
+## Stop playback when speech language changes — 2026-10-05
+
+- Changed: changing the selected speech language now cancels current or queued browser speech and explains that the new language applies to the next playback. This prevents audio from continuing in the previously selected language after the control changes.
+- Verification: `node --check web/app.js` and `git diff --check` pass. No test suite was run.
+- Limitation: speech cancellation and language switching were not exercised in a real browser/device in this run.
+
 ## Clearer microphone error messages — 2026-10-05
 
 - Changed: common browser speech-recognition errors now suggest a next step, such as allowing microphone access or checking for a connected microphone. Unknown errors remain visible with a typing fallback.
