@@ -58,7 +58,7 @@ By default it runs for up to eight hours and up to 24 focused tasks, spaced abou
 
 The planned end-to-end experience is a student asking in Hindi, English, or Hinglish for a short explanation, then asking the tutor to quiz them. The target system will speak its answer, ground explanations in a small checked corpus, score spoken answers against a rubric, and save progress.
 
-A central voice-engineering challenge is interruption handling. When a student speaks while audio is playing, the tutor should stop playback, cancel the old generation, preserve conversation context, and ignore late results from the interrupted turn. The current client keeps an interrupted pending question with an explicit interruption note for the next turn; provider-side generation cancellation remains incomplete. The project also aims to compare speech configurations on the same examples and report measured quality and latency, including failure cases.
+A central voice-engineering challenge is interruption handling. When a student speaks while audio is playing, the tutor should stop playback, cancel the old generation, preserve conversation context, and ignore late results from the interrupted turn. The current client keeps an interrupted pending question with an explicit interruption note for the next turn and the server quietly handles the resulting disconnected socket; provider-side generation cancellation remains incomplete. The project also aims to compare speech configurations on the same examples and report measured quality and latency, including failure cases.
 
 ## Target architecture
 

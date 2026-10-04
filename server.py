@@ -61,8 +61,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         self.send_header("X-Content-Type-Options", "nosniff")
         if self.path == "/":
             self._send_session_cookie_if_needed()
-        self.end_headers()
-        self.wfile.write(payload)
+        self._finish_response(payload)
 
     def do_DELETE(self) -> None:
         self._ensure_browser_session()
@@ -275,8 +274,15 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         self.send_header("X-Content-Type-Options", "nosniff")
         if include_session_cookie:
             self._send_session_cookie_if_needed()
-        self.end_headers()
-        self.wfile.write(encoded)
+        self._finish_response(encoded)
+
+    def _finish_response(self, payload: bytes) -> None:
+        """Finish writing unless the client disconnected before the response completed."""
+        try:
+            self.end_headers()
+            self.wfile.write(payload)
+        except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
+            pass
 
     def log_message(self, format: str, *args: Any) -> None:
         print(f"{self.address_string()} - {format % args}")

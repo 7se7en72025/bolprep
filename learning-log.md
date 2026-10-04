@@ -279,3 +279,9 @@
 
 - Added actionable messages for common synthesis errors: a busy audio device, blocked playback, unavailable language/voice/engine, and utterances that are too long. Unknown browser error codes remain visible with a readable-answer fallback.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Device-specific synthesis errors still need manual browser confirmation.
+
+
+## Handle client disconnects during response writes - 2026-10-05
+
+- JSON and static response bodies now ignore the socket errors associated with a client that disconnected before the server finished writing. This keeps normal browser cancellation from producing a server traceback; it does not stop an in-flight provider request.
+- Verification: parsed `server.py` with Python's AST parser and ran `git diff --check`. A real network-abort check was not run.
