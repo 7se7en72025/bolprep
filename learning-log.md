@@ -217,3 +217,9 @@
 
 - Browser recognition can place more text in the composer than its manual-entry `maxlength`, particularly because transcripts are assigned from JavaScript. Form submission now checks the active question/quiz-answer limit and keeps overlong text available for editing with a clear status message.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Transcript editing behavior needs manual browser confirmation.
+
+
+## Support the Windows Python launcher - 2026-10-05
+
+- The local setup script now falls back to `py -3` when `python` is not on PATH, while keeping the same Python 3.11 minimum check and virtual-environment setup.
+- Verification: parsed the PowerShell script for syntax errors and ran `git diff --check`. End-to-end setup with a py-only installation still needs a Windows machine where that exact configuration is available.

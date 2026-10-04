@@ -13,7 +13,7 @@ For the original input/function/output exercise, see [step0.py](step0.py). For t
 
 ## Run the text tutor
 
-On Windows with Python 3.11 or later, start the complete local setup with one command from the project folder:
+On Windows with Python 3.11 or later (`python` or the Windows `py` launcher), start the complete local setup with one command from the project folder:
 
 ```powershell
 .\tools\run-local.ps1
