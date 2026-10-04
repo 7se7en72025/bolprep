@@ -1,5 +1,12 @@
 # Learning log
 
+## Add arrest safeguards to checked corpus and quiz — 2026-10-05
+
+- Changed: added a Hindi, Hinglish, and English Article 22 note and a rubric question covering selected ordinary-arrest safeguards. The note scopes itself to clauses (1)–(3) and states that clauses (4)–(7)'s preventive-detention safeguards are not summarized.
+- Source: checked the official Constitution text published by the Legislative Department, Government of India, at the recorded source URL for Article 22(1)–(3).
+- Verification: both JSON files parse successfully and `git diff --check` passes. The retrieval evaluation and browser quiz were not run.
+- Limitation: this small note is not legal advice, does not cover the article's full preventive-detention framework, and is not added to the constructed retrieval examples in this change.
+
 ## Select a supported Windows Python launcher — 2026-10-05
 
 - Changed: the one-command Windows setup now probes `python` and the `py` launcher and uses the first interpreter at Python 3.11 or later. An older `python` on PATH no longer blocks a supported `py` runtime.

@@ -121,5 +121,29 @@
       "section": "Part III, Article 21A",
       "checked_on": "2026-10-04"
     }
+  },
+  {
+    "id": "article-22",
+    "title": "Article 22 — Protection against arrest and detention",
+    "title_hi": "अनुच्छेद 22 — गिरफ्तारी और निरोध के विरुद्ध संरक्षण",
+    "title_hinglish": "Article 22 — arrest aur detention se protection",
+    "summary": "Article 22(1) requires that an arrested person be informed of the grounds of arrest as soon as may be and allows consultation with, and defence by, a lawyer of their choice. Under Article 22(2), an arrested person must be produced before the nearest magistrate within 24 hours, excluding journey time; detention beyond that period requires a magistrate's authority. Clause (3) provides exceptions to clauses (1) and (2), including enemy aliens and people arrested or detained under a preventive detention law. This note does not explain the separate preventive detention safeguards in clauses (4) to (7).",
+    "summary_hi": "अनुच्छेद 22(1) के अनुसार, गिरफ्तार व्यक्ति को गिरफ्तारी के कारण जल्द बताए जाने चाहिए और उसे अपनी पसंद के वकील से सलाह लेने तथा बचाव करने का अधिकार है। अनुच्छेद 22(2) के अनुसार, यात्रा का समय छोड़कर, उसे गिरफ्तारी के 24 घंटे के भीतर निकटतम मजिस्ट्रेट के सामने पेश करना होगा; इसके बाद हिरासत के लिए मजिस्ट्रेट की अनुमति चाहिए। खंड (3) में खंड (1) और (2) के अपवाद हैं, जिनमें शत्रु विदेशी और निवारक निरोध के कानून के अंतर्गत गिरफ्तार या हिरासत में लिए गए लोग शामिल हैं। यह नोट खंड (4) से (7) के निवारक निरोध संबंधी अलग नियम नहीं समझाता।",
+    "summary_hinglish": "Article 22(1) ke mutabik arrested person ko arrest ke grounds jaldi batane chahiye, aur use apni choice ke lawyer se consult aur defend karne ka right hai. Article 22(2) ke under, journey time ko chhodkar, arrest ke 24 hours ke andar nearest magistrate ke saamne produce karna hota hai; uske baad custody ke liye magistrate ki authority chahiye. Clause (3), clauses (1) aur (2) ke exceptions deta hai, including enemy aliens aur preventive detention law ke under arrested ya detained log. Yeh note clauses (4) se (7) ke separate preventive detention safeguards explain nahi karta.",
+    "keywords": [
+      "fundamental rights", "right against arrest", "arrest safeguards", "arrested person",
+      "grounds of arrest", "lawyer of choice", "legal practitioner", "consult a lawyer",
+      "nearest magistrate", "24 hours", "detention", "custody", "preventive detention",
+      "article 22", "art 22", "arrest rights", "giraftari", "giraftari ke karan",
+      "vakil", "apni pasand ka vakil", "maijistret", "24 ghante", "hirasat",
+      "nivaraka nirodh", "गिरफ्तारी", "गिरफ्तारी के कारण", "वकील", "मजिस्ट्रेट",
+      "24 घंटे", "हिरासत", "निवारक निरोध"
+    ],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 22(1)–(3)",
+      "checked_on": "2026-10-05"
+    }
   }
 ]

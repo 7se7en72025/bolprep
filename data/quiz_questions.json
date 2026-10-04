@@ -164,5 +164,58 @@
       "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
       "section": "Part III, Article 21"
     }
+  },
+  {
+    "id": "art22_arrest_safeguards",
+    "topic": "fundamental rights",
+    "prompt": "Article 22(1)-(2) mein arrest ke do safeguards kya hain?",
+    "prompt_en": "Name two safeguards for an arrested person under Article 22(1)-(2).",
+    "minimum_concepts": 2,
+    "concepts": [
+      {
+        "label": "grounds of arrest are communicated",
+        "label_hi": "गिरफ्तारी के कारण बताए जाते हैं",
+        "label_hinglish": "arrest ke grounds bataye jaate hain",
+        "aliases": [
+          "grounds of arrest",
+          "reasons for arrest",
+          "arrest ke grounds",
+          "giraftari ke karan",
+          "गिरफ्तारी के कारण"
+        ]
+      },
+      {
+        "label": "consult and be defended by a lawyer of choice",
+        "label_hi": "अपनी पसंद के वकील से सलाह और बचाव",
+        "label_hinglish": "apni pasand ke lawyer se salah aur defence",
+        "aliases": [
+          "lawyer of choice",
+          "legal practitioner of choice",
+          "consult a lawyer",
+          "apni pasand ka vakil",
+          "apni choice ke lawyer",
+          "अपनी पसंद के वकील"
+        ]
+      },
+      {
+        "label": "production before a magistrate within 24 hours",
+        "label_hi": "24 घंटे में मजिस्ट्रेट के सामने पेशी",
+        "label_hinglish": "24 ghante mein magistrate ke saamne pesh karna",
+        "aliases": [
+          "nearest magistrate within 24 hours",
+          "within twenty four hours",
+          "produced before a magistrate",
+          "24 hours ke andar magistrate",
+          "24 ghante ke andar magistrate",
+          "24 घंटे के भीतर मजिस्ट्रेट",
+          "निकटतम मजिस्ट्रेट"
+        ]
+      }
+    ],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 22(1)–(2)"
+    }
   }
 ]
