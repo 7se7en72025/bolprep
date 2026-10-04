@@ -12,8 +12,10 @@ CORPUS_PATH = Path(__file__).resolve().parent / "data" / "fundamental_rights.jso
 STOPWORDS = {
     "a", "about", "an", "and", "are", "can", "explain", "for", "hai", "hain",
     "ho", "how", "in", "is", "ka", "ke", "ki", "kya", "me", "mein", "of",
-    "article", "art", "does", "please", "tell", "the", "to", "what", "who", "why", "ya", "ye", "your",
+    "article", "art", "does", "please", "tell", "the", "to", "what", "who", "which", "why", "ya", "ye", "your",
+    "right", "rights", "fundamental", "freedom", "freedoms", "adhikar", "adhikaar",
 }
+GENERIC_ARTICLE_QUERY_TOKENS = {"cover", "protect", "guarantee", "list", "mean", "say", "karta", "karti"}
 
 
 def _tokens(text: str) -> set[str]:
@@ -58,7 +60,15 @@ def retrieve(question: str, limit: int = 3) -> list[dict[str, Any]]:
     if not isinstance(question, str) or not question.strip() or limit < 1:
         return []
 
-    query_tokens = _tokens(question)
+    query_tokens = {token for token in _tokens(question) if not token.isdigit()}
+    normalized_question = question.casefold()
+    if any(phrase in normalized_question for phrase in ("fundamental rights", "मौलिक अधिकार", "maulik adhikar")):
+        return load_corpus()[:limit]
+
+    informative_tokens = {
+        token for token in query_tokens
+        if token not in GENERIC_ARTICLE_QUERY_TOKENS and not token.isdigit()
+    }
     scored: list[tuple[int, dict[str, Any]]] = []
     for document in load_corpus():
         keyword_tokens = _tokens(" ".join(document["keywords"]))
@@ -66,7 +76,9 @@ def retrieve(question: str, limit: int = 3) -> list[dict[str, Any]]:
         score = 2 * len(query_tokens & keyword_tokens) + len(query_tokens & body_tokens)
         article_id = document["id"].removeprefix("article-")
         if re.search(rf"\b(?:article|art)\s*[-.]?\s*{re.escape(article_id)}\b", question, re.IGNORECASE):
-            score += 12
+            topic_match = bool(informative_tokens & (keyword_tokens | body_tokens))
+            if topic_match or not informative_tokens:
+                score += 12
         if score >= 2:
             scored.append((score, document))
 

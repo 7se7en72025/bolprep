@@ -7,7 +7,7 @@ BolPrep is a beginner-built portfolio project for learning how to make a Hindi a
 
 **Implemented:** Step 0's fixed-answer Python exercise and a local browser tutor prototype. It accepts typed questions, retrieves a matching note from a checked three-article corpus, links the Constitution source, can use a configured OpenAI model through a small Python server, and speaks answers with the browser's built-in speech synthesis. Where the browser supports it, speech recognition can fill the question box. It also has a three-question quiz using checked questions and deterministic rubric scoring. Without an API key, the tutor summarizes retrieved notes in a clearly labeled offline mode.
 
-**Not implemented yet:** retrieval evaluation, LLM-directed tool calling, permanent progress storage, streaming voice, robust interruption/cancellation at the model provider, and benchmarks. Quiz scoring matches rubric phrases and does not interpret meaning; scores are not saved. Browser speech recognition support varies by browser and device. There are no measured voice-quality or latency results. The starter corpus covers only Articles 14, 19, and 21; unsupported questions should receive an insufficient-evidence response.
+**Not implemented yet:** LLM-directed tool calling, permanent progress storage, streaming voice, robust interruption/cancellation at the model provider, and speech quality/latency benchmarks. Quiz scoring matches rubric phrases and does not interpret meaning; scores are not saved. Browser speech recognition support varies by browser and device. The starter corpus covers only Articles 14, 19, and 21; unsupported questions should receive an insufficient-evidence response.
 
 For the original input/function/output exercise, see [step0.py](step0.py). For the current learning notes, see [learning-log.md](learning-log.md).
 
@@ -70,7 +70,11 @@ The current prototype uses a Python standard-library HTTP server and plain HTML,
 
 ## Starter study corpus
 
-The first corpus contains short summaries for Articles 14, 19, and 21, each with article-level source metadata. The source is the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-04. Retrieval uses keyword overlap with a boost for an explicitly named article number. Hindi and Hinglish aliases are included. This is a transparent lexical baseline; retrieval recall and answer quality have not yet been evaluated.
+The first corpus contains short summaries for Articles 14, 19, and 21, each with article-level source metadata. The source is the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-04. Retrieval uses keyword overlap with a guarded boost for an explicitly named article number. Hindi and Hinglish aliases are included. Run `python evals/run_retrieval_eval.py` for the labeled text baseline. It contains 17 constructed English, Hindi, and Hinglish examples; this is a small regression set, not a measure of real learner or speech performance.
+
+```powershell
+python evals/run_retrieval_eval.py
+```
 
 ## Roadmap
 

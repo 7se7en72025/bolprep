@@ -33,6 +33,15 @@ class RetrievalTests(unittest.TestCase):
     def test_uncovered_question_returns_no_notes(self):
         self.assertEqual(retrieve("Who is the current prime minister?"), [])
 
+    def test_explicit_article_does_not_cover_missing_topic(self):
+        self.assertEqual(retrieve("Does Article 21 guarantee privacy?"), [])
+
+    def test_broad_hindi_fundamental_rights_returns_starter_notes(self):
+        self.assertEqual(
+            {document["id"] for document in retrieve("मौलिक अधिकार क्या हैं?")},
+            {"article-14", "article-19", "article-21"},
+        )
+
     def test_corpus_sources_are_linkable_and_checked(self):
         documents = load_corpus()
         self.assertEqual(len(documents), 3)

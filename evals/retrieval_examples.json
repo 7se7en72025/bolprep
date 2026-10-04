@@ -1,0 +1,19 @@
+[
+  {"id": "en-equality", "language": "English", "question": "What does equality before the law mean under Article 14?", "expected_doc_ids": ["article-14"]},
+  {"id": "en-speech", "language": "English", "question": "Which freedoms does Article 19 list?", "expected_doc_ids": ["article-19"]},
+  {"id": "en-liberty", "language": "English", "question": "What does Article 21 say about personal liberty?", "expected_doc_ids": ["article-21"]},
+  {"id": "en-broad", "language": "English", "question": "Explain fundamental rights from the starter notes.", "expected_doc_ids": ["article-14", "article-19", "article-21"]},
+  {"id": "en-outside-domain", "language": "English", "question": "Who won the last cricket world cup?", "expected_doc_ids": []},
+  {"id": "en-uncovered-article-detail", "language": "English", "question": "Does Article 21 guarantee privacy?", "expected_doc_ids": []},
+  {"id": "hi-equality", "language": "Hindi", "question": "समानता का अधिकार किस अनुच्छेद में है?", "expected_doc_ids": ["article-14"]},
+  {"id": "hi-speech", "language": "Hindi", "question": "अनुच्छेद 19 में बोलने की आज़ादी क्या है?", "expected_doc_ids": ["article-19"]},
+  {"id": "hi-liberty", "language": "Hindi", "question": "अनुच्छेद 21 जीवन और व्यक्तिगत स्वतंत्रता की रक्षा कैसे करता है?", "expected_doc_ids": ["article-21"]},
+  {"id": "hi-broad", "language": "Hindi", "question": "मौलिक अधिकार क्या हैं?", "expected_doc_ids": ["article-14", "article-19", "article-21"]},
+  {"id": "hi-outside-domain", "language": "Hindi", "question": "क्रिकेट विश्व कप किसने जीता?", "expected_doc_ids": []},
+  {"id": "hinglish-equality", "language": "Hinglish", "question": "Article 14 me barabari ka kya matlab hai?", "expected_doc_ids": ["article-14"]},
+  {"id": "hinglish-speech", "language": "Hinglish", "question": "Article 19 mein bolne ki azaadi ka kya meaning hai?", "expected_doc_ids": ["article-19"]},
+  {"id": "hinglish-liberty", "language": "Hinglish", "question": "Article 21 jeevan aur personal liberty ko protect karta hai?", "expected_doc_ids": ["article-21"]},
+  {"id": "hinglish-broad", "language": "Hinglish", "question": "Fundamental rights samjhao", "expected_doc_ids": ["article-14", "article-19", "article-21"]},
+  {"id": "hinglish-outside-domain", "language": "Hinglish", "question": "Delhi ka current weather kya hai?", "expected_doc_ids": []},
+  {"id": "hinglish-uncovered-article-detail", "language": "Hinglish", "question": "Article 21 privacy ka right guarantee karta hai kya?", "expected_doc_ids": []}
+]
