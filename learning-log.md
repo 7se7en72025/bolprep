@@ -99,3 +99,9 @@
 
 - When the browser does not expose speech synthesis, the tutor now leaves the answer readable and says clearly that audio playback is unavailable instead of silently skipping speech.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Actual device support still needs browser QA.
+
+
+## Hindi rubric tokenization: 2026-10-04
+
+- Changed answer tokenization to preserve Unicode combining marks and normalize text before phrase matching. This keeps Devanagari words intact during quiz scoring; added the Hindi label for Article 14's equal-protection concept as an accepted answer phrase.
+- A direct pre-change diagnostic showed a Hindi word being split into partial tokens by the previous `\w` expression. Reviewed the new tokenizer path and the JSON rubric change; no test suite was run in this turn.

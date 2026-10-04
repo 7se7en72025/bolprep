@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import random
 import re
+import unicodedata
 from pathlib import Path
 from typing import Any
 
@@ -90,7 +91,18 @@ def start_quiz(
 
 
 def _answer_tokens(answer: str) -> list[str]:
-    return re.findall(r"[\w]+", answer.casefold(), flags=re.UNICODE)
+    """Keep Unicode combining marks attached so Hindi phrases stay whole."""
+    tokens: list[str] = []
+    current: list[str] = []
+    for character in unicodedata.normalize("NFC", answer.casefold()):
+        if character.isalnum() or unicodedata.category(character).startswith("M"):
+            current.append(character)
+        elif current:
+            tokens.append("".join(current))
+            current.clear()
+    if current:
+        tokens.append("".join(current))
+    return tokens
 
 
 def _contains_phrase(answer_tokens: list[str], phrase: str) -> bool:
