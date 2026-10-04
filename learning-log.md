@@ -144,3 +144,9 @@
 
 - SpeechRecognition exposes the full result list on each result event; the UI now rebuilds the transcript from all current results instead of dropping earlier segments when `resultIndex` advances.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Incremental event behavior still needs manual browser/microphone verification.
+
+
+## Cancel stale microphone recognition - 2026-10-05
+
+- Starting another tutor action now aborts active browser recognition and ignores result events after cancellation. Clearing a conversation also clears its unsent transcript so delayed STT callbacks cannot repopulate the composer.
+- Microphone start failures restore the button and listening state. Verification: `node --check web/app.js` and `git diff --check` pass; cancellation timing still needs manual browser/device verification.

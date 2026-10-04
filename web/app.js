@@ -29,6 +29,7 @@ const history = [];
 let activeRequest = null;
 let recognition = null;
 let recognitionAvailable = false;
+let recognitionListening = false;
 let recognitionStartedAt = null;
 let recognitionHadFinalResult = false;
 let matchingSpeechVoices = [];
@@ -66,11 +67,22 @@ function addMessage(role, text, sources = []) {
   conversation.scrollTop = conversation.scrollHeight;
 }
 
+function stopRecognition() {
+  recognitionListening = false;
+  if (!recognition) return;
+  try {
+    recognition.abort();
+  } catch {
+    // The recognizer may already have ended between UI events.
+  }
+}
+
 function stopTutor() {
   speechTurn += 1;
   window.speechSynthesis?.cancel();
   activeRequest?.abort();
   activeRequest = null;
+  stopRecognition();
   turn += 1;
   sendButton.disabled = false;
 }
@@ -336,6 +348,7 @@ document.querySelector("#clear-button").addEventListener("click", () => {
   stopTutor();
   quizSession = null;
   history.length = 0;
+  input.value = "";
   conversation.replaceChildren();
   addMessage("assistant", "Namaste! Fundamental Rights ke baare mein kya jaan-na hai?");
   nextQuestionButton.hidden = true;
@@ -401,12 +414,17 @@ if (SpeechRecognition) {
   recognition.interimResults = true;
   recognition.continuous = false;
   recognition.onstart = () => {
+    if (!recognitionListening) {
+      recognition.abort();
+      return;
+    }
     micButton.disabled = true;
     recognitionStartedAt = performance.now();
     recognitionHadFinalResult = false;
     statusLine.textContent = "Listening… speak now.";
   };
   recognition.onresult = (event) => {
+    if (!recognitionListening) return;
     let transcript = "";
     for (let i = 0; i < event.results.length; i += 1) {
       transcript += event.results[i][0].transcript;
@@ -418,8 +436,11 @@ if (SpeechRecognition) {
     }
     input.value = transcript.trim();
   };
-  recognition.onerror = (event) => { statusLine.textContent = `Microphone issue: ${event.error}. You can type instead.`; };
+  recognition.onerror = (event) => {
+    if (recognitionListening) statusLine.textContent = `Microphone issue: ${event.error}. You can type instead.`;
+  };
   recognition.onend = () => {
+    recognitionListening = false;
     micButton.disabled = false;
     if (!recognitionHadFinalResult && statusLine.textContent === "Listening… speak now.") {
       statusLine.textContent = "No final transcript was received. You can type instead.";
@@ -434,7 +455,15 @@ micButton.addEventListener("click", () => {
   if (!recognition) return;
   stopTutor();
   window.speechSynthesis?.cancel();
-  try { recognition.start(); } catch { statusLine.textContent = "Microphone is already starting. Please wait a moment."; }
+  recognitionListening = true;
+  micButton.disabled = true;
+  try {
+    recognition.start();
+  } catch {
+    recognitionListening = false;
+    micButton.disabled = false;
+    statusLine.textContent = "Microphone is already starting. Please wait a moment.";
+  }
 });
 
 fetch("/health").then((response) => response.json()).then((health) => {
