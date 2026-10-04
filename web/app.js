@@ -8,6 +8,7 @@ const stopButton = document.querySelector("#stop-button");
 const modeLabel = document.querySelector("#mode-label");
 const speechLanguage = document.querySelector("#speech-language");
 const speechVoice = document.querySelector("#speech-voice");
+const inputLabel = document.querySelector('label[for="question-input"]');
 const previewVoiceButton = document.querySelector("#preview-voice");
 const copySpeechDiagnosticsButton = document.querySelector("#copy-speech-diagnostics");
 const downloadSpeechDiagnosticsButton = document.querySelector("#download-speech-diagnostics");
@@ -470,6 +471,7 @@ function showQuizQuestion(speakPrompt = true) {
   quizSession.awaitingAnswer = true;
   nextQuestionButton.hidden = true;
   sendLabel.textContent = "Submit answer";
+  inputLabel.textContent = "Your quiz answer";
   input.maxLength = 1000;
   input.placeholder = "Speak or type your answer…";
   addMessage("assistant", `Question ${quizSession.index + 1} of ${quizSession.questions.length}: ${current.prompt}`, [current.source]);
@@ -508,6 +510,7 @@ async function submitQuizAnswer(answer) {
       const totalQuestions = quizSession.questions.length;
       quizSession = null;
       sendLabel.textContent = "Ask tutor";
+      inputLabel.textContent = "Your question";
       input.placeholder = "Type a question… e.g. Right to Equality kya hai?";
       statusLine.textContent = `Quiz complete: ${completeCount} of ${totalQuestions} answers covered the rubric. Results are saved for this browser.`;
       speak(feedback, statusLine.textContent);
@@ -571,6 +574,7 @@ document.querySelector("#clear-button").addEventListener("click", () => {
   addMessage("assistant", "Namaste! Fundamental Rights ke baare mein kya jaan-na hai?");
   nextQuestionButton.hidden = true;
   sendLabel.textContent = "Ask tutor";
+  inputLabel.textContent = "Your question";
   input.maxLength = 1200;
   input.placeholder = "Type a question… e.g. Right to Equality kya hai?";
   statusLine.textContent = "New session started.";

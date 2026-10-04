@@ -1,5 +1,11 @@
 # Learning log
 
+## Match the accessible input label to quiz mode — 2026-10-05
+
+- Changed: the question box's screen-reader label now changes to "Your quiz answer" when a quiz question is active, then returns to "Your question" when the quiz finishes or a new session starts.
+- Verification: `node --check web/app.js` and `git diff --check` pass. No test suite was run.
+- Limitation: screen-reader behavior was not exercised with assistive technology in this run.
+
 ## Preserve quiz answers when scoring fails — 2026-10-05
 
 - Changed: if quiz scoring fails after submission, the answer is restored to the input and focus returns there so the learner can retry without retyping.
