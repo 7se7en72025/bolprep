@@ -215,6 +215,19 @@ function recognitionTimingSummary(language) {
   return `STT ${language}: ${summary}, failures=${matchingFailures.length}.`;
 }
 
+function speechErrorMessage(error) {
+  const messages = {
+    "audio-busy": "Audio output is busy. Close another app using audio, then try again.",
+    "language-unavailable": "No speech voice is available for this language. Choose another installed voice or read the answer above.",
+    "not-allowed": "The browser blocked speech playback. Try the voice preview or read the answer above.",
+    "synthesis-failed": "The browser could not synthesize this answer. Read it above or try another voice.",
+    "synthesis-unavailable": "No speech engine is available in this browser. Read the answer above.",
+    "text-too-long": "This answer is too long for the browser to speak in one pass. Read it above.",
+    "voice-unavailable": "The selected voice is unavailable. Choose another installed voice or use Browser default.",
+  };
+  return messages[error] || `Speech playback failed (${error || "unknown error"}). Read the answer above.`;
+}
+
 function speak(text, completionText = "Ready when you are.", kind = "tutor") {
   if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
     statusLine.textContent = "Speech playback is not available in this browser. Read the answer above.";
@@ -259,11 +272,11 @@ function speak(text, completionText = "Ready when you are.", kind = "tutor") {
     statusLine.textContent = `${completionText} This run: start ${startDelay}s, playback ${playbackDuration}s. `
       + speechTimingSummary(sample);
   };
-  utterance.onerror = () => {
+  utterance.onerror = (event) => {
     if (requestSpeechTurn !== speechTurn) return;
     speechFailures.push({ ...sample });
     if (speechFailures.length > 500) speechFailures.shift();
-    statusLine.textContent = `Speech playback failed. Read the answer above. ${speechTimingSummary(sample)}`;
+    statusLine.textContent = `${speechErrorMessage(event.error)} ${speechTimingSummary(sample)}`;
   };
   window.speechSynthesis.speak(utterance);
 }

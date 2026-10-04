@@ -115,7 +115,7 @@ The intended story is to pair multilingual speech infrastructure work with a sep
 - Use consented, legally usable study material and evaluation recordings.
 - Document the evaluation sample, configuration, results, and known limitations.
 - Use the [browser voice run sheet](evals/voice-run-sheet.md) for repeatable manual STT/TTS checks; its timing and listener notes are diagnostics, not broad performance claims.
-- TTS timing summaries include failed browser playback events grouped by language, voice, and sample type. Counts and timings stay in page memory and clear on reload; failure details, speech text, and audio are not retained.
+- TTS timing summaries include failed browser playback events grouped by language, voice, and sample type. Common browser error codes show a suggested next step. Counts and timings stay in page memory and clear on reload; error details, speech text, and audio are not retained in the metrics.
 - STT timing summaries include failed or empty recognition attempts grouped by language. Deliberate stops and language-change cancellations are excluded; transcript text is not retained by the metrics.
 - The microphone control switches to **Stop** while recognition is active, so learners can end capture and review the transcript before sending it.
 - Common speech-recognition failures now explain a next step, such as allowing microphone access or checking for a connected microphone; unknown browser errors remain visible with a typing fallback.

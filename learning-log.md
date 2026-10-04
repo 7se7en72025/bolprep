@@ -273,3 +273,9 @@
 - Tutor request failures now retain the learner's question and a neutral failure note in the same bounded context used for interrupted turns. Follow-up questions can refer to the failed request without receiving the browser's raw network/provider error as model context.
 - Successful, failed, and interrupted turns now use one helper to keep the context window capped at 20 messages.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Error and retry behavior needs browser verification.
+
+
+## Explain common browser TTS failures - 2026-10-05
+
+- Added actionable messages for common synthesis errors: a busy audio device, blocked playback, unavailable language/voice/engine, and utterances that are too long. Unknown browser error codes remain visible with a readable-answer fallback.
+- Verification: `node --check web/app.js` and `git diff --check` pass. Device-specific synthesis errors still need manual browser confirmation.
