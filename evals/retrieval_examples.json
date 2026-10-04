@@ -24,5 +24,9 @@
   {"id": "hinglish-public-jobs", "language": "Hinglish", "question": "Article 16 sarkari naukri mein equal opportunity deta hai?", "expected_doc_ids": ["article-16"]},
   {"id": "hinglish-education", "language": "Hinglish", "question": "Article 21A mein free education kis age ke bachchon ko milti hai?", "expected_doc_ids": ["article-21a"]},
   {"id": "hinglish-outside-domain", "language": "Hinglish", "question": "Delhi ka current weather kya hai?", "expected_doc_ids": []},
-  {"id": "hinglish-uncovered-article-detail", "language": "Hinglish", "question": "Article 21 privacy ka right guarantee karta hai kya?", "expected_doc_ids": []}
+  {"id": "hinglish-uncovered-article-detail", "language": "Hinglish", "question": "Article 21 privacy ka right guarantee karta hai kya?", "expected_doc_ids": []},
+  {"id": "hinglish-art14-roman-variant", "language": "Hinglish", "question": "Art 14 mein samanta before law ka matlab kya hai?", "expected_doc_ids": ["article-14"]},
+  {"id": "hinglish-art16-code-switch", "language": "Hinglish", "question": "Article 16 mein सरकारी नौकरी ke liye equal opportunity kya hai?", "expected_doc_ids": ["article-16"]},
+  {"id": "hinglish-art19-devanagari-switch", "language": "Hinglish", "question": "Article 19 में speech and expression ki आज़ादी kya hai?", "expected_doc_ids": ["article-19"]},
+  {"id": "hinglish-art21a-ages", "language": "Hinglish", "question": "Article 21A mein 6 se 14 age ke children ke liye kaunsi shiksha hai?", "expected_doc_ids": ["article-21a"]}
 ]

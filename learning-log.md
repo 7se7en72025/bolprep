@@ -321,3 +321,9 @@
 
 - Added a Download JSON action beside Copy JSON. It saves a timestamped file locally, while copy failures now direct the learner to the download option.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Browser download handling and small-screen layout need manual review.
+
+
+## Add code-switched retrieval examples - 2026-10-05
+
+- Added four labeled examples for Roman article-number variants, Hindi/English code-switching, Devanagari insertions in Hinglish, and Article 21A age/education wording. Updated the README's constructed retrieval-set size to 30.
+- Verification: parsed the JSON and checked IDs and expected note IDs against the current corpus; the retrieval evaluation itself was not run.
