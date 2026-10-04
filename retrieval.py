@@ -60,9 +60,11 @@ def load_corpus(path: Path = CORPUS_PATH) -> list[dict[str, Any]]:
         if (
             not isinstance(source, dict)
             or not isinstance(source.get("title"), str)
+            or not source["title"].strip()
             or not isinstance(source.get("url"), str)
             or not source["url"].startswith("https://")
             or not isinstance(source.get("section"), str)
+            or not source["section"].strip()
         ):
             raise ValueError(f"Study note {document['id']} has invalid source metadata.")
         checked_on = source.get("checked_on")
@@ -76,15 +78,18 @@ def load_corpus(path: Path = CORPUS_PATH) -> list[dict[str, Any]]:
             raise ValueError(
                 f"Study note {document['id']} needs a non-future source checked_on date (YYYY-MM-DD)."
             ) from None
+        text_fields = (
+            "title", "title_hi", "title_hinglish", "summary", "summary_hi", "summary_hinglish"
+        )
+        if not all(
+            isinstance(document[field], str) and document[field].strip()
+            for field in text_fields
+        ):
+            raise ValueError(f"Study note {document['id']} needs non-empty text in every language.")
         if (
-            not isinstance(document["id"], str)
-            or not isinstance(document["title"], str)
-            or not all(
-                isinstance(document[field], str)
-                for field in ("summary", "summary_hi", "summary_hinglish", "title_hi", "title_hinglish")
-            )
-            or not isinstance(document["keywords"], list)
-            or not all(isinstance(keyword, str) for keyword in document["keywords"])
+            not isinstance(document["keywords"], list)
+            or not document["keywords"]
+            or not all(isinstance(keyword, str) and keyword.strip() for keyword in document["keywords"])
         ):
             raise ValueError("Study note fields have invalid types.")
     return documents

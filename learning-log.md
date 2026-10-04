@@ -1,5 +1,11 @@
 # Learning log
 
+## Reject empty study-note content — 2026-10-05
+
+- Changed: corpus loading now rejects blank localized titles or summaries, empty keyword lists or entries, and blank source titles or sections.
+- Verification: Python syntax compilation and `git diff --check` pass. No test suite or retrieval evaluation was run.
+- Limitation: field validation confirms usable text is present, not that translations are accurate or summaries exhaustively represent the source.
+
 ## Add arrest safeguards to checked corpus and quiz — 2026-10-05
 
 - Changed: added a Hindi, Hinglish, and English Article 22 note and a rubric question covering selected ordinary-arrest safeguards. The note scopes itself to clauses (1)–(3) and states that clauses (4)–(7)'s preventive-detention safeguards are not summarized.
