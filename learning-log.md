@@ -297,3 +297,9 @@
 
 - When no installed voice matches the selected language, the voice selector now labels Browser default with the unavailable language. Its helper text explains that the browser may use a voice for another language instead of implying a matching voice was found.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Actual voice availability and browser fallback behavior still need device testing.
+
+
+## Export page-local speech diagnostics - 2026-10-05
+
+- Added a collapsible Speech diagnostics panel with a copy action that exports grouped STT/TTS success counts, failure counts, and nearest-rank p50/p95 timings in seconds as JSON, ready to transfer to the run sheet. Empty groups use `null` percentiles; the export contains no transcript text or audio.
+- Verification: `node --check web/app.js` and `git diff --check` pass. Clipboard access and responsive layout need manual browser review.

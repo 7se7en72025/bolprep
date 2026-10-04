@@ -9,6 +9,7 @@ const modeLabel = document.querySelector("#mode-label");
 const speechLanguage = document.querySelector("#speech-language");
 const speechVoice = document.querySelector("#speech-voice");
 const previewVoiceButton = document.querySelector("#preview-voice");
+const copySpeechDiagnosticsButton = document.querySelector("#copy-speech-diagnostics");
 const speechPreferencesKey = "bolprep-speech-preferences";
 let speechPreferences = {};
 try {
@@ -228,6 +229,75 @@ function speechErrorMessage(error) {
   };
   return messages[error] || `Speech playback failed (${error || "unknown error"}). Read the answer above.`;
 }
+
+function buildSpeechDiagnostics() {
+  const ttsGroups = new Map();
+  const getTtsGroup = (sample) => {
+    const key = JSON.stringify([sample.language, sample.voice, sample.kind]);
+    if (!ttsGroups.has(key)) {
+      ttsGroups.set(key, {
+        language: sample.language,
+        voice: sample.voice,
+        sample_type: sample.kind,
+        completed: [],
+        failures: 0,
+      });
+    }
+    return ttsGroups.get(key);
+  };
+  speechSamples.forEach((sample) => getTtsGroup(sample).completed.push(sample));
+  speechFailures.forEach((sample) => { getTtsGroup(sample).failures += 1; });
+
+  const sttGroups = new Map();
+  const getSttGroup = (language) => {
+    if (!sttGroups.has(language)) sttGroups.set(language, { language, completed: [], failures: 0 });
+    return sttGroups.get(language);
+  };
+  recognitionSamples.forEach((sample) => getSttGroup(sample.language).completed.push(sample));
+  recognitionFailures.forEach((sample) => { getSttGroup(sample.language).failures += 1; });
+
+  const percentiles = (values) => values.length
+    ? {
+      p50_s: Number((percentile(values, 0.5) / 1000).toFixed(2)),
+      p95_s: Number((percentile(values, 0.95) / 1000).toFixed(2)),
+    }
+    : { p50_s: null, p95_s: null };
+  const tts = [...ttsGroups.values()]
+    .sort((left, right) => `${left.language}|${left.sample_type}|${left.voice}`
+      .localeCompare(`${right.language}|${right.sample_type}|${right.voice}`))
+    .map((group) => ({
+      language: group.language,
+      voice: group.voice,
+      sample_type: group.sample_type,
+      completed_count: group.completed.length,
+      failure_count: group.failures,
+      start_delay: percentiles(group.completed.map((sample) => sample.startMs)),
+      playback_duration: percentiles(group.completed.map((sample) => sample.playbackMs)),
+    }));
+  const stt = [...sttGroups.values()]
+    .sort((left, right) => left.language.localeCompare(right.language))
+    .map((group) => ({
+      language: group.language,
+      final_transcript_count: group.completed.length,
+      failed_or_empty_count: group.failures,
+      time_to_first_final: percentiles(group.completed.map((sample) => sample.firstFinalMs)),
+    }));
+  return {
+    scope: "Current page only",
+    privacy: "Timing and failure counts only; no transcript text or audio.",
+    tts,
+    stt,
+  };
+}
+
+copySpeechDiagnosticsButton.addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(buildSpeechDiagnostics(), null, 2));
+    statusLine.textContent = "Current-page speech diagnostics copied. They contain timings and counts only.";
+  } catch {
+    statusLine.textContent = "Could not copy speech diagnostics. Use the browser on localhost or HTTPS, then try again.";
+  }
+});
 
 function speak(text, completionText = "Ready when you are.", kind = "tutor") {
   if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
