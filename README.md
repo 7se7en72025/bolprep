@@ -5,21 +5,36 @@ BolPrep is a beginner-built portfolio project for learning how to make a Hindi a
 
 ## Current status
 
-**Implemented:** Step 0, a small Python program with a function that accepts a question and returns a fixed practice answer. It demonstrates strings, parameters, return values, lists, and loops.
+**Implemented:** Step 0's fixed-answer Python exercise and a local browser tutor prototype. It accepts typed questions, can use a configured OpenAI model through a small Python server, and speaks answers with the browser's built-in speech synthesis. Where the browser supports it, speech recognition can fill the question box. Without an API key, the tutor starts in a clearly labeled offline mode.
 
-**Not implemented yet:** an LLM connection, STT, TTS, browser app, retrieval, quiz tools, database, and benchmarks. There are no measured voice-quality or latency results yet.
+**Not implemented yet:** verified retrieval, quiz tools, progress storage, streaming voice, robust interruption/cancellation at the model provider, and benchmarks. Browser speech recognition support varies by browser and device. There are no measured voice-quality or latency results, and the tutor has no checked study corpus or source citations.
 
-The code is deliberately small so each feature can be built and understood in sequence. For the current learning notes and next task, see [learning-log.md](learning-log.md) and the exercise in [step0.py](step0.py).
+For the original input/function/output exercise, see [step0.py](step0.py). For the current learning notes, see [learning-log.md](learning-log.md).
 
-## Run the current exercise
+## Run the text tutor
 
-Requires Python 3. The current exercise uses only the standard library and needs no API key.
+Requires Python 3.11 or later. From the project folder:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+Copy-Item .env.example .env
+```
+
+Put your API key in `.env` to enable model answers. Keep that file private; it is excluded from Git. The default model can be changed with `OPENAI_MODEL` in `.env`. Start the local server, then open its address in a browser:
+
+```powershell
+python server.py
+```
+
+Open <http://127.0.0.1:8000>. The server binds to localhost and keeps the model key on the server. Browser microphone permission is requested only after you click **Speak**. Press Ctrl+C to stop the web server.
+
+Without an API key, the tutor starts in offline practice mode and clearly says it cannot generate an answer. Type `/quit` to leave. The smaller Step 0 example can still be run with:
 
 ```powershell
 python step0.py
 ```
-
-It prints three different questions and the same fixed answer for each. That is expected: the function currently accepts the input but does not interpret its meaning.
 
 ## Intended voice tutor
 
@@ -27,7 +42,7 @@ The planned end-to-end experience is a student asking in Hindi, English, or Hing
 
 A central voice-engineering challenge is interruption handling. When a student speaks while audio is playing, the tutor should stop playback, cancel the old generation, preserve conversation context, and ignore late results from the interrupted turn. The project also aims to compare speech configurations on the same examples and report measured quality and latency, including failure cases.
 
-## Planned architecture
+## Target architecture
 
 ```text
 Browser microphone
@@ -41,21 +56,21 @@ Backend -> session and progress storage, trace events
 Evaluation runner -> fixed examples, comparisons, and reports
 ```
 
-React/TypeScript, a Python backend, and PostgreSQL are proposed starting points, not implemented choices. STT and TTS providers have not been selected. Provider selection will follow a small comparison of current language support, streaming behavior, quality, and cost.
+The current prototype uses a Python standard-library HTTP server and plain HTML, CSS, and JavaScript. OpenAI Responses API is the optional text model; speech recognition and speech synthesis use browser-provided features. This keeps setup small while making browser and device support a known limitation. A database and streaming speech providers remain future choices; compare language support, streaming behavior, quality, and cost before selecting them.
 
 ## Roadmap
 
-1. **Text tutor:** connect a server-side LLM API, retain conversation context, and handle errors clearly.
-2. **TTS output:** synthesize the text response and listen for Hindi, English, and Hinglish pronunciation issues.
-3. **STT input:** transcribe short Hindi, English, and Hinglish recordings; inspect and record transcription errors.
-4. **Browser prototype:** add microphone controls, transcript, response playback, and request status.
+1. **Text tutor:** first local prototype is implemented; improve prompt behavior and add checked study sources.
+2. **TTS output:** browser speech synthesis is wired to answers; compare Hindi, English, and Hinglish pronunciation and consider streaming TTS.
+3. **STT input:** browser speech recognition is an optional transcript helper; compare Hindi, English, and Hinglish transcripts and provide a robust backend option.
+4. **Browser prototype:** improve interaction states and check behavior across supported browsers and devices.
 5. **Grounded answers:** retrieve checked notes with source metadata and indicate when evidence is insufficient.
 6. **Quiz tools and progress:** implement validated quiz/scoring tools and idempotent progress storage.
 7. **Live turn-taking:** stream speech, support interruptions and cancellation, and reject stale turn events.
 8. **Evaluation:** compare configurations on documented examples; report language-specific errors, TTS listener feedback, p50/p95 latency, and failures.
 9. **Portfolio demo:** document setup, architecture, limitations, measured results, and a short walkthrough.
 
-Each phase should be small enough to run, inspect, and explain before moving on. The next task is to explain the Step 0 input/function/output flow, then continue to the text tutor.
+Each phase should be small enough to run, inspect, and explain before moving on. The next task is to try the browser tutor in Hindi, English, and Hinglish, then begin a small checked study corpus for grounded answers.
 
 ## Portfolio context
 

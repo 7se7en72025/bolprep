@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f6f3eb">
+    <title>BolPrep — Voice study tutor</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="BolPrep home"><span class="brand-mark">ब</span> BolPrep</a>
+        <span class="topic">INDIAN POLITY <span aria-hidden="true">/</span> FUNDAMENTAL RIGHTS</span>
+      </header>
+
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">YOUR STUDY SPACE</p>
+        <h1 id="page-title">Learn it. Say it back.</h1>
+        <p class="lede">Ask a question in Hindi, English, or Hinglish. Keep it simple; we’ll build from here.</p>
+      </section>
+
+      <section class="tutor-card" aria-label="Tutor conversation">
+        <div class="card-head">
+          <div class="tutor-id"><span class="status-dot" aria-hidden="true"></span><div><strong>Your tutor</strong><small id="mode-label">Checking setup…</small></div></div>
+          <button class="text-button" id="clear-button" type="button">New session</button>
+        </div>
+
+        <div class="conversation" id="conversation" aria-live="polite" aria-relevant="additions text">
+          <article class="message tutor-message">
+            <span class="speaker">BOLPREP</span>
+            <p>Namaste! Fundamental Rights ke baare mein kya jaan-na hai?</p>
+          </article>
+        </div>
+
+        <form id="question-form" class="composer">
+          <label class="sr-only" for="question-input">Your question</label>
+          <textarea id="question-input" rows="2" maxlength="1200" placeholder="Type a question… e.g. Right to Equality kya hai?" required></textarea>
+          <div class="composer-actions">
+            <div class="voice-actions">
+              <label class="sr-only" for="speech-language">Speech language</label>
+              <select class="language-select" id="speech-language" aria-label="Speech language">
+                <option value="hi-IN">Hindi / Hinglish</option>
+                <option value="en-IN">English</option>
+              </select>
+              <button class="icon-button" id="mic-button" type="button" aria-label="Start voice input" title="Start voice input"><span aria-hidden="true">●</span><span class="button-label">Speak</span></button>
+              <button class="icon-button" id="stop-button" type="button" aria-label="Stop tutor speech" title="Stop tutor speech"><span aria-hidden="true">■</span><span class="button-label">Stop audio</span></button>
+            </div>
+            <button class="send-button" id="send-button" type="submit"><span id="send-label">Ask tutor</span><span aria-hidden="true">↗</span></button>
+          </div>
+        </form>
+        <p id="status" class="status" role="status">Ready when you are.</p>
+      </section>
+
+      <footer><span>Start with one question. Follow-ups are welcome.</span><span class="privacy-note">Speech input starts only when you tap Speak. Browser speech services may process audio.</span></footer>
+    </main>
+    <script src="/app.js" defer></script>
+  </body>
+</html>
