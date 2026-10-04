@@ -1,5 +1,11 @@
 # Learning log
 
+## Preserve quiz answers when scoring fails — 2026-10-05
+
+- Changed: if quiz scoring fails after submission, the answer is restored to the input and focus returns there so the learner can retry without retyping.
+- Verification: `node --check web/app.js` and `git diff --check` pass. No test suite was run.
+- Limitation: the network-failure interaction was not exercised in a browser during this run.
+
 ## Reliable PowerShell setup commands — 2026-10-05
 
 - Changed: setup examples invoke PowerShell scripts with a process-scoped execution-policy override and use the virtual environment's Python executable directly, avoiding activation-policy failures on Windows.

@@ -519,8 +519,10 @@ async function submitQuizAnswer(answer) {
   } catch (error) {
     if (requestTurn === turn) {
       quizSession.awaitingAnswer = true;
+      input.value = answer;
       addMessage("assistant", error.message);
       statusLine.textContent = "Scoring failed. You can try submitting the answer again.";
+      input.focus();
     }
   } finally {
     if (requestTurn === turn) {
