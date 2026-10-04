@@ -16,6 +16,7 @@ from retrieval import load_corpus, retrieve  # noqa: E402
 
 
 DATASET_PATH = Path(__file__).with_name("retrieval_examples.json")
+SUPPORTED_LANGUAGES = {"English", "Hindi", "Hinglish"}
 
 
 def evaluate(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
@@ -41,6 +42,15 @@ def evaluate(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
             or not all(isinstance(doc_id, str) for doc_id in example["expected_doc_ids"])
         ):
             raise ValueError("Retrieval evaluation example has invalid field types or a duplicate ID.")
+        if (
+            not example["id"].strip()
+            or not example["question"].strip()
+            or example["language"] not in SUPPORTED_LANGUAGES
+            or not all(doc_id.strip() for doc_id in example["expected_doc_ids"])
+        ):
+            raise ValueError("Retrieval evaluation IDs, questions, labels, and language names must be non-empty and supported.")
+        if len(example["expected_doc_ids"]) != len(set(example["expected_doc_ids"])):
+            raise ValueError(f"Retrieval evaluation example {example['id']} has duplicate expected document IDs.")
         unknown_expected_ids = set(example["expected_doc_ids"]) - corpus_ids
         if unknown_expected_ids:
             raise ValueError(

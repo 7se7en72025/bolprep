@@ -327,3 +327,9 @@
 
 - Added four labeled examples for Roman article-number variants, Hindi/English code-switching, Devanagari insertions in Hinglish, and Article 21A age/education wording. Updated the README's constructed retrieval-set size to 30.
 - Verification: parsed the JSON and checked IDs and expected note IDs against the current corpus; the retrieval evaluation itself was not run.
+
+
+## Reject malformed retrieval evaluation labels - 2026-10-05
+
+- The retrieval evaluator now rejects blank IDs/questions/expected labels, language names outside English/Hindi/Hinglish, and duplicate expected document IDs before scoring.
+- Verification: parsed `evals/run_retrieval_eval.py` with Python's AST parser and ran `git diff --check`. The evaluation runner was not executed.

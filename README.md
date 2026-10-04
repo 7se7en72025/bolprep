@@ -115,6 +115,7 @@ The intended story is to pair multilingual speech infrastructure work with a sep
 - Use consented, legally usable study material and evaluation recordings.
 - Document the evaluation sample, configuration, results, and known limitations.
 - Use the [browser voice run sheet](evals/voice-run-sheet.md) for repeatable manual STT/TTS checks; its timing and listener notes are diagnostics, not broad performance claims.
+- The retrieval evaluation runner rejects blank/duplicate example labels, unsupported language names, and expected document IDs that are blank, duplicated, or absent from the corpus.
 - The **Speech diagnostics** panel copies or downloads current-page STT/TTS p50/p95 timings and failure counts as versioned JSON with a UTC generation time for recording run-sheet results. The export contains no transcript text or audio and clears on reload with the underlying metrics.
 - TTS timing summaries include failed browser playback events grouped by language, voice, and sample type. Common browser error codes show a suggested next step. Counts and timings stay in page memory and clear on reload; error details, speech text, and audio are not retained in the metrics.
 - STT timing summaries include failed or empty recognition attempts grouped by language. Deliberate stops and language-change cancellations are excluded; transcript text is not retained by the metrics.
