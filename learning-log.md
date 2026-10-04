@@ -126,3 +126,9 @@
 
 - Added Roman Hinglish labels for each checked quiz rubric concept. Hindi-mode feedback now uses Devanagari labels for Devanagari answers and Roman Hinglish labels for Latin-script answers; English mode continues to use English labels.
 - Updated rubric validation to check the optional Hinglish label field. Verification: JSON parsing and Python compilation pass; no test suite was run in this turn.
+
+
+## Per-utterance browser speech timing - 2026-10-05
+
+- Browser TTS status now reports time from `speak()` enqueue to the synthesis `start` event and duration from `start` to `end`. Superseded utterance callbacks remain guarded by the active speech-turn token.
+- These are single playback diagnostics, not p50/p95 measurements or subjective pronunciation scores. Verification: `node --check web/app.js` and `git diff --check` pass; browser event timings need manual confirmation on supported devices.

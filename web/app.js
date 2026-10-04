@@ -120,16 +120,28 @@ function speak(text, completionText = "Ready when you are.") {
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = speechLanguage.value;
+  const queuedAt = performance.now();
+  let startedAt = null;
   const selectedVoice = matchingSpeechVoices.find((voice) =>
     `${voice.name}|${voice.lang}|${voice.voiceURI}` === speechVoice.value
   );
   if (selectedVoice) utterance.voice = selectedVoice;
   utterance.rate = 0.96;
   utterance.onstart = () => {
-    if (requestSpeechTurn === speechTurn) statusLine.textContent = "Tutor is speaking. Tap Stop audio or Speak to interrupt.";
+    if (requestSpeechTurn !== speechTurn) return;
+    startedAt = performance.now();
+    const startDelay = ((startedAt - queuedAt) / 1000).toFixed(2);
+    statusLine.textContent = `Tutor is speaking (started in ${startDelay}s). Tap Stop audio or Speak to interrupt.`;
   };
   utterance.onend = () => {
-    if (requestSpeechTurn === speechTurn) statusLine.textContent = completionText;
+    if (requestSpeechTurn !== speechTurn) return;
+    if (startedAt === null) {
+      statusLine.textContent = completionText;
+      return;
+    }
+    const startDelay = ((startedAt - queuedAt) / 1000).toFixed(2);
+    const playbackDuration = ((performance.now() - startedAt) / 1000).toFixed(2);
+    statusLine.textContent = `${completionText} Speech start: ${startDelay}s; playback: ${playbackDuration}s.`;
   };
   utterance.onerror = () => {
     if (requestSpeechTurn === speechTurn) statusLine.textContent = "Audio playback stopped.";
