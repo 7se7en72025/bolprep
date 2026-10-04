@@ -496,7 +496,13 @@ if (SpeechRecognition) {
       statusLine.textContent = "No final transcript was received. You can type instead.";
     }
   };
-  speechLanguage.addEventListener("change", () => { recognition.lang = speechLanguage.value; });
+  speechLanguage.addEventListener("change", () => {
+    if (recognitionListening) {
+      stopRecognition();
+      statusLine.textContent = "Speech language changed. Tap Speak to start a new transcript.";
+    }
+    recognition.lang = speechLanguage.value;
+  });
 }
 
 micButton.disabled = !recognitionAvailable;

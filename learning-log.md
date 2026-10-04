@@ -6,6 +6,11 @@
 - Verification: `node --check web/app.js` and `git diff --check` pass. No test suite was run.
 - Limitation: installed voice selection and persistence across language changes were not exercised in a real browser/device in this run.
 
+## Restart STT after a language switch — 2026-10-05
+
+- Changing the speech language during recognition now aborts the active session, updates the recognizer locale for the next start, and tells the learner to tap Speak again. This avoids silently changing the configured locale mid-utterance.
+- Verification: `node --check web/app.js` and `git diff --check` pass. Active microphone behavior still needs browser verification.
+
 ## Checked corpus metadata validation — 2026-10-05
 
 - Changed: the checked-note loader now rejects duplicate or blank note IDs and missing or invalid `source.checked_on` dates. Stable IDs keep retrieval and evaluation labels unambiguous; valid dates make source-review metadata explicit.
