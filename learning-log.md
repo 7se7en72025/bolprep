@@ -303,3 +303,9 @@
 
 - Added a collapsible Speech diagnostics panel with a copy action that exports grouped STT/TTS success counts, failure counts, and nearest-rank p50/p95 timings in seconds as JSON, ready to transfer to the run sheet. Empty groups use `null` percentiles; the export contains no transcript text or audio.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Clipboard access and responsive layout need manual browser review.
+
+
+## Map diagnostics exports to the voice run sheet - 2026-10-05
+
+- Updated the manual run sheet with the JSON field paths for TTS start/playback p50/p95, STT first-final p50/p95, sample counts, and failure counts. It explains that `null` percentiles mean the group has no successful samples.
+- Verification: reviewed the documented field names against `buildSpeechDiagnostics()` in `web/app.js`; no test suite was run.

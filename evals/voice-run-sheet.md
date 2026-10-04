@@ -12,7 +12,7 @@ Use this sheet to compare browser-provided speech features on the same device an
 - Installed TTS voice selected (name and locale):
 - Browser-provided STT available:
 
-Do not record or upload learner audio for this run. The app keeps timing summaries in page memory and does not retain transcript text in those metrics.
+Do not record or upload learner audio for this run. The app keeps timing summaries in page memory and does not retain transcript text in those metrics. Expand **Speech diagnostics** and use **Copy current-page summary** to copy grouped timing and failure counts as JSON; the export contains no transcript text or audio and clears on reload.
 
 ## TTS checks
 
@@ -24,7 +24,7 @@ Use **Preview** for the fixed English phrase. For Hindi and Hinglish, run BolPre
 | Hinglish | Use Hinglish STT prompt below; listen to the offline tutor answer. | | | | |
 | English | Hello, let's study fundamental rights together. | | | | |
 
-Record the displayed TTS start-delay p50/p95 and playback-duration p50/p95 separately for each voice, language, and sample type (Preview or tutor answer):
+From the copied JSON `tts` entries, transfer `start_delay.p50_s` / `start_delay.p95_s` and `playback_duration.p50_s` / `playback_duration.p95_s` into the matching language, voice, and sample-type row (Preview or tutor answer). `completed_count` is Runs; `failure_count` is Failures. A `null` timing means no successful playback was recorded for that group.
 
 | Language / voice | Sample type | Runs | Start p50 / p95 (s) | Playback p50 / p95 (s) | Failures |
 | --- | --- | ---: | ---: | ---: | --- |
@@ -40,7 +40,7 @@ Read each prompt once at a natural pace. Compare the recognized text with the re
 | Hinglish | Article 14 mein equality ke do ideas kya hain? | | | |
 | English | What two ideas does Article 14 protect? | | | |
 
-Record the displayed STT time-to-first-final p50/p95 by language:
+From the copied JSON `stt` entries, transfer `time_to_first_final.p50_s` / `time_to_first_final.p95_s` by language. `final_transcript_count` is Runs; `failed_or_empty_count` is Failed / empty results. A `null` timing means no successful final transcript was recorded for that language.
 
 | Language / STT locale | Runs | First-final p50 / p95 (s) | Failed / empty results | Notes |
 | --- | ---: | ---: | ---: | --- |
