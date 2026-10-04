@@ -48,6 +48,14 @@ let turn = 0;
 let speechTurn = 0;
 let quizSession = null;
 
+function updateMicrophoneButton(listening, disabled = false) {
+  const label = listening ? "Stop" : "Speak";
+  micButton.querySelector(".button-label").textContent = label;
+  micButton.setAttribute("aria-label", listening ? "Stop voice input" : "Start voice input");
+  micButton.title = listening ? "Stop voice input" : "Start voice input";
+  micButton.disabled = disabled || !recognitionAvailable;
+}
+
 function addMessage(role, text, sources = []) {
   const article = document.createElement("article");
   article.className = `message ${role === "user" ? "user-message" : "tutor-message"}`;
@@ -80,6 +88,7 @@ function addMessage(role, text, sources = []) {
 
 function stopRecognition() {
   recognitionListening = false;
+  updateMicrophoneButton(false);
   if (!recognition) return;
   try {
     recognition.abort();
@@ -482,7 +491,7 @@ if (SpeechRecognition) {
       recognition.abort();
       return;
     }
-    micButton.disabled = true;
+    updateMicrophoneButton(true);
     recognitionStartedAt = performance.now();
     recognitionHadFinalResult = false;
     recognitionLastError = null;
@@ -514,7 +523,7 @@ if (SpeechRecognition) {
   recognition.onend = () => {
     const wasListening = recognitionListening;
     recognitionListening = false;
-    micButton.disabled = false;
+    updateMicrophoneButton(false);
     if (wasListening && !recognitionHadFinalResult) {
       const language = recognition.lang;
       recognitionFailures.push({ language });
@@ -538,15 +547,20 @@ micButton.disabled = !recognitionAvailable;
 if (!recognitionAvailable) micButton.title = "Speech recognition is not available in this browser. You can still type your question.";
 micButton.addEventListener("click", () => {
   if (!recognition) return;
+  if (recognitionListening) {
+    stopRecognition();
+    statusLine.textContent = "Listening stopped. You can type or tap Speak again.";
+    return;
+  }
   stopTutor();
   window.speechSynthesis?.cancel();
   recognitionListening = true;
-  micButton.disabled = true;
+  updateMicrophoneButton(false, true);
   try {
     recognition.start();
   } catch {
     recognitionListening = false;
-    micButton.disabled = false;
+    updateMicrophoneButton(false);
     statusLine.textContent = "Microphone is already starting. Please wait a moment.";
   }
 });

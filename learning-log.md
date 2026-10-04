@@ -204,3 +204,10 @@
 - Added per-page failed/empty recognition counts grouped by language alongside first-final p50/p95 timings. Browser error details remain visible for the current attempt, while only the language is retained in the bounded diagnostic samples.
 - Deliberate stop and language-change cancellation paths clear the active listening flag before aborting, so they are not counted as recognition failures. Reloading clears the metrics.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Error and cancellation event ordering still needs manual confirmation in supported browsers.
+
+
+## Make active microphone capture stoppable - 2026-10-05
+
+- The Speak control now becomes an enabled Stop control while the browser is listening. It aborts capture, restores the normal button label, and leaves any transcript available for review before submission.
+- Shared stop paths restore the control as well, and deliberate cancellation remains excluded from failed/empty STT metrics.
+- Verification: `node --check web/app.js` and `git diff --check` pass. Microphone permission and event timing need manual browser verification.

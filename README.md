@@ -36,7 +36,7 @@ Put your API key in `.env` to enable model answers. Keep that file private; it i
 python server.py
 ```
 
-Open <http://127.0.0.1:8000>. The server binds to localhost and keeps the model key on the server. Browser microphone permission is requested only after you click **Speak**. Press Ctrl+C to stop the web server.
+Open <http://127.0.0.1:8000>. The server binds to localhost and keeps the model key on the server. Browser microphone permission is requested only after you click **Speak**. While listening, the same button changes to **Stop** so you can end capture without sending the transcript; you can review the text before submitting it. Press Ctrl+C to stop the web server.
 
 Without an API key, the tutor returns matching local study-note summaries and source links; it labels these as notes rather than generated explanations. Questions outside the six-note corpus receive an insufficient-evidence response. The smaller Step 0 example can still be run with:
 
@@ -117,4 +117,5 @@ The intended story is to pair multilingual speech infrastructure work with a sep
 - Use the [browser voice run sheet](evals/voice-run-sheet.md) for repeatable manual STT/TTS checks; its timing and listener notes are diagnostics, not broad performance claims.
 - TTS timing summaries include failed browser playback events grouped by language, voice, and sample type. Counts and timings stay in page memory and clear on reload; failure details, speech text, and audio are not retained.
 - STT timing summaries include failed or empty recognition attempts grouped by language. Deliberate stops and language-change cancellations are excluded; transcript text is not retained by the metrics.
+- The microphone control switches to **Stop** while recognition is active, so learners can end capture and review the transcript before sending it.
 - Add features incrementally and record experiments in [learning-log.md](learning-log.md).
