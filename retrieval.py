@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import unicodedata
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -48,9 +49,13 @@ def load_corpus(path: Path = CORPUS_PATH) -> list[dict[str, Any]]:
         "id", "title", "title_hi", "title_hinglish", "summary", "summary_hi",
         "summary_hinglish", "keywords", "source",
     }
+    seen_ids: set[str] = set()
     for document in documents:
         if not isinstance(document, dict) or not required.issubset(document):
             raise ValueError("Each study note needs an id, title, summary, keywords, and source.")
+        if not isinstance(document["id"], str) or not document["id"].strip() or document["id"] in seen_ids:
+            raise ValueError("Each study note needs a unique, non-empty id.")
+        seen_ids.add(document["id"])
         source = document["source"]
         if (
             not isinstance(source, dict)
@@ -60,6 +65,17 @@ def load_corpus(path: Path = CORPUS_PATH) -> list[dict[str, Any]]:
             or not isinstance(source.get("section"), str)
         ):
             raise ValueError(f"Study note {document['id']} has invalid source metadata.")
+        checked_on = source.get("checked_on")
+        try:
+            if not isinstance(checked_on, str):
+                raise ValueError
+            checked_date = date.fromisoformat(checked_on)
+            if checked_date.isoformat() != checked_on or checked_date > date.today():
+                raise ValueError
+        except ValueError:
+            raise ValueError(
+                f"Study note {document['id']} needs a non-future source checked_on date (YYYY-MM-DD)."
+            ) from None
         if (
             not isinstance(document["id"], str)
             or not isinstance(document["title"], str)

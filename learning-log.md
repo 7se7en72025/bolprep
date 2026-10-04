@@ -1,5 +1,11 @@
 # Learning log
 
+## Checked corpus metadata validation — 2026-10-05
+
+- Changed: the checked-note loader now rejects duplicate or blank note IDs and missing or invalid `source.checked_on` dates. Stable IDs keep retrieval and evaluation labels unambiguous; valid dates make source-review metadata explicit.
+- Verification: Python 3.11 compilation and `git diff --check` pass. No test suite or retrieval evaluation was run in this turn.
+- Limitation: the checks validate metadata shape and date syntax, not whether a source was actually reviewed on that date.
+
 ## Step 0 — 2026-10-03
 
 - Banaya: question lene wala Python function, fixed practice answer, teen questions ki list aur input/output printing.

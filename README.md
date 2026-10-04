@@ -78,7 +78,7 @@ The current prototype uses a Python standard-library HTTP server and plain HTML,
 
 ## Starter study corpus
 
-The starter corpus contains short summaries for Articles 14, 15, 16, 19, 21, and 21A, each with article-level source metadata. The source is the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-04. Retrieval uses keyword overlap with a guarded boost for an explicitly named article number. Hindi and Hinglish aliases are included. Run `python evals/run_retrieval_eval.py` for the labeled text baseline. It contains 26 constructed English, Hindi, and Hinglish examples; this is a small regression set, not a measure of real learner or speech performance.
+The starter corpus contains short summaries for Articles 14, 15, 16, 19, 21, and 21A, each with article-level source metadata. The source is the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-04. The corpus loader rejects duplicate note IDs and missing or invalid source check dates. Retrieval uses keyword overlap with a guarded boost for an explicitly named article number. Hindi and Hinglish aliases are included. Run `python evals/run_retrieval_eval.py` for the labeled text baseline. It contains 26 constructed English, Hindi, and Hinglish examples; this is a small regression set, not a measure of real learner or speech performance.
 
 ```powershell
 python evals/run_retrieval_eval.py

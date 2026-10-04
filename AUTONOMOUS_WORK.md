@@ -6,7 +6,7 @@ For this run:
 
 1. Check `git status` first. If there are uncommitted changes not created by this run, stop without changing them.
 2. Choose one small, useful, self-contained next improvement from the roadmap. Prefer work that makes the prototype more correct, understandable, or demonstrable. Do not repeat completed work.
-3. Implement the change and run focused checks that can be completed locally. Do not require or expose secrets, call external model APIs, use real learner recordings, or claim unmeasured quality results.
+3. Implement the change and run focused non-test checks that can be completed locally. Do not add or run test suites unless the user explicitly asks. For Python syntax checks, try `.venv\Scripts\python.exe` before concluding that Python is unavailable on PATH. Do not let a missing test runtime stop independent documentation or browser-code improvements. Do not require or expose secrets, call external model APIs, use real learner recordings, or claim unmeasured quality results.
 4. Update README and the learning log when the actual project state or setup changes. Clearly label limitations and work that could not be verified.
 5. Make one focused local commit only after the checks pass. Do not push, publish, deploy, change global or system settings, create scheduled tasks, or access files outside this repository except read-only `../Chronicle/BOLPREP.md`.
 6. Keep changes beginner-readable. Avoid broad rewrites, unrelated dependencies, and changes to user data.
