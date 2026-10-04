@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import json
+import uuid
+from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
 from bolprep import api_is_configured, ask_model, offline_answer
+from progress import ProgressConflict, clear_progress, create_quiz_run, ensure_session, get_progress, save_answer
 from quiz import score_answer, start_quiz
 from retrieval import load_corpus, retrieve
 
@@ -21,6 +24,10 @@ MAX_BODY_BYTES = 256 * 1024
 
 class BolPrepHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
+        self._ensure_browser_session()
+        if self.path == "/api/progress":
+            self._send_json(200, get_progress(self.session_id))
+            return
         routes = {
             "/": (WEB_ROOT / "index.html", "text/html; charset=utf-8"),
             "/app.js": (WEB_ROOT / "app.js", "text/javascript; charset=utf-8"),
@@ -44,10 +51,21 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(payload)))
         self.send_header("X-Content-Type-Options", "nosniff")
+        self._send_session_cookie_if_needed()
         self.end_headers()
         self.wfile.write(payload)
 
+    def do_DELETE(self) -> None:
+        self._ensure_browser_session()
+        if self.path != "/api/progress":
+            self.send_error(404, "Not found")
+            return
+        clear_progress(self.session_id)
+        ensure_session(self.session_id)
+        self._send_json(200, {"ok": True})
+
     def do_POST(self) -> None:
+        self._ensure_browser_session()
         if self.path not in {"/api/answer", "/api/quiz/start", "/api/quiz/score"}:
             self.send_error(404, "Not found")
             return
@@ -132,12 +150,30 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         except ValueError as exc:
             self._send_json(400, {"error": str(exc)})
             return
+        quiz_id = str(uuid.uuid4())
+        create_quiz_run(
+            self.session_id,
+            quiz_id,
+            quiz["topic"],
+            [question["id"] for question in quiz["questions"]],
+        )
+        quiz["quiz_id"] = quiz_id
         self._send_json(200, quiz)
 
     def _handle_quiz_score(self, body: dict[str, Any]) -> None:
         question_id = body.get("question_id")
         answer = body.get("answer")
+        quiz_id = body.get("quiz_id")
+        idempotency_key = body.get("idempotency_key")
         language = body.get("language", "en-IN")
+        if (
+            not isinstance(quiz_id, str)
+            or not isinstance(question_id, str)
+            or not isinstance(answer, str)
+            or not isinstance(idempotency_key, str)
+        ):
+            self._send_json(400, {"error": "Quiz ID, question ID, answer, and retry key are required."})
+            return
         if not isinstance(language, str) or language not in {"hi-IN", "en-IN"}:
             self._send_json(400, {"error": "Choose Hindi/Hinglish or English feedback."})
             return
@@ -146,7 +182,39 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         except ValueError as exc:
             self._send_json(400, {"error": str(exc)})
             return
+        try:
+            result = save_answer(self.session_id, quiz_id, question_id, idempotency_key, result)
+        except ProgressConflict as exc:
+            self._send_json(409, {"error": str(exc)})
+            return
+        except ValueError as exc:
+            self._send_json(400, {"error": str(exc)})
+            return
         self._send_json(200, result)
+
+    def _ensure_browser_session(self) -> None:
+        cookie = SimpleCookie()
+        try:
+            cookie.load(self.headers.get("Cookie", ""))
+        except Exception:
+            cookie = SimpleCookie()
+        morsel = cookie.get("bolprep_session")
+        session_id = None
+        if morsel:
+            try:
+                session_id = str(uuid.UUID(morsel.value))
+            except ValueError:
+                session_id = None
+        self.new_session_cookie = session_id is None
+        self.session_id = session_id or str(uuid.uuid4())
+        ensure_session(self.session_id)
+
+    def _send_session_cookie_if_needed(self) -> None:
+        if self.new_session_cookie:
+            self.send_header(
+                "Set-Cookie",
+                f"bolprep_session={self.session_id}; HttpOnly; SameSite=Lax; Path=/; Max-Age=31536000",
+            )
 
     def _send_json(self, status: int, payload: dict[str, Any]) -> None:
         encoded = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -155,6 +223,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(encoded)))
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
+        self._send_session_cookie_if_needed()
         self.end_headers()
         self.wfile.write(encoded)
 

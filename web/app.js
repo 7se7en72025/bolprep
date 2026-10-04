@@ -10,6 +10,8 @@ const speechLanguage = document.querySelector("#speech-language");
 const quizButton = document.querySelector("#quiz-button");
 const nextQuestionButton = document.querySelector("#next-question");
 const sendLabel = document.querySelector("#send-label");
+const progressSummary = document.querySelector("#progress-summary");
+const weakTopics = document.querySelector("#weak-topics");
 
 const history = [];
 let activeRequest = null;
@@ -129,7 +131,7 @@ async function startQuiz() {
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || "Could not start the quiz.");
     if (requestTurn !== turn) return;
-    quizSession = { questions: payload.questions, index: 0, results: [], awaitingAnswer: false };
+    quizSession = { quizId: payload.quiz_id, questions: payload.questions, index: 0, results: [], awaitingAnswer: false };
     showQuizQuestion();
   } catch (error) {
     if (requestTurn === turn) {
@@ -158,6 +160,7 @@ function showQuizQuestion() {
 async function submitQuizAnswer(answer) {
   if (!quizSession || !quizSession.awaitingAnswer) return;
   const current = quizSession.questions[quizSession.index];
+  current.idempotencyKey ||= window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   quizSession.awaitingAnswer = false;
   const requestTurn = ++turn;
   sendButton.disabled = true;
@@ -168,12 +171,13 @@ async function submitQuizAnswer(answer) {
     const response = await fetch("/api/quiz/score", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question_id: current.id, answer, language: speechLanguage.value }),
+      body: JSON.stringify({ quiz_id: quizSession.quizId, question_id: current.id, idempotency_key: current.idempotencyKey, answer, language: speechLanguage.value }),
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "Could not score the answer.");
     if (requestTurn !== turn) return;
     quizSession.results.push(result);
+    loadProgress();
     const feedback = `${result.feedback} Score: ${result.score}%.`;
     addMessage("assistant", feedback, [result.source]);
     quizSession.index += 1;
@@ -183,7 +187,7 @@ async function submitQuizAnswer(answer) {
       quizSession = null;
       sendLabel.textContent = "Ask tutor";
       input.placeholder = "Type a question… e.g. Right to Equality kya hai?";
-      statusLine.textContent = `Quiz complete: ${completeCount} of 3 answers covered the rubric. Scores are not saved after this session.`;
+      statusLine.textContent = `Quiz complete: ${completeCount} of 3 answers covered the rubric. Results are saved for this browser.`;
       speak(feedback, statusLine.textContent);
     } else {
       statusLine.textContent = `Answer checked. ${quizSession.index} of 3 complete; tap Next question when ready.`;
@@ -245,6 +249,45 @@ document.querySelector("#clear-button").addEventListener("click", () => {
 quizButton.addEventListener("click", startQuiz);
 nextQuestionButton.addEventListener("click", showQuizQuestion);
 
+async function loadProgress() {
+  try {
+    const response = await fetch("/api/progress");
+    const progress = await response.json();
+    if (!response.ok) throw new Error(progress.error || "Could not load saved results.");
+    weakTopics.replaceChildren();
+    if (!progress.attempt_count) {
+      progressSummary.textContent = "No saved quiz answers yet. Complete a quiz to build your revision list.";
+      return;
+    }
+    progressSummary.textContent = `${progress.attempt_count} saved answer${progress.attempt_count === 1 ? "" : "s"} · ${progress.average_score}% average score`;
+    for (const topic of progress.weak_topics) {
+      const item = document.createElement("li");
+      item.textContent = `${topic.topic}: ${topic.latest_score}% on the latest try (${topic.attempts} attempt${topic.attempts === 1 ? "" : "s"})`;
+      weakTopics.append(item);
+    }
+    if (!progress.weak_topics.length) {
+      const item = document.createElement("li");
+      item.textContent = "No recent weak areas. Keep practising to build a longer history.";
+      weakTopics.append(item);
+    }
+  } catch {
+    progressSummary.textContent = "Saved progress could not load. Check that the local server is running.";
+  }
+}
+
+document.querySelector("#refresh-progress").addEventListener("click", loadProgress);
+document.querySelector("#clear-progress").addEventListener("click", async () => {
+  if (!window.confirm("Delete saved quiz scores for this browser?")) return;
+  try {
+    const response = await fetch("/api/progress", { method: "DELETE" });
+    if (!response.ok) throw new Error("Could not clear saved results.");
+    await loadProgress();
+    statusLine.textContent = "Saved quiz progress cleared.";
+  } catch (error) {
+    statusLine.textContent = error.message;
+  }
+});
+
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 if (SpeechRecognition) {
   recognitionAvailable = true;
@@ -279,3 +322,4 @@ fetch("/health").then((response) => response.json()).then((health) => {
 }).catch(() => {
   modeLabel.textContent = "Start the local server to connect";
 });
+loadProgress();

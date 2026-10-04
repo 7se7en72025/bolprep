@@ -10,3 +10,5 @@ recordings/
 *.m4a
 *.webm
 .codex/overnight/
+.codex/*.sqlite3
+.codex/*.sqlite3-*

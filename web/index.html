@@ -56,6 +56,18 @@
         <p id="status" class="status" role="status">Ready when you are.</p>
       </section>
 
+      <section class="progress-card" aria-labelledby="progress-title">
+        <div class="progress-head">
+          <div><p class="eyebrow">YOUR PRACTICE</p><h2 id="progress-title">Saved progress</h2></div>
+          <div class="progress-actions">
+            <button class="text-button" id="refresh-progress" type="button">Refresh</button>
+            <button class="text-button" id="clear-progress" type="button">Clear saved progress</button>
+          </div>
+        </div>
+        <p id="progress-summary" class="progress-summary">Loading saved results…</p>
+        <ul id="weak-topics" class="weak-topics"></ul>
+      </section>
+
       <footer><span>Start with one question. Follow-ups are welcome.</span><span class="privacy-note">Speech starts only when you tap Speak. Browser speech services may process audio; questions go to the configured AI provider in model mode.</span></footer>
     </main>
     <script src="/app.js" defer></script>
