@@ -1,5 +1,11 @@
 # Learning log
 
+## Report decision stops accurately — 2026-10-05
+
+- Changed: the bounded work loop now records when it exits because a task requested a user decision, instead of also labeling that exit as a time-limit expiration.
+- Verification: PowerShell parser reports no syntax errors and `git diff --check` passes. The long-running loop was not stopped or restarted to exercise the new branch.
+- Limitation: this only corrects status reporting; the existing loop process uses the script version loaded when it started.
+
 ## Match the accessible input label to quiz mode — 2026-10-05
 
 - Changed: the question box's screen-reader label now changes to "Your quiz answer" when a quiz question is active, then returns to "Your question" when the quiz finishes or a new session starts.

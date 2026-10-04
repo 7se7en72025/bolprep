@@ -31,6 +31,7 @@ $deadline = [DateTimeOffset]::UtcNow.AddHours($DurationHours)
 $runNumber = 0
 $retryDelaySeconds = 20
 $taskIntervalSeconds = [Math]::Max(300, [int](($DurationHours * 3600) / $MaxRuns))
+$stoppedForDecision = $false
 
 function Write-Status([string]$Message) {
     $line = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') $Message"
@@ -71,6 +72,7 @@ try {
             Write-Status "Run $runNumber completed with marker: $firstLine"
             if ($firstLine -match '^\[STOP\]') {
                 Write-Status "Stopped because a user decision is needed."
+                $stoppedForDecision = $true
                 break
             }
             if ($firstLine -notmatch '^\[CONTINUE\]') {
@@ -99,7 +101,10 @@ try {
         }
     }
 
-    if (Test-Path $stopPath) {
+    if ($stoppedForDecision) {
+        Write-Status 'The loop exited while waiting for a user decision.'
+    }
+    elseif (Test-Path $stopPath) {
         Write-Status 'Stop requested; the loop has exited.'
     }
     elseif ($runNumber -ge $MaxRuns) {
