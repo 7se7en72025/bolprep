@@ -42,6 +42,7 @@ let activeRequest = null;
 let recognition = null;
 let recognitionAvailable = false;
 let recognitionListening = false;
+let recognitionRun = 0;
 let recognitionStartedAt = null;
 let recognitionHadFinalResult = false;
 let pendingQuestion = null;
@@ -925,13 +926,34 @@ refreshSpeechVoices();
 
 if (SpeechRecognition) {
   recognitionAvailable = true;
-  recognition = new SpeechRecognition();
-  recognition.lang = speechLanguage.value;
-  recognition.interimResults = true;
-  recognition.continuous = false;
-  recognition.onstart = () => {
-    if (!recognitionListening) {
-      recognition.abort();
+  recognition = null;
+  speechLanguage.addEventListener("change", () => {
+    if (recognitionListening) {
+      stopRecognition();
+      statusLine.textContent = "Speech language changed. Tap Speak to start a new transcript.";
+    }
+  });
+}
+
+updateMicrophoneButton(false);
+micButton.addEventListener("click", () => {
+  if (!recognitionAvailable) return;
+  if (recognitionListening) {
+    stopRecognition();
+    statusLine.textContent = "Listening stopped. You can type or tap Speak again.";
+    return;
+  }
+  stopTutor();
+  window.speechSynthesis?.cancel();
+  const run = ++recognitionRun;
+  const capture = new SpeechRecognition();
+  recognition = capture;
+  capture.lang = speechLanguage.value;
+  capture.interimResults = true;
+  capture.continuous = false;
+  capture.onstart = () => {
+    if (run !== recognitionRun || !recognitionListening) {
+      capture.abort();
       return;
     }
     updateMicrophoneButton(true);
@@ -940,8 +962,8 @@ if (SpeechRecognition) {
     recognitionLastError = null;
     statusLine.textContent = "Listening… speak now.";
   };
-  recognition.onresult = (event) => {
-    if (!recognitionListening) return;
+  capture.onresult = (event) => {
+    if (run !== recognitionRun || !recognitionListening) return;
     let transcript = "";
     for (let i = 0; i < event.results.length; i += 1) {
       transcript += event.results[i][0].transcript;
@@ -949,27 +971,28 @@ if (SpeechRecognition) {
         && !recognitionHadFinalResult && recognitionStartedAt !== null) {
         recognitionHadFinalResult = true;
         const elapsedMs = performance.now() - recognitionStartedAt;
-        recognitionSamples.push({ language: recognition.lang, firstFinalMs: elapsedMs });
+        recognitionSamples.push({ language: capture.lang, firstFinalMs: elapsedMs });
         if (recognitionSamples.length > 500) recognitionSamples.shift();
         const elapsed = (elapsedMs / 1000).toFixed(2);
         statusLine.textContent = `Final transcript received in ${elapsed}s. Review it, then ask. `
-          + recognitionTimingSummary(recognition.lang);
+          + recognitionTimingSummary(capture.lang);
       }
     }
     input.value = transcript.trim();
   };
-  recognition.onerror = (event) => {
-    if (recognitionListening) {
+  capture.onerror = (event) => {
+    if (run === recognitionRun && recognitionListening) {
       recognitionLastError = event.error;
       statusLine.textContent = recognitionErrorMessage(event.error);
     }
   };
-  recognition.onend = () => {
+  capture.onend = () => {
+    if (run !== recognitionRun) return;
     const wasListening = recognitionListening;
     recognitionListening = false;
     updateMicrophoneButton(false);
     if (wasListening && !recognitionHadFinalResult) {
-      const language = recognition.lang;
+      const language = capture.lang;
       recognitionFailures.push({ language, reason: recognitionLastError || "no-final-transcript" });
       if (recognitionFailures.length > 500) recognitionFailures.shift();
       const reason = recognitionLastError
@@ -978,31 +1001,13 @@ if (SpeechRecognition) {
       statusLine.textContent = `${reason} ${recognitionTimingSummary(language)}`;
     }
   };
-  speechLanguage.addEventListener("change", () => {
-    if (recognitionListening) {
-      stopRecognition();
-      statusLine.textContent = "Speech language changed. Tap Speak to start a new transcript.";
-    }
-    recognition.lang = speechLanguage.value;
-  });
-}
-
-updateMicrophoneButton(false);
-micButton.addEventListener("click", () => {
-  if (!recognition) return;
-  if (recognitionListening) {
-    stopRecognition();
-    statusLine.textContent = "Listening stopped. You can type or tap Speak again.";
-    return;
-  }
-  stopTutor();
-  window.speechSynthesis?.cancel();
   recognitionListening = true;
   updateMicrophoneButton(false, true);
   try {
-    recognition.start();
+    capture.start();
   } catch {
     recognitionListening = false;
+    recognitionRun += 1;
     updateMicrophoneButton(false);
     statusLine.textContent = "Microphone is already starting. Please wait a moment.";
   }

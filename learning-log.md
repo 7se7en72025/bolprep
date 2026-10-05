@@ -660,3 +660,9 @@
 
 - Replaced corrupted mojibake literals in the offline agent intent patterns with explicit Devanagari regex escapes, so Hindi quiz and weak-topic/revision phrases can be recognized again.
 - Verification: Python syntax compilation passed; focused regex checks matched the Devanagari quiz and revision cues; `git diff --check` passed. The project test suite was not run.
+
+
+## Ignore stale speech recognition events - 2026-10-06
+
+- Speech recognition now creates a fresh recognizer per listening run and guards event handlers with a run ID. Delayed start, transcript, error, or end events from a stopped/replaced run cannot update the active transcript or its state.
+- Verification: `node --check web/app.js` and `git diff --check` passed. Browser recognition event timing was not exercised on a device; the project test suite was not run.
