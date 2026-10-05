@@ -1,5 +1,11 @@
 # Learning log
 
+## Explain unavailable voice input on the mic button — 2026-10-05
+
+- Changed: when browser speech recognition is unavailable, the disabled microphone button's accessible name and tooltip now explain that voice input is unavailable and typing still works.
+- Verification: `node --check web/app.js` and `git diff --check` pass. No browser interaction or test suite was run.
+- Limitation: screen-reader announcement and browser-specific speech-recognition support were not manually checked.
+
 ## Stop an active turn with Escape — 2026-10-05
 
 - Changed: Escape now stops an active tutor request, browser speech playback, or microphone capture through the existing stop handler. The stop control also advertises the shortcut to assistive technology.

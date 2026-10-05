@@ -57,12 +57,16 @@ let quizSession = null;
 
 function updateMicrophoneButton(listening, disabled = false) {
   const label = listening ? "Stop" : "Speak";
+  const unavailable = !recognitionAvailable;
+  const actionLabel = unavailable
+    ? "Voice input is unavailable in this browser. You can type your question."
+    : listening ? "Stop voice input" : "Start voice input";
   micButton.querySelector(".button-label").textContent = label;
-  micButton.setAttribute("aria-label", listening ? "Stop voice input" : "Start voice input");
+  micButton.setAttribute("aria-label", actionLabel);
   micButton.setAttribute("aria-pressed", String(listening));
   micButton.classList.toggle("is-listening", listening);
-  micButton.title = listening ? "Stop voice input" : "Start voice input";
-  micButton.disabled = disabled || !recognitionAvailable;
+  micButton.title = actionLabel;
+  micButton.disabled = disabled || unavailable;
 }
 
 function addMessage(role, text, sources = []) {
@@ -786,7 +790,6 @@ if (SpeechRecognition) {
 }
 
 updateMicrophoneButton(false);
-if (!recognitionAvailable) micButton.title = "Speech recognition is not available in this browser. You can still type your question.";
 micButton.addEventListener("click", () => {
   if (!recognition) return;
   if (recognitionListening) {
