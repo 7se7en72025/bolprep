@@ -1,5 +1,11 @@
 # Learning log
 
+## Add Article 35 coverage - 2026-10-06
+
+- Added a bounded English, Hindi, and Hinglish summary of Article 35: Parliament has exclusive power over the specified lawmaking matters listed in Article 16(3), Article 32(3), Articles 33 and 34, and over prescribing punishments for acts declared offences under Part III. Existing laws on those specified matters continue until Parliament changes them. Checked against Article 35 in the Constitution of India published by the Legislative Department, Government of India (https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-06.
+- Added one retrieval example per language. The corpus now contains 24 notes and the labeled set contains 85 constructed examples.
+- Verification: Node parsed the corpus and examples, and confirmed 24 notes, 85 unique examples, three Article 35 article-reference examples with overlapping article-specific terms, and valid Article 35 source metadata; `node --check web/app.js` and `git diff --check` passed. Python is unavailable in this environment, so the Python retrieval evaluator and runtime retrieval were not run; browser/live-model behavior was not exercised. Examples are constructed, not learner queries, and retrieval quality remains unmeasured.
+
 ## Add Article 34 coverage - 2026-10-06
 
 - Added a bounded English, Hindi, and Hinglish summary of Article 34: Parliament may by law indemnify people for specified acts connected with maintaining or restoring order in an area where martial law was in force, and may validate listed acts done under martial law there. Checked against the Constitution of India published by the Legislative Department, Government of India (https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-06.

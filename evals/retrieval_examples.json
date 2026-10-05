@@ -80,5 +80,8 @@
   {"id":"hinglish-art33-police","language":"Hinglish","question":"Article 33 mein public order forces aur police ke members ke rights restrict karne ka decision kaun leta hai?","expected_doc_ids":["article-33"]},
   {"id":"en-art34-martial-law","language":"English","question":"Under Article 34, what may Parliament do for acts connected with restoring order under martial law?","expected_doc_ids":["article-34"]},
   {"id":"hi-art34-martial-law","language":"Hindi","question":"अनुच्छेद 34 में मार्शल लॉ वाले क्षेत्र में व्यवस्था बहाल करने के कामों के बारे में संसद को कौन-सी शक्ति दी गई है?","expected_doc_ids":["article-34"]},
-  {"id":"hinglish-art34-indemnity","language":"Hinglish","question":"Article 34 mein martial law ke dauran order restore karne wale acts ke liye Parliament kya kar sakti hai?","expected_doc_ids":["article-34"]}
+  {"id":"hinglish-art34-indemnity","language":"Hinglish","question":"Article 34 mein martial law ke dauran order restore karne wale acts ke liye Parliament kya kar sakti hai?","expected_doc_ids":["article-34"]},
+  {"id":"en-art35-law-making","language":"English","question":"Who has exclusive law-making power on the specified Fundamental Rights matters in Article 35?","expected_doc_ids":["article-35"]},
+  {"id":"hi-art35-parliament","language":"Hindi","question":"अनुच्छेद 35 के तहत बताए गए मामलों पर कानून बनाने का अधिकार किसे है?","expected_doc_ids":["article-35"]},
+  {"id":"hinglish-art35-laws","language":"Hinglish","question":"Article 35 ke specified matters par law banane ki power Parliament ke paas hai ya State Legislature ke paas?","expected_doc_ids":["article-35"]}
 ]

@@ -493,5 +493,26 @@
       "section": "Part III, Article 34",
       "checked_on": "2026-10-06"
     }
+  },
+  {
+    "id": "article-35",
+    "title": "Article 35 - Parliament makes laws for specified Fundamental Rights matters",
+    "title_hi": "अनुच्छेद 35 - कुछ मौलिक अधिकारों के मामलों पर संसद कानून बनाती है",
+    "title_hinglish": "Article 35 - kuch Fundamental Rights matters par Parliament law banati hai",
+    "summary": "Article 35 gives Parliament exclusive power to make laws on the matters listed in Article 16(3), Article 32(3), Article 33, and Article 34, and to prescribe punishment for acts declared offences under Part III. Laws already in force on the specified matters continue until Parliament changes them. This note does not explain those separate matters or identify particular laws.",
+    "summary_hi": "अनुच्छेद 35 के अनुसार, अनुच्छेद 16(3), 32(3), 33 और 34 में बताए गए मामलों पर कानून बनाने की शक्ति संसद को है, राज्य विधानमंडल को नहीं। भाग III के तहत अपराध घोषित किए गए कार्यों की सज़ा तय करने का अधिकार भी संसद को है। इन बताए गए मामलों पर पहले से लागू कानून संसद के बदलने तक जारी रहते हैं। यह नोट उन अलग-अलग मामलों या किसी खास कानून की व्याख्या नहीं करता।",
+    "summary_hinglish": "Article 35 ke mutabik, Article 16(3), 32(3), 33 aur 34 mein diye matters par law banane ki exclusive power Parliament ke paas hai, State Legislature ke paas nahi. Part III ke under offences declare kiye gaye acts ki punishment prescribe karne ka power bhi Parliament ko hai. In specified matters par pehle se lagu laws Parliament ke badalne tak jaari rehte hain. Yeh note un alag matters ya kisi particular law ko explain nahi karta.",
+    "keywords": [
+      "parliament", "state legislature", "exclusive power", "legislation", "law making",
+      "punishment", "offence", "offences under part iii", "existing law", "law in force",
+      "article 16(3)", "article 32(3)", "article 33", "article 34", "article 35", "art 35",
+      "sansad", "vidhanmandal", "kanoon", "saza", "aparadh", "अनुच्छेद 35", "संसद", "विधानमंडल", "कानून", "सज़ा", "अपराध"
+    ],
+    "source": {
+      "title": "The Constitution of India - Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 35",
+      "checked_on": "2026-10-06"
+    }
   }
 ]
