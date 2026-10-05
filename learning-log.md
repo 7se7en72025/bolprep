@@ -1,5 +1,11 @@
 # Learning log
 
+## Abort in-flight quiz scoring requests - 2026-10-05
+
+- Connected quiz scoring fetches to the shared request abort controller, so Stop and Escape can cancel the browser request and stale results remain ignored by the turn counter. Stopping during scoring returns the quiz to answer entry so the learner can retry.
+- Updated the README to explain that a request already received by the server may still finish; its idempotency key makes retrying the same answer safe.
+- Verification: `node --check web/app.js` and `git diff --check` pass. Browser interaction and server-side cancellation behavior were not exercised.
+
 ## Add the general provisions in Articles 12 and 13 - 2026-10-05
 
 - Added bounded English, Hindi, and Hinglish notes for Article 12's Part III definition of State and Article 13's rules for laws inconsistent with Fundamental Rights. Article 13's summary includes clause (4) and avoids claims about judicial interpretation. Checked against Part III, Articles 12 and 13, in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-05.

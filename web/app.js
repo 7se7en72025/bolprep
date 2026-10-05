@@ -144,6 +144,10 @@ function stopTutor() {
   preserveInterruptedTurn();
   activeRequest?.abort();
   activeRequest = null;
+  if (quizSession && !quizSession.awaitingAnswer) {
+    quizSession.awaitingAnswer = true;
+    input.value = "";
+  }
   stopRecognition();
   turn += 1;
   sendButton.disabled = false;
@@ -550,6 +554,8 @@ async function submitQuizAnswer(answer) {
   current.idempotencyKey ||= window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   quizSession.awaitingAnswer = false;
   const requestTurn = ++turn;
+  activeRequest = new AbortController();
+  const controller = activeRequest;
   sendButton.disabled = true;
   micButton.disabled = true;
   statusLine.textContent = "Checking your answer against the rubric…";
@@ -559,6 +565,7 @@ async function submitQuizAnswer(answer) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ quiz_id: quizSession.quizId, question_id: current.id, idempotency_key: current.idempotencyKey, answer, language: speechLanguage.value }),
+      signal: controller.signal,
     });
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "Could not score the answer.");
@@ -595,6 +602,7 @@ async function submitQuizAnswer(answer) {
     if (requestTurn === turn) {
       sendButton.disabled = false;
       micButton.disabled = !recognitionAvailable;
+      activeRequest = null;
     }
   }
 }
