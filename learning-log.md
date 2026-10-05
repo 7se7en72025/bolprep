@@ -1,5 +1,11 @@
 # Learning log
 
+## Keep saved progress clear during deletion — 2026-10-05
+
+- Changed: confirming saved-progress deletion immediately clears the panel, invalidates earlier refreshes, disables its controls during the request, then reloads the actual state after success or failure.
+- Verification: `node --check web/app.js` and `git diff --check` pass. No browser interaction or test suite was run.
+- Limitation: delayed DELETE responses and overlapping score updates were not exercised in a browser.
+
 ## Ignore stale progress refresh responses — 2026-10-05
 
 - Changed: overlapping saved-progress refreshes now use a request generation ID; older responses cannot overwrite the newest result or error state.

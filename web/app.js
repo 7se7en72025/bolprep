@@ -33,6 +33,8 @@ const nextQuestionButton = document.querySelector("#next-question");
 const sendLabel = document.querySelector("#send-label");
 const progressSummary = document.querySelector("#progress-summary");
 const weakTopics = document.querySelector("#weak-topics");
+const progressRefreshButton = document.querySelector("#refresh-progress");
+const clearProgressButton = document.querySelector("#clear-progress");
 
 const history = [];
 let activeRequest = null;
@@ -673,9 +675,14 @@ async function loadProgress() {
   }
 }
 
-document.querySelector("#refresh-progress").addEventListener("click", loadProgress);
-document.querySelector("#clear-progress").addEventListener("click", async () => {
+progressRefreshButton.addEventListener("click", loadProgress);
+clearProgressButton.addEventListener("click", async () => {
   if (!window.confirm("Delete saved quiz scores for this browser?")) return;
+  ++progressRequestId;
+  weakTopics.replaceChildren();
+  progressSummary.textContent = "Clearing saved results…";
+  progressRefreshButton.disabled = true;
+  clearProgressButton.disabled = true;
   try {
     const response = await fetch("/api/progress", { method: "DELETE" });
     if (!response.ok) throw new Error("Could not clear saved results.");
@@ -683,6 +690,10 @@ document.querySelector("#clear-progress").addEventListener("click", async () => 
     statusLine.textContent = "Saved quiz progress cleared.";
   } catch (error) {
     statusLine.textContent = error.message;
+    await loadProgress();
+  } finally {
+    progressRefreshButton.disabled = false;
+    clearProgressButton.disabled = false;
   }
 });
 
