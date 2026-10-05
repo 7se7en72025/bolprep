@@ -735,3 +735,8 @@
 
 - Updated the voice button's accessible name and tooltip to tell users that starting voice input interrupts active tutor audio or a turn.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Screen-reader announcement and browser interaction were not manually checked.
+
+## Display the captured recording language correctly - 2026-10-06
+
+- The language selector uses locale tags (`hi-IN` and `en-IN`), so comparing the captured value to `hi` mislabeled Hindi recordings as English. Recording and transcription status now map the full locale to the displayed language name.
+- Verification: `node --check web/app.js` and `git diff --check` passed. No browser microphone or provider request was made.

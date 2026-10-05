@@ -77,6 +77,10 @@ let speechTurn = 0;
 let progressRequestId = 0;
 let quizSession = null;
 
+function speechLanguageLabel(language) {
+  return language === "hi-IN" ? "Hindi/Hinglish" : "English";
+}
+
 function updateMicrophoneButton(listening, disabled = false) {
   const label = listening ? "Stop" : "Speak";
   const unavailable = !recognitionAvailable;
@@ -226,7 +230,7 @@ async function startServerRecording() {
     };
     recorder.start();
     updateServerTranscribeButton("recording");
-    statusLine.textContent = `Recording in ${recordingLanguage === "hi" ? "Hindi/Hinglish" : "English"}. Tap Stop or speak for up to 20 seconds.`;
+    statusLine.textContent = `Recording in ${speechLanguageLabel(recordingLanguage)}. Tap Stop or speak for up to 20 seconds.`;
     serverRecordingTimer = window.setTimeout(() => {
       statusLine.textContent = "20-second recording limit reached. Transcribing your question.";
       stopServerRecording(false);
@@ -247,7 +251,7 @@ async function transcribeRecordedAudio(audio, language) {
   const controller = new AbortController();
   activeTranscriptionController = controller;
   updateServerTranscribeButton("busy");
-  statusLine.textContent = `Transcribing in ${language === "hi" ? "Hindi/Hinglish" : "English"}. Review the text before asking.`;
+  statusLine.textContent = `Transcribing in ${speechLanguageLabel(language)}. Review the text before asking.`;
   try {
     const response = await fetch("/api/transcribe", {
       method: "POST",
