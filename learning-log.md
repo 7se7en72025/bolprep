@@ -1,5 +1,10 @@
 # Learning log
 
+## Add a spoken quiz flow evaluation - 2026-10-06
+
+- Added a repeatable manual run-sheet scenario covering audible quiz prompts, editable spoken answers, rubric feedback, progression to the next question, and saved progress after reload. It uses self-authored practice answers and labels the limitation that deterministic phrase matching does not assess meaning.
+- Updated the README to link this evaluation coverage and state that browser behavior has not been checked. Verification: reviewed the instructions and table against the existing quiz UI and documented flow; `git diff --check` passed. No browser/device trial was performed, so quiz speech behavior remains unmeasured.
+
 ## Stop speech when a typed follow-up starts - 2026-10-06
 
 - Submitting a question now cancels active browser speech synthesis and aborts or stops streamed PCM playback before starting the next tutor request. Added a manual run-sheet scenario for sending a typed follow-up during playback.
