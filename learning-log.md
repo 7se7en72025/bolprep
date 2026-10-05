@@ -1,5 +1,11 @@
 # Learning log
 
+## Broaden multilingual retrieval abstention examples - 2026-10-05
+
+- Added Hinglish out-of-domain and Hindi/Hinglish uncovered-detail cases to check that lexical retrieval abstains across all three supported language categories, not only on existing English/Hindi negatives.
+- Updated the README's constructed-set count from 73 to 76 and documented the added coverage. These remain authored text examples, not learner or speech measurements.
+- Verification: Node parsed the JSON dataset, checked 76 unique IDs and the three new records, and `git diff --check` passed. The Python retrieval evaluator could not run because the checked-in virtual environment points to a missing Python 3.11 installation; actual retrieval outcomes and aggregate metrics remain unverified.
+
 ## Add an end-to-end voice trial record - 2026-10-05
 
 - Added a compact manual record for fixed self-authored Hindi, English, and Hinglish practice questions, separating transcript usability, displayed-source relevance, answer support, and spoken completion by trial.

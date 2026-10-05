@@ -71,5 +71,8 @@
   {"id": "hinglish-art13-law", "language": "Hinglish", "question": "Article 13 mein rights ko abridge karne wala law kitni had tak void hota hai?", "expected_doc_ids": ["article-13"]},
   {"id": "en-art32-writs", "language": "English", "question": "Which writs can the Supreme Court issue under Article 32 to enforce Fundamental Rights?", "expected_doc_ids": ["article-32"]},
   {"id": "hi-art32-remedy", "language": "Hindi", "question": "मौलिक अधिकार लागू कराने के लिए अनुच्छेद 32 के तहत किस न्यायालय जा सकते हैं?", "expected_doc_ids": ["article-32"]},
-  {"id": "hinglish-art32-petition", "language": "Hinglish", "question": "Article 32 mein rights enforce karne ke liye Supreme Court kaun se writs de sakta hai?", "expected_doc_ids": ["article-32"]}
+  {"id": "hinglish-art32-petition", "language": "Hinglish", "question": "Article 32 mein rights enforce karne ke liye Supreme Court kaun se writs de sakta hai?", "expected_doc_ids": ["article-32"]},
+  {"id": "hinglish-cricket-outside-domain", "language": "Hinglish", "question": "Cricket World Cup kisne jeeta?", "expected_doc_ids": []},
+  {"id": "hi-uncovered-article-detail", "language": "Hindi", "question": "क्या अनुच्छेद 21 निजता की गारंटी देता है?", "expected_doc_ids": []},
+  {"id": "hinglish-privacy-detail", "language": "Hinglish", "question": "Article 21 privacy guarantee karta hai?", "expected_doc_ids": []}
 ]
