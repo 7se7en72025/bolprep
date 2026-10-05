@@ -1,5 +1,11 @@
 # Learning log
 
+## Stop an active turn with Escape — 2026-10-05
+
+- Changed: Escape now stops an active tutor request, browser speech playback, or microphone capture through the existing stop handler. The stop control also advertises the shortcut to assistive technology.
+- Verification: `node --check web/app.js` and `git diff --check` pass. No browser interaction or test suite was run.
+- Limitation: Escape handling was not manually checked across browsers or assistive technologies.
+
 ## Focus the question box after starting a new session — 2026-10-05
 
 - Changed: after clearing the conversation, keyboard focus moves to the question box so the learner can start typing immediately.

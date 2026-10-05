@@ -622,7 +622,16 @@ form.addEventListener("submit", (event) => {
 stopButton.addEventListener("click", () => {
   stopTutor();
   sendButton.disabled = false;
-  statusLine.textContent = "Audio stopped. You can continue the conversation.";
+  statusLine.textContent = "Tutor turn stopped. You can continue the conversation.";
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  const speechSynthesis = window.speechSynthesis;
+  if (!activeRequest && !recognitionListening && !speechSynthesis?.speaking && !speechSynthesis?.pending) return;
+  event.preventDefault();
+  stopTutor();
+  statusLine.textContent = "Tutor turn stopped. You can continue the conversation.";
 });
 
 document.querySelector("#clear-button").addEventListener("click", () => {
