@@ -256,20 +256,29 @@ function buildSpeechDiagnostics() {
         sample_type: sample.kind,
         completed: [],
         failures: 0,
+        failure_reasons: {},
       });
     }
     return ttsGroups.get(key);
   };
   speechSamples.forEach((sample) => getTtsGroup(sample).completed.push(sample));
-  speechFailures.forEach((sample) => { getTtsGroup(sample).failures += 1; });
+  speechFailures.forEach((sample) => {
+    const group = getTtsGroup(sample);
+    group.failures += 1;
+    group.failure_reasons[sample.reason] = (group.failure_reasons[sample.reason] || 0) + 1;
+  });
 
   const sttGroups = new Map();
   const getSttGroup = (language) => {
-    if (!sttGroups.has(language)) sttGroups.set(language, { language, completed: [], failures: 0 });
+    if (!sttGroups.has(language)) sttGroups.set(language, { language, completed: [], failures: 0, failure_reasons: {} });
     return sttGroups.get(language);
   };
   recognitionSamples.forEach((sample) => getSttGroup(sample.language).completed.push(sample));
-  recognitionFailures.forEach((sample) => { getSttGroup(sample.language).failures += 1; });
+  recognitionFailures.forEach((sample) => {
+    const group = getSttGroup(sample.language);
+    group.failures += 1;
+    group.failure_reasons[sample.reason] = (group.failure_reasons[sample.reason] || 0) + 1;
+  });
 
   const percentiles = (values) => values.length
     ? {
@@ -286,6 +295,7 @@ function buildSpeechDiagnostics() {
       sample_type: group.sample_type,
       completed_count: group.completed.length,
       failure_count: group.failures,
+      failure_reasons: group.failure_reasons,
       start_delay: percentiles(group.completed.map((sample) => sample.startMs)),
       playback_duration: percentiles(group.completed.map((sample) => sample.playbackMs)),
     }));
@@ -295,13 +305,14 @@ function buildSpeechDiagnostics() {
       language: group.language,
       final_transcript_count: group.completed.length,
       failed_or_empty_count: group.failures,
+      failure_reasons: group.failure_reasons,
       time_to_first_final: percentiles(group.completed.map((sample) => sample.firstFinalMs)),
     }));
   return {
     schema_version: 1,
     generated_at_utc: new Date().toISOString(),
     scope: "Current page only",
-    privacy: "Timing and failure counts only; no transcript text or audio.",
+    privacy: "Timing, failure counts, and browser error categories only; no transcript text or audio.",
     tts,
     stt,
   };
@@ -432,7 +443,7 @@ function speak(text, completionText = "Ready when you are.", kind = "tutor") {
     utterance.onerror = (event) => {
       if (requestSpeechTurn !== speechTurn || failed) return;
       failed = true;
-      speechFailures.push({ ...sample });
+      speechFailures.push({ ...sample, reason: event.error || "unknown" });
       if (speechFailures.length > 500) speechFailures.shift();
       statusLine.textContent = `${speechErrorMessage(event.error)} ${speechTimingSummary(sample)}`;
       window.speechSynthesis.cancel();
@@ -792,7 +803,7 @@ if (SpeechRecognition) {
     updateMicrophoneButton(false);
     if (wasListening && !recognitionHadFinalResult) {
       const language = recognition.lang;
-      recognitionFailures.push({ language });
+      recognitionFailures.push({ language, reason: recognitionLastError || "no-final-transcript" });
       if (recognitionFailures.length > 500) recognitionFailures.shift();
       const reason = recognitionLastError
         ? recognitionErrorMessage(recognitionLastError)

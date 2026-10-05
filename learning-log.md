@@ -585,3 +585,8 @@
 - Added three constructed English, Hindi, and Hinglish retrieval examples. The corpus now contains 15 notes and the labeled set contains 55 examples.
 - Verification: Node parsed the corpus and evaluation JSON (15 notes, 55 examples), checked Article 30 source/language metadata, and a focused lexical-retrieval check ranked all three Article 30 examples first; `git diff --check` passes. The Python retrieval evaluator was not run; aggregate retrieval metrics remain unmeasured.
 - Limitation: the note summarizes constitutional text and is not legal advice; examples are constructed, not real learner queries, and retrieval quality remains unmeasured.
+
+## Include speech failure categories in diagnostics - 2026-10-06
+
+- Current-page JSON diagnostics now group TTS failures by browser playback error and STT failed/empty attempts by recognition error, with `no-final-transcript` used when recognition ends without a final result or error code. Speech text and audio remain excluded.
+- Verification: JavaScript syntax and `git diff --check` passed. Browser-generated STT/TTS failures were not triggered, so the category output was checked statically rather than through a device trial.
