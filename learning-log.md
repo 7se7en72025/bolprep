@@ -1,5 +1,10 @@
 # Learning log
 
+## Add a stale recognition run-sheet case - 2026-10-06
+
+- Added a repeatable manual check for stopping speech recognition and immediately starting a new capture, watching whether delayed events from the stopped capture overwrite the new transcript or status. The instructions distinguish an observed pass from browsers that do not expose delayed events, which should be marked unavailable.
+- Verification: reviewed the updated turn-taking checklist and summary table; `git diff --check` passed. No browser/device run was performed, so stale-event behavior was not measured.
+
 ## Reject stale streamed audio chunks - 2026-10-06
 
 - Streamed TTS now checks the active speech-turn ID and abort signal before scheduling each PCM chunk. A chunk arriving after Stop, a new turn, or another playback replacement is ignored instead of being queued.
