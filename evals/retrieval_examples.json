@@ -62,5 +62,11 @@
   {"id": "hinglish-art17-ban", "language": "Hinglish", "question": "Article 17 chhua chhoot ke practice par kya rok lagata hai?", "expected_doc_ids": ["article-17"]},
   {"id": "en-art18-state-title", "language": "English", "question": "Can the State confer a title other than a military or academic distinction under Article 18?", "expected_doc_ids": ["article-18"]},
   {"id": "hi-art18-foreign-title", "language": "Hindi", "question": "अनुच्छेद 18 के तहत क्या भारतीय नागरिक विदेशी राज्य से उपाधि स्वीकार कर सकते हैं?", "expected_doc_ids": ["article-18"]},
-  {"id": "hinglish-art18-titles", "language": "Hinglish", "question": "Article 18 mein military aur academic distinction ke alawa titles dene ka kya rule hai?", "expected_doc_ids": ["article-18"]}
+  {"id": "hinglish-art18-titles", "language": "Hinglish", "question": "Article 18 mein military aur academic distinction ke alawa titles dene ka kya rule hai?", "expected_doc_ids": ["article-18"]},
+  {"id": "en-art12-state-definition", "language": "English", "question": "Which bodies count as the State under Article 12 for Fundamental Rights?", "expected_doc_ids": ["article-12"]},
+  {"id": "hi-art12-state", "language": "Hindi", "question": "अनुच्छेद 12 में मौलिक अधिकारों के लिए राज्य में कौन-कौन शामिल हैं?", "expected_doc_ids": ["article-12"]},
+  {"id": "hinglish-art12-local-authority", "language": "Hinglish", "question": "Article 12 ke hisaab se local authority bhi State mein aati hai?", "expected_doc_ids": ["article-12"]},
+  {"id": "en-art13-void-law", "language": "English", "question": "What happens to a law that takes away a Fundamental Right under Article 13?", "expected_doc_ids": ["article-13"]},
+  {"id": "hi-art13-inconsistent-law", "language": "Hindi", "question": "अनुच्छेद 13 के तहत मौलिक अधिकारों से टकराने वाले कानून का क्या होता है?", "expected_doc_ids": ["article-13"]},
+  {"id": "hinglish-art13-law", "language": "Hinglish", "question": "Article 13 mein rights ko abridge karne wala law kitni had tak void hota hai?", "expected_doc_ids": ["article-13"]}
 ]

@@ -1,5 +1,12 @@
 # Learning log
 
+## Add the general provisions in Articles 12 and 13 - 2026-10-05
+
+- Added bounded English, Hindi, and Hinglish notes for Article 12's Part III definition of State and Article 13's rules for laws inconsistent with Fundamental Rights. Article 13's summary includes clause (4) and avoids claims about judicial interpretation. Checked against Part III, Articles 12 and 13, in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-05.
+- Added three constructed English, Hindi, and Hinglish retrieval examples per article. The corpus now contains 20 notes and the labeled set contains 70 examples.
+- Verification: Node parsed both JSON files and checked all 20 note records for required language fields and source metadata; a focused Node check mirroring lexical ranking placed all six new Article 12/13 examples in the top three; `git diff --check` passes. The Python retrieval evaluator could not run because `.venv\Scripts\python.exe` points to a Python 3.11 installation that is unavailable in this environment. Browser interactions were not run.
+- Limitation: these concise notes do not explain judicial interpretation; examples are constructed, not real learner queries, and retrieval quality remains unmeasured.
+
 ## Add equality protections from Articles 17 and 18 - 2026-10-05
 
 - Added English, Hindi, and Hinglish notes for Article 17's abolition of untouchability and Article 18's restrictions on State-conferred and foreign titles. Checked against Articles 17 and 18 in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-05.

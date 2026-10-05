@@ -1,5 +1,37 @@
 [
   {
+    "id": "article-12",
+    "title": "Article 12 — Definition of the State",
+    "title_hi": "अनुच्छेद 12 — राज्य की परिभाषा",
+    "title_hinglish": "Article 12 — Part III mein State ka meaning",
+    "summary": "For Part III, Article 12 defines the State to include the Government and Parliament of India, each State's Government and Legislature, and local or other authorities in India or under Government of India's control. This note summarizes the definition and does not resolve how courts apply it to particular bodies.",
+    "summary_hi": "भाग III के लिए, अनुच्छेद 12 में राज्य में भारत की सरकार और संसद, प्रत्येक राज्य की सरकार और विधानमंडल, तथा भारत में या भारत सरकार के नियंत्रण में आने वाले स्थानीय और अन्य प्राधिकरण शामिल हैं। यह संक्षिप्त नोट परिभाषा बताता है; किसी विशेष संस्था पर इसका न्यायिक प्रयोग नहीं समझाता।",
+    "summary_hinglish": "Part III ke liye Article 12 mein State ka matlab India ki Government aur Parliament, har State ki Government aur Legislature, aur India mein ya Government of India ke control mein aane wale local ya other authorities bhi hain. Yeh short note definition batata hai; kisi particular body par courts ise kaise apply karte hain, woh nahi.",
+    "keywords": ["fundamental rights", "part iii", "state", "definition of state", "government", "parliament", "legislature", "local authority", "public authority", "article 12", "art 12", "rajya", "sarkar", "sansad", "sthaniya pradhikaran", "राज्य", "सरकार", "संसद", "स्थानीय प्राधिकरण", "अनुच्छेद 12"],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 12",
+      "checked_on": "2026-10-05"
+    }
+  },
+  {
+    "id": "article-13",
+    "title": "Article 13 — Laws inconsistent with Fundamental Rights",
+    "title_hi": "अनुच्छेद 13 — मौलिक अधिकारों से असंगत कानून",
+    "title_hinglish": "Article 13 — Fundamental Rights se takrane wale laws",
+    "summary": "Article 13 says pre-Constitution laws are void to the extent they conflict with Part III. The State must not make a law that takes away or abridges Part III rights; a law that contravenes this rule is void to that extent. The article also defines law broadly, and clause (4) addresses constitutional amendments; this short note does not explain judicial interpretation.",
+    "summary_hi": "अनुच्छेद 13 के अनुसार संविधान लागू होने से पहले के कानून भाग III से टकराने की सीमा तक शून्य हैं। राज्य ऐसा कानून नहीं बना सकता जो भाग III के अधिकार छीनता या घटाता हो; उल्लंघन करने वाला कानून उस सीमा तक शून्य है। अनुच्छेद में कानून की व्यापक परिभाषा और खंड (4) में संवैधानिक संशोधनों का उल्लेख भी है; यह संक्षिप्त नोट न्यायिक व्याख्या नहीं बताता।",
+    "summary_hinglish": "Article 13 kehta hai ki Constitution se pehle ke laws Part III se jitni had tak takrate hain, utni had tak void hain. State aisa law nahi bana sakta jo Part III rights ko take away ya abridge kare; rule todne wala law us had tak void hai. Article law ko broadly define karta hai aur clause (4) constitutional amendments ko address karta hai; yeh short note court interpretation explain nahi karta.",
+    "keywords": ["fundamental rights", "inconsistent law", "void law", "abridge rights", "take away rights", "pre-constitutional law", "law", "ordinance", "rule", "custom", "constitutional amendment", "article 13", "art 13", "adhikar", "kanoon", "void", "मौलिक अधिकार", "कानून", "शून्य", "अधिकार", "अनुच्छेद 13"],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 13(1)–(4)",
+      "checked_on": "2026-10-05"
+    }
+  },
+  {
     "id": "article-14",
     "title": "Article 14 — Equality before law",
     "title_hi": "अनुच्छेद 14 — कानून के समक्ष समानता",
