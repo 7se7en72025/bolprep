@@ -1,5 +1,12 @@
 # Learning log
 
+## Add Article 29 cultural and education protections - 2026-10-05
+
+- Added English, Hindi, and Hinglish notes for Article 29(1)–(2), covering conservation of a distinct language, script, or culture and protection from specified admission discrimination. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), Article 29, checked on 2026-10-05.
+- Added three constructed English, Hindi, and Hinglish retrieval examples. The labeled set now contains 52 examples.
+- Verification: Node parsed the corpus and evaluation JSON (14 notes, 52 examples), and a focused Node check mirroring lexical retrieval ranked all three Article 29 examples correctly; `git diff --check` passes. The Python retrieval evaluator was not run; retrieval metrics remain unmeasured.
+- Limitation: the note covers only clauses (1)–(2), not detailed interpretation; examples are constructed, not real learner queries, and retrieval quality remains unmeasured.
+
 ## Cover religious instruction at educational institutions in Article 28 - 2026-10-05
 
 - Added English, Hindi, and Hinglish notes for Article 28(1)–(3), including the full-State-funding rule, the endowment or trust exception, and consent for instruction or worship at State-recognised or State-aided institutions. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), Article 28, checked on 2026-10-05.
