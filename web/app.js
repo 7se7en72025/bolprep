@@ -641,11 +641,12 @@ quizButton.addEventListener("click", startQuiz);
 nextQuestionButton.addEventListener("click", showQuizQuestion);
 
 async function loadProgress() {
+  weakTopics.replaceChildren();
+  progressSummary.textContent = "Loading saved results…";
   try {
     const response = await fetch("/api/progress");
     const progress = await response.json();
     if (!response.ok) throw new Error(progress.error || "Could not load saved results.");
-    weakTopics.replaceChildren();
     if (!progress.attempt_count) {
       progressSummary.textContent = "No saved quiz answers yet. Complete a quiz to build your revision list.";
       return;
@@ -662,6 +663,7 @@ async function loadProgress() {
       weakTopics.append(item);
     }
   } catch {
+    weakTopics.replaceChildren();
     progressSummary.textContent = "Saved progress could not load. Check that the local server is running.";
   }
 }

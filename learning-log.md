@@ -1,5 +1,11 @@
 # Learning log
 
+## Clear stale progress during refresh — 2026-10-05
+
+- Changed: the saved-progress panel clears prior weak-topic entries while a refresh loads and when a request fails, so old results are not shown beside a loading or error message.
+- Verification: JavaScript syntax check with Node and `git diff --check` pass. No browser interaction or test suite was run.
+- Limitation: the loading, successful refresh, and failure states were not exercised in a browser during this change.
+
 ## Cover Article 22 in retrieval examples — 2026-10-05
 
 - Changed: extended the labeled retrieval examples with English, Hindi, and Hinglish questions about Article 22's grounds-of-arrest, lawyer, and magistrate protections; README count updated from 30 to 33.
