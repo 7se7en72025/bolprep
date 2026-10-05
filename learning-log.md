@@ -1,5 +1,10 @@
 # Learning log
 
+## Record end-to-end voice response timing - 2026-10-06
+
+- Added a per-attempt stopwatch field to the manual voice trial sheet for time from the end of the learner's spoken question to the tutor's first audible sound. The instructions distinguish this coarse end-to-end value from browser STT and TTS event timings and label unobservable endpoints unavailable.
+- Verification: reviewed the updated trial table and instructions; `git diff --check` passed. No browser/device trials were performed, so no latency result is claimed.
+
 ## Add per-language retrieval reporting - 2026-10-06
 
 - Extended the labeled retrieval report with per-language example and support counts, exact match, supported recall@3, and unsupported false-positive rate. Rates with no applicable examples are reported as `null`.

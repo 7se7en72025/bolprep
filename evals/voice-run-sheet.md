@@ -48,15 +48,15 @@ From the copied JSON `stt` entries, transfer `time_to_first_final.p50_s` / `time
 
 ## End-to-end voice trial record
 
-Use a fixed, self-authored practice question for each language. For every attempt, compare the recognized transcript with what you said, then check the answer against the displayed study source. Mark a stage unavailable when the browser does not provide that feature; do not infer success from a later stage.
+Use a fixed, self-authored practice question for each language. For every attempt, compare the recognized transcript with what you said, then check the answer against the displayed study source. When a spoken answer is produced, use a stopwatch to time from the end of your spoken question to the first audible tutor sound; record seconds to one decimal place. Start timing when you finish speaking, not when the final transcript appears. Mark unavailable if either endpoint cannot be observed, and do not infer success from a later stage.
 
-| Language | Trial | Intended question | Transcript usable? | Source shown and relevant? | Answer supported by source? | Spoken answer completed? | Failure stage / notes |
-| --- | ---: | --- | --- | --- | --- | --- | --- |
-| | 1 | | | | | | |
-| | 2 | | | | | | |
-| | 3 | | | | | | |
+| Language | Trial | Intended question | Transcript usable? | Source shown and relevant? | Answer supported by source? | Spoken answer completed? | Speech-end to first-audio (s) | Failure stage / notes |
+| --- | ---: | --- | --- | --- | --- | --- | ---: | --- |
+| | 1 | | | | | | | |
+| | 2 | | | | | | | |
+| | 3 | | | | | | | |
 
-For transcript usability, record whether the meaning and any named article number survived recognition; exact wording is not required. For source relevance and answer support, cite the article shown and note any claim that the source does not support. Keep these observations separate from speech latency and listener ratings above. This small manual record does not measure population-level accuracy.
+For transcript usability, record whether the meaning and any named article number survived recognition; exact wording is not required. For source relevance and answer support, cite the article shown and note any claim that the source does not support. The stopwatch value is a coarse end-to-end observation for that attempt; it includes browser recognition, tutor response, and speech startup, so do not add it to the UI's STT or TTS timings. Keep these observations separate from listener ratings above. This small manual record does not measure population-level accuracy.
 ## Report carefully
 
 - Include browser, device, selected voice/locale, sample phrase, run count, and failures with any results.
