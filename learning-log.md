@@ -1,5 +1,11 @@
 # Learning log
 
+## Update broad retrieval labels for Article 22 — 2026-10-05
+
+- Changed: English, Hindi, and Hinglish broad Fundamental Rights examples now expect Article 22 alongside the six existing notes, matching the corpus-wide retrieval behavior.
+- Verification: the JSON parses with Node and `git diff --check` passes. The retrieval evaluator was not run.
+- Limitation: the expected labels were reconciled with the documented broad-query behavior; measured evaluator results remain pending.
+
 ## Clear stale progress during refresh — 2026-10-05
 
 - Changed: the saved-progress panel clears prior weak-topic entries while a refresh loads and when a request fails, so old results are not shown beside a loading or error message.
