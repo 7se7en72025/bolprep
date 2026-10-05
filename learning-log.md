@@ -1,4 +1,10 @@
 # Learning log
+## Add Article 32 remedies and retrieval cases - 2026-10-05
+
+- Added a bounded Article 32 note for the Supreme Court remedy and the writs in clauses (1)–(2), in English, Hindi, and Hinglish, with the checked Constitution source and explicit scope limits. Added one constructed retrieval case per language. The corpus now contains 21 notes and the labeled set contains 73 examples.
+- Updated README coverage and evaluation-set counts.
+- Verification: the virtual-environment Python loader accepted all 21 notes; the three focused Article 32 examples each ranked `article-32` first, and a general Fundamental Rights query still returns the full corpus. Python syntax parsing and `git diff --check` passed. The full retrieval evaluation and browser/live-model behavior were not run, so aggregate retrieval metrics remain unmeasured.
+
 ## Capture individual interruption trials - 2026-10-05
 
 - The browser voice run sheet now has a row for each interruption attempt, records the outcome and visible browser symptom, and asks users to keep run settings fixed or start a separate sheet when they change.

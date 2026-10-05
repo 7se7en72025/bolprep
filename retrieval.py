@@ -107,8 +107,14 @@ def retrieve(question: str, limit: int | None = None) -> list[dict[str, Any]]:
     query_tokens = {token for token in _tokens(question) if not token.isdigit()}
     normalized_question = question.casefold()
     if any(phrase in normalized_question for phrase in ("fundamental rights", "मौलिक अधिकार", "maulik adhikar")):
-        documents = load_corpus()
-        return documents if limit is None else documents[:limit]
+        has_explicit_article = re.search(
+            r"(?:\b(?:article|art|anuchhed)\s*[-.]?\s*\d+[a-z]?\b|अनुच्छेद\s*[-.]?\s*\d+[a-z]?\b)",
+            question,
+            re.IGNORECASE,
+        )
+        if not has_explicit_article:
+            documents = load_corpus()
+            return documents if limit is None else documents[:limit]
 
     informative_tokens = {
         token for token in query_tokens
@@ -120,7 +126,12 @@ def retrieve(question: str, limit: int | None = None) -> list[dict[str, Any]]:
         body_tokens = _tokens(f"{document['title']} {document['summary']}")
         score = 2 * len(query_tokens & keyword_tokens) + len(query_tokens & body_tokens)
         article_id = document["id"].removeprefix("article-")
-        if re.search(rf"\b(?:article|art)\s*[-.]?\s*{re.escape(article_id)}\b", question, re.IGNORECASE):
+        article_reference = re.search(
+            rf"(?:\b(?:article|art|anuchhed)\s*[-.]?\s*{re.escape(article_id)}\b|अनुच्छेद\s*[-.]?\s*{re.escape(article_id)}\b)",
+            question,
+            re.IGNORECASE,
+        )
+        if article_reference:
             topic_match = bool(informative_tokens & (keyword_tokens | body_tokens))
             if topic_match or not informative_tokens:
                 score += 12
