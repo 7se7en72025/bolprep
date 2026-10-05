@@ -278,6 +278,7 @@ function buildSpeechDiagnostics() {
         language: sample.language,
         voice: sample.voice,
         sample_type: sample.kind,
+        start_event: sample.startEvent || "speech_synthesis_onstart",
         completed: [],
         failures: 0,
         failure_reasons: {},
@@ -317,6 +318,7 @@ function buildSpeechDiagnostics() {
       language: group.language,
       voice: group.voice,
       sample_type: group.sample_type,
+      start_event: group.start_event,
       completed_count: group.completed.length,
       failure_count: group.failures,
       failure_reasons: group.failure_reasons,
@@ -436,7 +438,12 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
   const controller = new AbortController();
   activeSpeechController = controller;
   const voice = "coral";
-  const sample = { language: speechLanguage.value, voice: `OpenAI ${voice}`, kind };
+  const sample = {
+    language: speechLanguage.value,
+    voice: `OpenAI ${voice}`,
+    kind,
+    startEvent: "first_pcm_buffer_scheduled",
+  };
   const queuedAt = performance.now();
   let firstAudioAt = null;
   let nextStartAt = 0;
@@ -554,6 +561,7 @@ function speakWithBrowser(text, completionText = "Ready when you are.", kind = "
     language: speechLanguage.value,
     voice: selectedVoice ? `${selectedVoice.name} (${selectedVoice.lang})` : "browser default",
     kind,
+    startEvent: "speech_synthesis_onstart",
   };
   chunks.forEach((chunk, index) => {
     const utterance = new SpeechSynthesisUtterance(chunk);
