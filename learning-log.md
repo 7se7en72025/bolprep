@@ -1,5 +1,12 @@
 # Learning log
 
+## Cover religious instruction at educational institutions in Article 28 - 2026-10-05
+
+- Added English, Hindi, and Hinglish notes for Article 28(1)–(3), including the full-State-funding rule, the endowment or trust exception, and consent for instruction or worship at State-recognised or State-aided institutions. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), Article 28, checked on 2026-10-05.
+- Added three constructed English, Hindi, and Hinglish retrieval examples. The labeled set now contains 49 examples.
+- Verification: pending local JSON parsing and focused keyword checks. The Python retrieval evaluator and browser interactions were not run.
+- Limitation: this concise note does not cover judicial interpretation; examples are constructed, not real learner queries, and retrieval quality remains unmeasured.
+
 ## Cover religion-specific taxation in Article 27 - 2026-10-05
 
 - Added English, Hindi, and Hinglish notes and retrieval keywords for Article 27's rule against compelling a person to pay a tax specifically appropriated to promote or maintain a particular religion or religious denomination. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), Article 27, checked on 2026-10-05.

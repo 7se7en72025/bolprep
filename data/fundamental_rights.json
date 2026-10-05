@@ -261,5 +261,27 @@
       "section": "Part III, Article 27",
       "checked_on": "2026-10-05"
     }
+  },
+  {
+    "id": "article-28",
+    "title": "Article 28 — Freedom from religious instruction in certain educational institutions",
+    "title_hi": "अनुच्छेद 28 — कुछ शिक्षण संस्थानों में धार्मिक शिक्षा से स्वतंत्रता",
+    "title_hinglish": "Article 28 — kuch educational institutions mein religious instruction se freedom",
+    "summary": "Article 28(1) bars religious instruction in educational institutions wholly maintained out of State funds. Clause (2) makes an exception for a State-administered institution established under an endowment or trust that requires such instruction. Under clause (3), a person at a State-recognised or State-aided institution cannot be required to join religious instruction or worship there without consent; for a minor, the guardian gives consent.",
+    "summary_hi": "अनुच्छेद 28(1) के अनुसार, पूरी तरह राज्य निधि से चलने वाले शिक्षण संस्थान में धार्मिक शिक्षा नहीं दी जाएगी। खंड (2) उस राज्य-प्रशासित संस्थान को अपवाद देता है जो ऐसे न्यास या दान के तहत स्थापित हुआ हो जिसमें धार्मिक शिक्षा की शर्त हो। खंड (3) के तहत, राज्य से मान्यता प्राप्त या सहायता पाने वाले संस्थान में किसी व्यक्ति को उसकी सहमति के बिना धार्मिक शिक्षा या पूजा में भाग लेने के लिए बाध्य नहीं किया जा सकता; नाबालिग के लिए अभिभावक सहमति देता है।",
+    "summary_hinglish": "Article 28(1) ke mutabik, poori tarah State funds se chalne wale educational institution mein religious instruction nahi di jayegi. Clause (2) State-administered us institution ko exception deta hai jo aise endowment ya trust ke under bana ho jisme religious instruction ki condition ho. Clause (3) ke under, State-recognised ya State-aided institution mein kisi person ko consent ke bina religious instruction ya worship mein hissa lene ke liye majboor nahi kiya ja sakta; minor ke liye guardian consent deta hai.",
+    "keywords": [
+      "religious instruction", "religious worship", "state funds", "wholly maintained", "state aided institution",
+      "state recognised institution", "consent", "guardian consent", "minor", "endowment", "trust",
+      "article 28", "art 28", "dharmik shiksha", "dharmik pooja", "sarkari sahayata wala sansthan",
+      "sahmati", "abhibhavak ki sahmati", "अनुच्छेद 28", "धार्मिक शिक्षा", "धार्मिक पूजा", "राज्य निधि",
+      "सहमति", "अभिभावक की सहमति", "नाबालिग"
+    ],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 28(1)–(3)",
+      "checked_on": "2026-10-05"
+    }
   }
 ]
