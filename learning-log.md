@@ -1,10 +1,10 @@
-# Learning log
+﻿# Learning log
 
 ## Add the general provisions in Articles 12 and 13 - 2026-10-05
 
 - Added bounded English, Hindi, and Hinglish notes for Article 12's Part III definition of State and Article 13's rules for laws inconsistent with Fundamental Rights. Article 13's summary includes clause (4) and avoids claims about judicial interpretation. Checked against Part III, Articles 12 and 13, in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-05.
 - Added three constructed English, Hindi, and Hinglish retrieval examples per article. The corpus now contains 20 notes and the labeled set contains 70 examples.
-- Verification: Node parsed both JSON files and checked all 20 note records for required language fields and source metadata; a focused Node check mirroring lexical ranking placed all six new Article 12/13 examples in the top three; `git diff --check` passes. The Python retrieval evaluator could not run because `.venv\Scripts\python.exe` points to a Python 3.11 installation that is unavailable in this environment. Browser interactions were not run.
+- Verification: Node parsed both JSON files and checked all 20 note records for required language fields and source metadata; a focused Node check mirroring lexical ranking placed all six new Article 12/13 examples in the top three; `git diff --check` passes. The Python retrieval evaluator was not run; aggregate retrieval metrics remain unmeasured. Browser interactions were not run.
 - Limitation: these concise notes do not explain judicial interpretation; examples are constructed, not real learner queries, and retrieval quality remains unmeasured.
 
 ## Add equality protections from Articles 17 and 18 - 2026-10-05
@@ -16,21 +16,21 @@
 
 ## Cover protections for accused persons in Article 20 - 2026-10-05
 
-- Added English, Hindi, and Hinglish notes for Article 20(1)–(3), covering protection from retrospective criminal penalties, repeated prosecution and punishment for the same offence, and compelled self-incrimination. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), Article 20(1)–(3), checked on 2026-10-05.
+- Added English, Hindi, and Hinglish notes for Article 20(1)â€“(3), covering protection from retrospective criminal penalties, repeated prosecution and punishment for the same offence, and compelled self-incrimination. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), Article 20(1)â€“(3), checked on 2026-10-05.
 - Added three constructed English, Hindi, and Hinglish retrieval examples, and updated the broad retrieval label to match all current notes. The corpus now contains 16 notes and the labeled set contains 58 examples.
 - Verification: Node parsed the corpus and evaluation JSON (16 notes, 58 examples), and a focused Node check mirroring lexical retrieval matched all three Article 20 examples and the broad 16-note label; `git diff --check` passes. The Python retrieval evaluator was not run; aggregate retrieval metrics remain unmeasured. Browser interactions were not run.
 - Limitation: the concise note does not cover judicial interpretation; examples are constructed, not real learner queries, and retrieval quality remains unmeasured.
 
 ## Add Article 29 cultural and education protections - 2026-10-05
 
-- Added English, Hindi, and Hinglish notes for Article 29(1)–(2), covering conservation of a distinct language, script, or culture and protection from specified admission discrimination. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), Article 29, checked on 2026-10-05.
+- Added English, Hindi, and Hinglish notes for Article 29(1)â€“(2), covering conservation of a distinct language, script, or culture and protection from specified admission discrimination. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), Article 29, checked on 2026-10-05.
 - Added three constructed English, Hindi, and Hinglish retrieval examples. The labeled set now contains 52 examples.
 - Verification: Node parsed the corpus and evaluation JSON (14 notes, 52 examples), and a focused Node check mirroring lexical retrieval ranked all three Article 29 examples correctly; `git diff --check` passes. The Python retrieval evaluator was not run; retrieval metrics remain unmeasured.
-- Limitation: the note covers only clauses (1)–(2), not detailed interpretation; examples are constructed, not real learner queries, and retrieval quality remains unmeasured.
+- Limitation: the note covers only clauses (1)â€“(2), not detailed interpretation; examples are constructed, not real learner queries, and retrieval quality remains unmeasured.
 
 ## Cover religious instruction at educational institutions in Article 28 - 2026-10-05
 
-- Added English, Hindi, and Hinglish notes for Article 28(1)–(3), including the full-State-funding rule, the endowment or trust exception, and consent for instruction or worship at State-recognised or State-aided institutions. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), Article 28, checked on 2026-10-05.
+- Added English, Hindi, and Hinglish notes for Article 28(1)â€“(3), including the full-State-funding rule, the endowment or trust exception, and consent for instruction or worship at State-recognised or State-aided institutions. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), Article 28, checked on 2026-10-05.
 - Added three constructed English, Hindi, and Hinglish retrieval examples. The labeled set now contains 49 examples.
 - Verification: pending local JSON parsing and focused keyword checks. The Python retrieval evaluator and browser interactions were not run.
 - Limitation: this concise note does not cover judicial interpretation; examples are constructed, not real learner queries, and retrieval quality remains unmeasured.
@@ -85,157 +85,157 @@
 - Added four English, Hindi, and Hinglish retrieval examples for the two notes. The labeled set now contains 37 constructed examples.
 - Verification: parsed both JSON files and checked the new expected document IDs against the corpus. The retrieval evaluation was not run, so no retrieval quality change is claimed.
 
-## Explain unavailable voice input on the mic button — 2026-10-05
+## Explain unavailable voice input on the mic button â€” 2026-10-05
 
 - Changed: when browser speech recognition is unavailable, the disabled microphone button's accessible name and tooltip now explain that voice input is unavailable and typing still works.
 - Verification: `node --check web/app.js` and `git diff --check` pass. No browser interaction or test suite was run.
 - Limitation: screen-reader announcement and browser-specific speech-recognition support were not manually checked.
 
-## Stop an active turn with Escape — 2026-10-05
+## Stop an active turn with Escape â€” 2026-10-05
 
 - Changed: Escape now stops an active tutor request, browser speech playback, or microphone capture through the existing stop handler. The stop control also advertises the shortcut to assistive technology.
 - Verification: `node --check web/app.js` and `git diff --check` pass. No browser interaction or test suite was run.
 - Limitation: Escape handling was not manually checked across browsers or assistive technologies.
 
-## Focus the question box after starting a new session — 2026-10-05
+## Focus the question box after starting a new session â€” 2026-10-05
 
 - Changed: after clearing the conversation, keyboard focus moves to the question box so the learner can start typing immediately.
 - Verification: `node --check web/app.js` and `git diff --check` pass. No browser interaction or test suite was run.
 - Limitation: focus behavior was not manually checked with a screen reader or browser.
 
-## Announce saved-progress updates to assistive technology — 2026-10-05
+## Announce saved-progress updates to assistive technology â€” 2026-10-05
 
 - Changed: marked the saved-progress summary as a status region so loading, empty, error, and refreshed-result messages are announced politely by assistive technology.
 - Verification: `node --check web/app.js` and `git diff --check` pass. No screen-reader/browser interaction or test suite was run.
 - Limitation: announcement behavior can vary by browser and screen reader and was not manually checked.
 
-## Keep saved progress clear during deletion — 2026-10-05
+## Keep saved progress clear during deletion â€” 2026-10-05
 
 - Changed: confirming saved-progress deletion immediately clears the panel, invalidates earlier refreshes, disables its controls during the request, then reloads the actual state after success or failure.
 - Verification: `node --check web/app.js` and `git diff --check` pass. No browser interaction or test suite was run.
 - Limitation: delayed DELETE responses and overlapping score updates were not exercised in a browser.
 
-## Ignore stale progress refresh responses — 2026-10-05
+## Ignore stale progress refresh responses â€” 2026-10-05
 
 - Changed: overlapping saved-progress refreshes now use a request generation ID; older responses cannot overwrite the newest result or error state.
 - Verification: `node --check web/app.js` and `git diff --check` pass. No browser interaction or test suite was run.
 - Limitation: out-of-order network responses were not simulated in a browser during this change.
 
-## Update broad retrieval labels for Article 22 — 2026-10-05
+## Update broad retrieval labels for Article 22 â€” 2026-10-05
 
 - Changed: English, Hindi, and Hinglish broad Fundamental Rights examples now expect Article 22 alongside the six existing notes, matching the corpus-wide retrieval behavior.
 - Verification: the JSON parses with Node and `git diff --check` passes. The retrieval evaluator was not run.
 - Limitation: the expected labels were reconciled with the documented broad-query behavior; measured evaluator results remain pending.
 
-## Clear stale progress during refresh — 2026-10-05
+## Clear stale progress during refresh â€” 2026-10-05
 
 - Changed: the saved-progress panel clears prior weak-topic entries while a refresh loads and when a request fails, so old results are not shown beside a loading or error message.
 - Verification: JavaScript syntax check with Node and `git diff --check` pass. No browser interaction or test suite was run.
 - Limitation: the loading, successful refresh, and failure states were not exercised in a browser during this change.
 
-## Cover Article 22 in retrieval examples — 2026-10-05
+## Cover Article 22 in retrieval examples â€” 2026-10-05
 
 - Changed: extended the labeled retrieval examples with English, Hindi, and Hinglish questions about Article 22's grounds-of-arrest, lawyer, and magistrate protections; README count updated from 30 to 33.
 - Verification: the evaluation JSON parses with Node and `git diff --check` passes. The retrieval evaluator was not run.
 - Limitation: expected labels were added from the checked corpus note but retrieval metrics for the expanded set remain unmeasured in this change.
 
-## Bound autonomous task duration — 2026-10-05
+## Bound autonomous task duration â€” 2026-10-05
 
 - Changed: each Codex task now runs in a helper process with a configurable 60-minute default timeout. On timeout or when the overall deadline arrives, the runner terminates the helper process tree, records the timeout, and retries with backoff if time remains.
 - Verification: PowerShell parser reports no syntax errors for the three loop scripts and `git diff --check` passes. No timed task was launched to exercise process-tree termination.
 - Limitation: timeout cleanup relies on Windows `taskkill.exe`; the eight-hour loop has not yet been relaunched with this version.
 
-## Reject empty study-note content — 2026-10-05
+## Reject empty study-note content â€” 2026-10-05
 
 - Changed: corpus loading now rejects blank localized titles or summaries, empty keyword lists or entries, and blank source titles or sections.
 - Verification: Python syntax compilation and `git diff --check` pass. No test suite or retrieval evaluation was run.
 - Limitation: field validation confirms usable text is present, not that translations are accurate or summaries exhaustively represent the source.
 
-## Add arrest safeguards to checked corpus and quiz — 2026-10-05
+## Add arrest safeguards to checked corpus and quiz â€” 2026-10-05
 
-- Changed: added a Hindi, Hinglish, and English Article 22 note and a rubric question covering selected ordinary-arrest safeguards. The note scopes itself to clauses (1)–(3) and states that clauses (4)–(7)'s preventive-detention safeguards are not summarized.
-- Source: checked the official Constitution text published by the Legislative Department, Government of India, at the recorded source URL for Article 22(1)–(3).
+- Changed: added a Hindi, Hinglish, and English Article 22 note and a rubric question covering selected ordinary-arrest safeguards. The note scopes itself to clauses (1)â€“(3) and states that clauses (4)â€“(7)'s preventive-detention safeguards are not summarized.
+- Source: checked the official Constitution text published by the Legislative Department, Government of India, at the recorded source URL for Article 22(1)â€“(3).
 - Verification: both JSON files parse successfully and `git diff --check` passes. The retrieval evaluation and browser quiz were not run.
 - Limitation: this small note is not legal advice, does not cover the article's full preventive-detention framework, and is not added to the constructed retrieval examples in this change.
 
-## Select a supported Windows Python launcher — 2026-10-05
+## Select a supported Windows Python launcher â€” 2026-10-05
 
 - Changed: the one-command Windows setup now probes `python` and the `py` launcher and uses the first interpreter at Python 3.11 or later. An older `python` on PATH no longer blocks a supported `py` runtime.
 - Verification: PowerShell parser reports no syntax errors and `git diff --check` passes. The launcher was not executed against multiple installed Python versions.
 - Limitation: the selection path is statically checked here; Windows installation combinations still need a direct setup run.
 
-## Honor retry backoff when a run omits its marker — 2026-10-05
+## Honor retry backoff when a run omits its marker â€” 2026-10-05
 
 - Changed: the work loop now chooses retry delay from the run's retry state. A successful `[CONTINUE]` waits for the normal task interval; a failed run or missing marker uses the capped backoff even if the CLI returned exit code zero.
 - Verification: PowerShell parser reports no syntax errors and `git diff --check` passes. The active loop was not restarted to exercise retry timing.
 - Limitation: a future loop run is needed to observe the missing-marker branch in operation.
 
-## Split long answers for browser speech — 2026-10-05
+## Split long answers for browser speech â€” 2026-10-05
 
 - Changed: long TTS answers are divided at sentence boundaries, then word or code-point boundaries when needed, and queued as browser utterances. Interruption checks and speech diagnostics still cover the answer as one turn.
 - Verification: `node --check web/app.js` and `git diff --check` pass. No test suite or browser speech run was performed.
 - Limitation: chunking improves compatibility with browser utterance limits but does not provide streamed audio; browser and installed-voice behavior still needs manual evaluation.
 
-## Reject blank quiz rubric content — 2026-10-05
+## Reject blank quiz rubric content â€” 2026-10-05
 
 - Changed: the quiz-bank loader now rejects blank question IDs and text, blank concept labels or aliases, and blank source titles or sections before exposing a quiz.
 - Verification: Python syntax compilation and `git diff --check` pass. No test suite was run.
 - Limitation: this validates required text presence and shape; it does not verify rubric correctness against the cited Constitution source.
 
-## Report decision stops accurately — 2026-10-05
+## Report decision stops accurately â€” 2026-10-05
 
 - Changed: the bounded work loop now records when it exits because a task requested a user decision, instead of also labeling that exit as a time-limit expiration.
 - Verification: PowerShell parser reports no syntax errors and `git diff --check` passes. The long-running loop was not stopped or restarted to exercise the new branch.
 - Limitation: this only corrects status reporting; the existing loop process uses the script version loaded when it started.
 
-## Match the accessible input label to quiz mode — 2026-10-05
+## Match the accessible input label to quiz mode â€” 2026-10-05
 
 - Changed: the question box's screen-reader label now changes to "Your quiz answer" when a quiz question is active, then returns to "Your question" when the quiz finishes or a new session starts.
 - Verification: `node --check web/app.js` and `git diff --check` pass. No test suite was run.
 - Limitation: screen-reader behavior was not exercised with assistive technology in this run.
 
-## Preserve quiz answers when scoring fails — 2026-10-05
+## Preserve quiz answers when scoring fails â€” 2026-10-05
 
 - Changed: if quiz scoring fails after submission, the answer is restored to the input and focus returns there so the learner can retry without retyping.
 - Verification: `node --check web/app.js` and `git diff --check` pass. No test suite was run.
 - Limitation: the network-failure interaction was not exercised in a browser during this run.
 
-## Reliable PowerShell setup commands — 2026-10-05
+## Reliable PowerShell setup commands â€” 2026-10-05
 
 - Changed: setup examples invoke PowerShell scripts with a process-scoped execution-policy override and use the virtual environment's Python executable directly, avoiding activation-policy failures on Windows.
 - Verification: inspected the README commands and ran `git diff --check`. No test suite was run.
 - Limitation: the commands were not executed on a separate Windows installation.
 
-## Stop playback when speech language changes — 2026-10-05
+## Stop playback when speech language changes â€” 2026-10-05
 
 - Changed: changing the selected speech language now cancels current or queued browser speech and explains that the new language applies to the next playback. This prevents audio from continuing in the previously selected language after the control changes.
 - Verification: `node --check web/app.js` and `git diff --check` pass. No test suite was run.
 - Limitation: speech cancellation and language switching were not exercised in a real browser/device in this run.
 
-## Clearer microphone error messages — 2026-10-05
+## Clearer microphone error messages â€” 2026-10-05
 
 - Changed: common browser speech-recognition errors now suggest a next step, such as allowing microphone access or checking for a connected microphone. Unknown errors remain visible with a typing fallback.
 - Verification: `node --check web/app.js` and `git diff --check` pass. No test suite was run.
 - Limitation: actual browser-specific error events were not triggered in this run; messages still depend on the error codes exposed by the browser.
 
-## Per-language voice preference — 2026-10-05
+## Per-language voice preference â€” 2026-10-05
 
 - Changed: selected browser speech voices are now remembered separately for Hindi and English. Existing saved single-voice preferences are migrated when the app next saves settings.
 - Verification: `node --check web/app.js` and `git diff --check` pass. No test suite was run.
 - Limitation: installed voice selection and persistence across language changes were not exercised in a real browser/device in this run.
 
-## Restart STT after a language switch — 2026-10-05
+## Restart STT after a language switch â€” 2026-10-05
 
 - Changing the speech language during recognition now aborts the active session, updates the recognizer locale for the next start, and tells the learner to tap Speak again. This avoids silently changing the configured locale mid-utterance.
 - Verification: `node --check web/app.js` and `git diff --check` pass. Active microphone behavior still needs browser verification.
 
-## Checked corpus metadata validation — 2026-10-05
+## Checked corpus metadata validation â€” 2026-10-05
 
 - Changed: the checked-note loader now rejects duplicate or blank note IDs and missing or invalid `source.checked_on` dates. Stable IDs keep retrieval and evaluation labels unambiguous; valid dates make source-review metadata explicit.
 - Verification: Python 3.11 compilation and `git diff --check` pass. No test suite or retrieval evaluation was run in this turn.
 - Limitation: the checks validate metadata shape and date syntax, not whether a source was actually reviewed on that date.
 
-## Step 0 — 2026-10-03
+## Step 0 â€” 2026-10-03
 
 - Banaya: question lene wala Python function, fixed practice answer, teen questions ki list aur input/output printing.
 - Seekhne ke concepts: variable, string, function, parameter, return, list aur for loop.
@@ -245,7 +245,7 @@
 - Kya fail hua aur kyun: is implementation aur run mein koi error nahi aaya.
 - Next: input/function/output apne words mein explain karna, phir Step 1.
 
-## Text tutor prototype — 2026-10-04
+## Text tutor prototype â€” 2026-10-04
 
 - Banaya: local browser UI aur Python server; typed question flow, recent-turn context, optional model configuration, Hindi/Hinglish aur English speech controls, browser speech input/playback, offline state, and request validation.
 - API: OpenAI Responses API integration taiyar hai. Is environment mein API key configured nahi thi, isliye live model request exercise nahi hui.
@@ -253,27 +253,27 @@
 - Limitations: retrieval, source citations, server-side provider cancellation, streamed audio, and browser-level microphone/playback behavior abhi verify nahi hain.
 - Next: supported browser mein Hindi, English, aur Hinglish mic/playback try karo; phir checked source notes ka first retrieval baseline banao.
 
-## Voice status callback fix — 2026-10-04
+## Voice status callback fix â€” 2026-10-04
 
 - Changed: browser speech callbacks now update the status only while they belong to the latest speech turn. Stopping speech or starting a newer tutor action invalidates older callbacks, so a late browser event cannot replace the current status.
 - Verification: `node --check web/app.js` passed. Python files were unchanged by this fix; the isolated Codex runner did not have the Python executable on its PATH.
 - Limitation: this check does not exercise actual browser speech playback or its event timing; browser/device behavior still needs a manual check.
 
-## Checked-note retrieval baseline — 2026-10-04
+## Checked-note retrieval baseline â€” 2026-10-04
 
 - Banaya: three short notes for Articles 14, 19, and 21; each has official source URL and article section. Keyword overlap plus an explicit-article boost retrieves relevant notes, including English, Devanagari, and common Hinglish spellings.
 - App behavior: both the browser route and CLI pass retrieved notes to model mode; offline mode summarizes retrieved notes. UI shows source links. No matching note means the tutor says its checked notes do not cover the question.
 - Verification: 9 unit tests passed, including article ranking, Hindi/Hinglish aliases, unsupported questions, source metadata, and mocked model-request evidence. Python compilation and JavaScript syntax checks passed. Local server returned one Article 14 source for an English question, one Article 14 source for a Hinglish question, and zero sources for an unsupported question.
 - Limitations: lexical retrieval is not benchmarked; the live model key path and browser microphone/playback have not been exercised. Three articles do not cover the whole Fundamental Rights section.
 
-## Retrieval regression set — 2026-10-04
+## Retrieval regression set â€” 2026-10-04
 
 - Added 17 constructed labeled examples across English, Hindi, and Hinglish, including broad questions, unsupported topics, and out-of-domain questions. The runner reports exact match, supported recall@3, false-positive rate for unsupported questions, and per-language exact match.
-- Tightened article-number boosting so the article number alone cannot make an uncovered topic look supported; broad “fundamental rights” queries return all three starter notes, including the Hindi phrase “मौलिक अधिकार”.
+- Tightened article-number boosting so the article number alone cannot make an uncovered topic look supported; broad â€œfundamental rightsâ€ queries return all three starter notes, including the Hindi phrase â€œà¤®à¥Œà¤²à¤¿à¤• à¤…à¤§à¤¿à¤•à¤¾à¤°â€.
 - Run `python evals/run_retrieval_eval.py`. The set is a regression aid only, not a real speech or learner benchmark.
 - Next: add a bounded quiz and rubric-scoring flow from checked notes, then test it without storing permanent learner progress yet.
 
-## Session-only quiz and rubric scoring — 2026-10-04
+## Session-only quiz and rubric scoring â€” 2026-10-04
 
 - Banaya: three checked questions for Articles 14, 19, and 21; Hindi/Hinglish and English prompts; server-side `start_quiz` and `score_answer` functions; a browser flow that can speak the question, accept typed or recognized answers, show rubric feedback and source, and continue to the next question.
 - Scoring: exact keyword/phrase aliases award points by required concept groups. Article 19 asks for any two of several listed freedoms. This is deterministic text matching, not semantic grading.
@@ -281,21 +281,21 @@
 - Verification: 6 quiz unit tests passed; all 15 repo unit tests passed; Python compilation and browser JavaScript syntax checks passed. Local HTTP smoke run returned three English prompts, scored full-rubric Article 14/19/21 answers at 100%, returned article-level source metadata, and rejected an unknown question ID with HTTP 400.
 - Limitations: questions are selected from a fixed bank, not generated through an LLM tool call; quiz UI has not yet been exercised in a browser or with real speech recognition.
 
-## Local saved quiz progress — 2026-10-04
+## Local saved quiz progress â€” 2026-10-04
 
 - Added a SQLite store for quiz runs and scored answers, scoped by a random HttpOnly cookie issued by the local server. A score write is unique per quiz and question; retrying with the same per-answer idempotency key returns its first result, while a new key for the same question is rejected. Neither raw learner answers nor answer hashes are stored.
 - The browser now shows saved answer count, average score, and questions whose latest result needs revision. It can clear progress for the current browser cookie. SQLite data lives under `.codex/` and is ignored by Git.
 - Verification: all 23 unit tests pass, including persistence, cross-session separation, retry idempotency, conflict handling, legacy-database migration, weak-area summary, raw-answer/hash omission, and deletion. Local HTTP smoke checks confirmed progress is isolated by cookie, repeated score submissions count once, different sessions cannot submit another session's quiz, delete clears progress, and saved scores remain after restarting the server.
 - Limitations: this is a local single-browser identity model, not account authentication or a hosted multi-user design. Full browser-based quiz flow and mic input still need manual checking.
 
-## Responses API function tools — 2026-10-04
+## Responses API function tools â€” 2026-10-04
 
 - Added `agent.py` with strict-schema `start_quiz`, `score_answer`, and `get_weak_topics` function tools. It validates every argument on the server, limits tool calls per turn, returns tool output by its `call_id`, and surfaces successful tool events to the browser. The browser submits natural quiz requests to the agent route and starts the checked questions returned by the tool.
 - Without a configured key, the same route uses the offline notes and a small explicit quiz/revision intent fallback. This keeps the local demo runnable and labels the mode rather than pretending it used a model.
 - Verification: all 27 unit tests pass, including mocked Responses tool-call/continuation flow, invalid-argument rejection, server-rubric scoring, and offline quiz starts. Python compilation and browser JavaScript syntax checks pass.
 - Limitations: the OpenAI SDK and API key are absent from this environment, so provider serialization and a live model-selected tool call could not be exercised. Tool-generated answer scores still use the deterministic lexical rubric; no browser was available for visual interaction checks.
 
-## Hindi and Hinglish offline notes — 2026-10-04
+## Hindi and Hinglish offline notes â€” 2026-10-04
 
 - Added Devanagari Hindi and Roman Hinglish titles and summaries for the three checked starter notes. Offline responses now select Hindi script when the learner typed Hindi and Roman Hinglish when they typed in Latin script; English stays English. Unsupported-topic messages also follow the selected input style.
 - Rechecked Articles 14, 19, and 21 against the [Legislative Department's official Constitution of India PDF](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), including each article's core text and the Article 19(2) reference to restrictions.
@@ -546,3 +546,4 @@
 - Added three constructed English, Hindi, and Hinglish retrieval examples. The corpus now contains 15 notes and the labeled set contains 55 examples.
 - Verification: Node parsed the corpus and evaluation JSON (15 notes, 55 examples), checked Article 30 source/language metadata, and a focused lexical-retrieval check ranked all three Article 30 examples first; `git diff --check` passes. The Python retrieval evaluator was not run; aggregate retrieval metrics remain unmeasured.
 - Limitation: the note summarizes constitutional text and is not legal advice; examples are constructed, not real learner queries, and retrieval quality remains unmeasured.
+
