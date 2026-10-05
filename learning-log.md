@@ -5,6 +5,11 @@
 - Added a repeatable manual run-sheet scenario covering audible quiz prompts, editable spoken answers, rubric feedback, progression to the next question, and saved progress after reload. It uses self-authored practice answers and labels the limitation that deterministic phrase matching does not assess meaning.
 - Updated the README to link this evaluation coverage and state that browser behavior has not been checked. Verification: reviewed the instructions and table against the existing quiz UI and documented flow; `git diff --check` passed. No browser/device trial was performed, so quiz speech behavior remains unmeasured.
 
+## Refresh broad-query evaluation labels - 2026-10-06
+
+- Updated the three broad Fundamental Rights examples to expect all 29 current notes, matching the explicitly documented corpus-wide behavior. Clarified in the README that these broad prompts return the full note set; this may produce a long offline response.
+- Verification: the 100-example constructed retrieval evaluation now reports 100% exact match, 100% supported recall@3, and 0% false positives over eight unsupported examples, with no failures in any language. This aligns the broad labels with the implemented behavior; it does not benchmark answer usefulness or learner outcomes.
+
 ## Stop speech when a typed follow-up starts - 2026-10-06
 
 - Submitting a question now cancels active browser speech synthesis and aborts or stops streamed PCM playback before starting the next tutor request. Added a manual run-sheet scenario for sending a typed follow-up during playback.
