@@ -53,6 +53,7 @@
               </select>
               <button class="icon-button" id="preview-voice" type="button" aria-label="Preview selected voice" title="Preview selected voice"><span aria-hidden="true">♫</span><span class="button-label">Preview</span></button>
               <button class="icon-button" id="mic-button" type="button" aria-label="Start voice input" title="Start voice input"><span aria-hidden="true">●</span><span class="button-label">Speak</span></button>
+              <button class="icon-button server-transcribe-button" id="server-transcribe-button" type="button" aria-label="Record a question for server transcription" title="Record up to 20 seconds; audio is sent for transcription when you stop" hidden disabled><span aria-hidden="true">●</span><span class="button-label">Record</span></button>
               <button class="icon-button" id="stop-button" type="button" aria-label="Stop tutor turn (Escape)" aria-keyshortcuts="Escape" title="Stop tutor turn (Escape)"><span aria-hidden="true">■</span><span class="button-label">Stop audio</span></button>
             </div>
             <button class="send-button" id="send-button" type="submit"><span id="send-label">Ask tutor</span><span aria-hidden="true">↗</span></button>
@@ -76,6 +77,7 @@
             <option value="cedar">cedar</option>
           </select>
         </label>
+        <p id="server-stt-note" class="server-stt-note" hidden>When you stop recording, the audio is sent to the configured transcription provider. BolPrep does not save the recording; review the transcript before asking.</p>
         <p id="status" class="status" role="status">Ready when you are.</p>
         <details class="speech-diagnostics">
           <summary>Speech diagnostics</summary>

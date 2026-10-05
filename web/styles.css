@@ -50,6 +50,9 @@ textarea::placeholder { color: #a3aaa2; }
 .icon-button:disabled { opacity: .42; cursor: not-allowed; }
 .icon-button.is-listening { background: #fae7e4; color: #8c3028; }
 .icon-button.is-listening:hover:not(:disabled) { background: #f3d7d1; color: #78231e; }
+.server-transcribe-button[hidden], .server-stt-note[hidden] { display: none; }
+.server-transcribe-button span:first-child { color: #b43d31; }
+.server-stt-note { margin: 7px 22px 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
 #mic-button span:first-child { font-size: 10px; color: #699073; }
 #mic-button.is-listening span:first-child { color: #b43d31; }
 #stop-button span:first-child { font-size: 9px; }

@@ -683,3 +683,10 @@
 - Added a separately selectable streamed provider voice, defaulting to Coral to preserve existing behavior. The choice is saved with speech preferences and appears in timing groups, allowing repeatable comparisons across voices. Updated the TTS run sheet and corrected the roadmap status from ?consider streaming TTS? to the existing streamed implementation.
 - Checked voice options against the [official text-to-speech guide](https://developers.openai.com/api/docs/guides/text-to-speech), which lists 13 voices and says they are optimized for English. Hindi/Hinglish quality remains unevaluated; streamed requests may incur usage.
 - Verification: JavaScript syntax passed; the UI voice choices match the server allowlist and default to Coral; `git diff --check` passed. No provider request or browser playback was made.
+
+
+## Add optional recorded-file speech transcription - 2026-10-06
+
+- Added a separate 20-second MediaRecorder path that uploads WebM or MP4 only after the user stops, returns editable Hindi/English text for review, and does not persist audio in BolPrep. The browser-native recognition button remains available. Server uploads are capped at 5 MB and 1,200 transcript characters.
+- The endpoint uses `gpt-transcribe` with an explicit input language. The [official speech-to-text guide](https://developers.openai.com/api/docs/guides/speech-to-text) recommends this model for recorded files and lists WebM among accepted formats. This is recorded-file transcription, not live streaming STT; provider calls may incur usage.
+- Verification: Python syntax compilation and JavaScript syntax checks passed; local offline HTTP checks confirmed health and that the transcription route reports unavailable without an API key; `git diff --check` passed. No real audio or provider request was used. Browser microphone behavior remains unverified.

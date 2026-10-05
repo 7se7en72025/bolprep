@@ -12,6 +12,7 @@ Use this sheet to compare browser-provided speech features on the same device an
 - TTS provider and voice selected (browser or streamed OpenAI voice):
 - Installed TTS voice selected (name and locale):
 - Browser-provided STT available:
+- Server recorded-file transcription available:
 
 Do not record or upload learner audio for this run. The app keeps timing summaries in page memory and does not retain transcript text in those metrics. Expand **Speech diagnostics** and use **Copy JSON** or **Download JSON** to export grouped timing and failure counts; the export contains no transcript text or audio and clears on reload.
 
@@ -33,7 +34,7 @@ From the copied JSON `tts` entries, transfer `start_delay.p50_s` / `start_delay.
 
 ## STT checks
 
-Read each prompt once at a natural pace. Compare the recognized text with the reference and note omitted, substituted, or extra words. Repeat at least ten times per language before interpreting the displayed latency p50/p95.
+Read each prompt once at a natural pace. Compare the recognized text with the reference and note omitted, substituted, or extra words. Repeat at least ten times per language before interpreting the displayed latency p50/p95. For the optional server path, configure an API key, click **Record**, stop after speaking a self-authored phrase, and compare the editable transcript. The completed recording is sent to the configured provider and may incur usage; this path transcribes after recording and is not live STT.
 
 | Language | Reference prompt | Recognized text | Exact match? | Error notes |
 | --- | --- | --- | --- | --- |

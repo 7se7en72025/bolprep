@@ -21,6 +21,7 @@ WEB_ROOT = ROOT / "web"
 HOST = "127.0.0.1"
 PORT = 8000
 MAX_BODY_BYTES = 256 * 1024
+MAX_AUDIO_BYTES = 5 * 1024 * 1024
 
 
 class BolPrepHandler(BaseHTTPRequestHandler):
@@ -36,6 +37,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                     "mode": mode,
                     "study_notes": len(load_corpus()),
                     "streaming_tts": api_is_configured(),
+                    "server_transcription": api_is_configured(),
                 },
                 include_session_cookie=False,
             )
@@ -81,8 +83,11 @@ class BolPrepHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         self._ensure_browser_session()
-        if self.path not in {"/api/answer", "/api/agent/turn", "/api/quiz/start", "/api/quiz/score", "/api/speech"}:
+        if self.path not in {"/api/answer", "/api/agent/turn", "/api/quiz/start", "/api/quiz/score", "/api/speech", "/api/transcribe"}:
             self.send_error(404, "Not found")
+            return
+        if self.path == "/api/transcribe":
+            self._handle_transcription()
             return
         body = self._read_json_body()
         if body is None:
@@ -239,6 +244,63 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 self.close_connection = True
             else:
                 self._send_json(502, {"error": "The speech provider could not return audio. Check the server terminal and try again."})
+
+    def _handle_transcription(self) -> None:
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+        except ValueError:
+            self.close_connection = True
+            self._send_json(400, {"error": "Invalid audio request length."})
+            return
+        if length <= 0:
+            self._send_json(400, {"error": "Record a short question before requesting a transcript."})
+            return
+        if length > MAX_AUDIO_BYTES:
+            self.close_connection = True
+            self._send_json(413, {"error": "The recording is too large. Keep it under 5 MB."})
+            return
+        audio = self.rfile.read(length)
+        if len(audio) != length:
+            self.close_connection = True
+            self._send_json(400, {"error": "The audio upload was incomplete. Try recording again."})
+            return
+
+        content_type = self.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+        formats = {"audio/webm": "question.webm", "audio/mp4": "question.mp4"}
+        filename = formats.get(content_type)
+        if not filename:
+            self._send_json(415, {"error": "Use a browser recording in WebM or MP4 format."})
+            return
+        language = self.headers.get("X-Speech-Language", "")
+        language_code = {"hi-IN": "hi", "en-IN": "en"}.get(language)
+        if not language_code:
+            self._send_json(400, {"error": "Choose Hindi/Hinglish or English before recording."})
+            return
+        if not api_is_configured():
+            self._send_json(503, {"error": "Server transcription needs an API key. Browser speech recognition remains available."})
+            return
+
+        try:
+            from openai import OpenAI
+
+            client = OpenAI(timeout=60.0, max_retries=0)
+            response = client.audio.transcriptions.create(
+                model="gpt-transcribe",
+                file=(filename, audio, content_type),
+                language=language_code,
+            )
+            transcript = getattr(response, "text", "")
+            if not isinstance(transcript, str) or not transcript.strip():
+                self._send_json(502, {"error": "The transcription provider returned no text. Try again or type your question."})
+                return
+            transcript = transcript.strip()
+            if len(transcript) > 1200:
+                self._send_json(422, {"error": "The transcript is over 1,200 characters. Please shorten it or type a shorter question."})
+                return
+            self._send_json(200, {"transcript": transcript})
+        except Exception as exc:
+            print(f"Transcription request failed: {exc}")
+            self._send_json(502, {"error": "The transcription provider could not return text. Check the server terminal and try again."})
 
     def _read_json_body(self) -> dict[str, Any] | None:
         try:

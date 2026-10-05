@@ -4,6 +4,8 @@ const conversation = document.querySelector("#conversation");
 const statusLine = document.querySelector("#status");
 const sendButton = document.querySelector("#send-button");
 const micButton = document.querySelector("#mic-button");
+const serverTranscribeButton = document.querySelector("#server-transcribe-button");
+const serverSttNote = document.querySelector("#server-stt-note");
 const stopButton = document.querySelector("#stop-button");
 const modeLabel = document.querySelector("#mode-label");
 const speechLanguage = document.querySelector("#speech-language");
@@ -47,6 +49,16 @@ let recognition = null;
 let recognitionAvailable = false;
 let recognitionListening = false;
 let recognitionRun = 0;
+let serverTranscriptionAvailable = false;
+let activeTranscriptionController = null;
+let activeMediaRecorder = null;
+let activeMediaStream = null;
+let serverRecordingChunks = [];
+let discardServerRecording = false;
+let serverRecordingTimer = null;
+let serverRecordingStarting = false;
+let serverRecordingStartCancelled = false;
+let serverRecordingRun = 0;
 let recognitionStartedAt = null;
 let recognitionHadFinalResult = false;
 let pendingQuestion = null;
@@ -128,6 +140,142 @@ function stopRecognition() {
   }
 }
 
+function updateServerTranscribeButton(state = "idle") {
+  serverTranscribeButton.hidden = !serverTranscriptionAvailable;
+  const recording = state === "recording";
+  serverTranscribeButton.disabled = !serverTranscriptionAvailable || state === "busy";
+  serverTranscribeButton.querySelector(".button-label").textContent = recording ? "Stop" : "Record";
+  const label = recording
+    ? "Stop recording and transcribe the question"
+    : "Record a question for server transcription";
+  serverTranscribeButton.setAttribute("aria-label", label);
+  serverTranscribeButton.title = label;
+  serverTranscribeButton.classList.toggle("is-listening", recording);
+  serverTranscribeButton.setAttribute("aria-pressed", String(recording));
+}
+
+function stopServerRecording(discard = false) {
+  if (serverRecordingTimer !== null) {
+    window.clearTimeout(serverRecordingTimer);
+    serverRecordingTimer = null;
+  }
+  if (!activeMediaRecorder) return;
+  discardServerRecording = discard;
+  updateServerTranscribeButton("busy");
+  if (activeMediaRecorder.state === "recording") activeMediaRecorder.stop();
+}
+
+async function startServerRecording() {
+  if (!serverTranscriptionAvailable || activeMediaRecorder || activeTranscriptionController) return;
+  if (!navigator.mediaDevices?.getUserMedia || typeof window.MediaRecorder !== "function") {
+    statusLine.textContent = "This browser cannot record audio. Use browser speech input or type your question.";
+    return;
+  }
+  stopTutor();
+  serverRecordingStartCancelled = false;
+  serverRecordingStarting = true;
+  const recordingRun = ++serverRecordingRun;
+  updateServerTranscribeButton("busy");
+  statusLine.textContent = "Allow microphone access, then ask a short question. Audio is sent for transcription when you stop.";
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    if (recordingRun !== serverRecordingRun || serverRecordingStartCancelled) {
+      stream.getTracks().forEach((track) => track.stop());
+      return;
+    }
+    const mimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"]
+      .find((candidate) => typeof MediaRecorder.isTypeSupported === "function"
+        && MediaRecorder.isTypeSupported(candidate));
+    const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+    const baseType = recorder.mimeType.split(";", 1)[0].toLowerCase();
+    if (!new Set(["audio/webm", "audio/mp4"]).has(baseType)) {
+      throw new Error("This browser did not provide a supported WebM or MP4 recording format.");
+    }
+    activeMediaStream = stream;
+    activeMediaRecorder = recorder;
+    serverRecordingChunks = [];
+    discardServerRecording = false;
+    recorder.ondataavailable = (event) => {
+      if (event.data?.size) serverRecordingChunks.push(event.data);
+    };
+    recorder.onerror = () => {
+      stopServerRecording(true);
+      statusLine.textContent = "Recording failed. Try again or type your question.";
+    };
+    recorder.onstop = () => {
+      if (serverRecordingTimer !== null) {
+        window.clearTimeout(serverRecordingTimer);
+        serverRecordingTimer = null;
+      }
+      const discard = discardServerRecording;
+      const audio = new Blob(serverRecordingChunks, { type: recorder.mimeType });
+      serverRecordingChunks = [];
+      activeMediaRecorder = null;
+      activeMediaStream?.getTracks().forEach((track) => track.stop());
+      activeMediaStream = null;
+      discardServerRecording = false;
+      updateServerTranscribeButton();
+      if (discard) return;
+      if (!audio.size) {
+        statusLine.textContent = "No audio was recorded. Try again or type your question.";
+        return;
+      }
+      void transcribeRecordedAudio(audio);
+    };
+    recorder.start();
+    updateServerTranscribeButton("recording");
+    statusLine.textContent = "Recording. Tap Stop or speak for up to 20 seconds.";
+    serverRecordingTimer = window.setTimeout(() => {
+      statusLine.textContent = "20-second recording limit reached. Transcribing your question.";
+      stopServerRecording(false);
+    }, 20_000);
+  } catch (error) {
+    stream?.getTracks().forEach((track) => track.stop());
+    if (recordingRun !== serverRecordingRun || serverRecordingStartCancelled) return;
+    activeMediaRecorder = null;
+    activeMediaStream = null;
+    updateServerTranscribeButton();
+    statusLine.textContent = `${error.message || "Microphone access failed."} Check browser permission or type your question.`;
+  } finally {
+    if (recordingRun === serverRecordingRun) serverRecordingStarting = false;
+  }
+}
+
+async function transcribeRecordedAudio(audio) {
+  const controller = new AbortController();
+  activeTranscriptionController = controller;
+  updateServerTranscribeButton("busy");
+  statusLine.textContent = "Transcribing your recording. Review the text before asking.";
+  try {
+    const response = await fetch("/api/transcribe", {
+      method: "POST",
+      headers: {
+        "Content-Type": audio.type.split(";", 1)[0] || "audio/webm",
+        "X-Speech-Language": speechLanguage.value,
+      },
+      body: audio,
+      signal: controller.signal,
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || "Transcription failed.");
+    if (activeTranscriptionController !== controller) return;
+    if (typeof payload.transcript !== "string" || !payload.transcript.trim()) {
+      throw new Error("The transcription provider returned an empty transcript.");
+    }
+    input.value = payload.transcript.trim();
+    input.focus();
+    statusLine.textContent = "Transcript ready. Review it, then ask.";
+  } catch (error) {
+    if (error.name !== "AbortError" && activeTranscriptionController === controller) {
+      statusLine.textContent = `${error.message} You can record again or type your question.`;
+    }
+  } finally {
+    if (activeTranscriptionController === controller) activeTranscriptionController = null;
+    updateServerTranscribeButton();
+  }
+}
+
 function recognitionErrorMessage(error) {
   const messages = {
     "audio-capture": "No microphone was found. Check that one is connected, or type instead.",
@@ -179,6 +327,12 @@ function stopTutor() {
     quizSession.pendingAnswer = "";
   }
   stopRecognition();
+  serverRecordingStartCancelled = true;
+  serverRecordingRun += 1;
+  serverRecordingStarting = false;
+  updateServerTranscribeButton();
+  if (activeMediaRecorder) stopServerRecording(true);
+  activeTranscriptionController?.abort();
   turn += 1;
   sendButton.disabled = false;
   micButton.disabled = !recognitionAvailable;
@@ -829,7 +983,8 @@ document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
   const speechSynthesis = window.speechSynthesis;
   if (!activeRequest && !activeSpeechController && !scheduledSpeechSources.size
-    && !recognitionListening && !speechSynthesis?.speaking && !speechSynthesis?.pending) return;
+    && !recognitionListening && !activeMediaRecorder && !serverRecordingStarting
+    && !activeTranscriptionController && !speechSynthesis?.speaking && !speechSynthesis?.pending) return;
   event.preventDefault();
   const stoppingQuizScore = Boolean(quizSession && !quizSession.awaitingAnswer);
   stopTutor();
@@ -1029,16 +1184,31 @@ micButton.addEventListener("click", () => {
   }
 });
 
+serverTranscribeButton.addEventListener("click", () => {
+  if (activeMediaRecorder?.state === "recording") {
+    stopServerRecording(false);
+    return;
+  }
+  void startServerRecording();
+});
+
 fetch("/health").then((response) => response.json()).then((health) => {
   const mode = health.mode === "model" ? "Model answers enabled" : "Offline practice mode";
   streamingTtsAvailable = Boolean(health.streaming_tts);
   streamedTtsOption.disabled = !streamingTtsAvailable;
   streamedTtsVoice.disabled = !streamingTtsAvailable || !streamedTtsOption.checked;
+  serverTranscriptionAvailable = Boolean(health.server_transcription);
+  serverSttNote.hidden = !serverTranscriptionAvailable;
+  updateServerTranscribeButton();
   streamedTtsOption.title = streamingTtsAvailable
     ? "Streams generated speech from the server. API usage may be billed."
     : "Add an API key to the local server configuration to enable streamed speech.";
   modeLabel.textContent = `${mode} · history stays in this tab`;
-  if (!recognitionAvailable) statusLine.textContent = "Ready to type. Speech recognition is not available in this browser.";
+  if (!recognitionAvailable) {
+    statusLine.textContent = serverTranscriptionAvailable
+      ? "Ready to type or record a question for server transcription."
+      : "Ready to type. Speech recognition is not available in this browser.";
+  }
 }).catch(() => {
   modeLabel.textContent = "Start the local server to connect";
 });
