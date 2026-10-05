@@ -9,7 +9,7 @@
 
 - Added a concise Article 31 note in English, Hindi, and Hinglish that records its omission from the current constitutional text and links the official footnote to the Forty-fourth Amendment, effective 20 June 1979. The note explicitly avoids interpreting current property law.
 - Added constructed retrieval examples in all three languages. The corpus now contains 28 notes and the labeled set contains 97 examples. Updated README coverage counts and limitations.
-- Checked the omission footnote in the [official Constitution of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf). Verification: parsed both JSON files and loaded the corpus; focused retrieval checks cover exact article references. No browser or live-model behavior was exercised; constructed examples do not measure learner or speech performance.
+- Checked the omission footnote in the [official Constitution of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf). Article-numbered status questions retrieve the note in English, Hindi, and Hinglish without making unrelated current-events queries match. The constructed evaluator reports 96.91% exact match, 100% supported recall@3, and 0% false positives across its eight unsupported queries. Three broad-query exact-match cases remain because generic rights queries return more notes than their labels expect. No browser or live-model behavior was exercised; these constructed figures do not measure learner or speech performance.
 
 ## Add a streamed speech interruption trial - 2026-10-06
 
