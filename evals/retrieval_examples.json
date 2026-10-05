@@ -90,5 +90,8 @@
 ,
   {"id":"en-art31c-dpsp","language":"English","question":"What laws does Article 31C protect from rights under Articles 14 and 19?","expected_doc_ids":["article-31c"]},
   {"id":"hi-art31c-policy","language":"Hindi","question":"अनुच्छेद 31C के तहत अनुच्छेद 39(b) और 39(c) की नीति लागू करने वाले कानूनों को किन अधिकारों से संरक्षण मिलता है?","expected_doc_ids":["article-31c"]},
-  {"id":"hinglish-art31c-policy","language":"Hinglish","question":"Article 31C mein 39(b) aur 39(c) ki policy wale kanoon ko Article 14 aur 19 se kya protection milti hai?","expected_doc_ids":["article-31c"]}
+  {"id":"hinglish-art31c-policy","language":"Hinglish","question":"Article 31C mein 39(b) aur 39(c) ki policy wale kanoon ko Article 14 aur 19 se kya protection milti hai?","expected_doc_ids":["article-31c"]},
+  {"id":"en-art31b-schedule","language":"English","question":"What does Article 31B say about laws listed in the Ninth Schedule?","expected_doc_ids":["article-31b"]},
+  {"id":"hi-art31b-suchibaddh-kanoon","language":"Hindi","question":"अनुच्छेद 31B नौवीं अनुसूची में सूचीबद्ध कानूनों के बारे में क्या कहता है?","expected_doc_ids":["article-31b"]},
+  {"id":"hinglish-art31b-protection","language":"Hinglish","question":"Article 31B ke under Ninth Schedule ke listed laws ko Part III rights se kya protection milti hai?","expected_doc_ids":["article-31b"]}
 ]

@@ -582,5 +582,21 @@
       "section": "Part III, Article 35",
       "checked_on": "2026-10-06"
     }
+  },
+  {
+    "id": "article-31b",
+    "title": "Article 31B - validation of certain laws in the Ninth Schedule",
+    "title_hi": "अनुच्छेद 31B - नौवीं अनुसूची के कुछ कानूनों का संरक्षण",
+    "title_hinglish": "Article 31B - Ninth Schedule ke kuch laws ka protection",
+    "summary": "Article 31B says Acts and Regulations listed in the Ninth Schedule are not void solely because they conflict with or abridge a Part III right, and they continue in force subject to a competent Legislature's power to repeal or amend them. This short note does not explain court decisions about the limits of that protection or assess any listed law.",
+    "summary_hi": "अनुच्छेद 31B के अनुसार, नौवीं अनुसूची में दिए गए अधिनियम और विनियम केवल इस आधार पर शून्य नहीं माने जाते कि वे भाग III के किसी अधिकार से असंगत हैं या उसे कम करते हैं। वे लागू रहते हैं, लेकिन सक्षम विधानमंडल उन्हें निरस्त या संशोधित कर सकता है। यह संक्षिप्त नोट इस संरक्षण की न्यायालयों द्वारा तय सीमाएँ या किसी सूचीबद्ध कानून का मूल्यांकन नहीं बताता।",
+    "summary_hinglish": "Article 31B kehta hai ki Ninth Schedule mein listed Acts aur Regulations sirf is wajah se void nahi hote ki woh Part III ke kisi right se takrate ya use abridge karte hain. Woh force mein rehte hain, lekin competent Legislature unhe repeal ya amend kar sakti hai. Yeh short note court decisions se protection ki limits ya kisi listed law ka assessment explain nahi karta.",
+    "keywords": ["fundamental rights", "ninth schedule", "listed laws", "validation", "void", "inconsistent", "abridge", "repeal", "amend", "article 31b", "art 31b", "schedule nine", "nauvi anusuchi", "listed kanoon", "adhikar", "नौवीं अनुसूची", "सूचीबद्ध कानून", "संशोधन", "निरस्त", "अनुच्छेद 31B"],
+    "source": {
+      "title": "The Constitution of India - Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 31B",
+      "checked_on": "2026-10-06"
+    }
   }
 ]

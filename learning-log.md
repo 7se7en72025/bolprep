@@ -641,3 +641,11 @@
 
 - Current-page JSON diagnostics now group TTS failures by browser playback error and STT failed/empty attempts by recognition error, with `no-final-transcript` used when recognition ends without a final result or error code. Speech text and audio remain excluded.
 - Verification: JavaScript syntax and `git diff --check` passed. Browser-generated STT/TTS failures were not triggered, so the category output was checked statically rather than through a device trial.
+
+
+## Add Ninth Schedule coverage from Article 31B - 2026-10-06
+
+- Added a concise Article 31B note in English, Hindi, and Hinglish. It summarizes the constitutional text's protection for Ninth Schedule laws against being void solely for conflict with Part III rights and notes legislative repeal or amendment; it does not discuss judicially established limits or assess individual laws. Checked against Article 31B in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-06.
+- Added three constructed retrieval examples, one each in English, Hindi, and Hinglish. The corpus now contains 27 notes and the labeled set contains 94 examples.
+- Verification: parsed both JSON files and checked that focused English, Hindi, and Hinglish Article 31B queries retrieve `article-31b` first; `git diff --check` passes. The retrieval evaluation suite was not run, and aggregate retrieval quality remains unmeasured.
+- Limitation: the note summarizes constitutional text and is not legal advice; examples are constructed, not real learner queries.
