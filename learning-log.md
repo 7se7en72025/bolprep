@@ -1,5 +1,10 @@
 # Learning log
 
+## Prevent recorded transcripts overwriting a submitted question - 2026-10-06
+
+- Starting a tutor turn now cancels any unfinished server recording and aborts pending recorded-file transcription. Late transcription results can no longer replace the question composer after the learner submits a typed question.
+- Verification: `node --check web/app.js` and `git diff --check` passed. The recording/transcription race was not exercised in a browser; provider-side cancellation remains unverified.
+
 ## Add a spoken quiz flow evaluation - 2026-10-06
 
 - Added a repeatable manual run-sheet scenario covering audible quiz prompts, editable spoken answers, rubric feedback, progression to the next question, and saved progress after reload. It uses self-authored practice answers and labels the limitation that deterministic phrase matching does not assess meaning.

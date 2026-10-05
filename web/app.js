@@ -777,6 +777,13 @@ previewVoiceButton.addEventListener("click", () => {
 
 async function sendQuestion(question) {
   prepareStreamingAudio();
+  serverRecordingStartCancelled = true;
+  serverRecordingRun += 1;
+  serverRecordingStarting = false;
+  if (activeMediaRecorder) stopServerRecording(true);
+  activeTranscriptionController?.abort();
+  activeTranscriptionController = null;
+  updateServerTranscribeButton();
   stopSpeechOutput();
   const requestTurn = ++turn;
   preserveInterruptedTurn();
