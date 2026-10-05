@@ -171,6 +171,7 @@ async function startServerRecording() {
     statusLine.textContent = "This browser cannot record audio. Use browser speech input or type your question.";
     return;
   }
+  const recordingLanguage = speechLanguage.value;
   stopTutor();
   serverRecordingStartCancelled = false;
   serverRecordingStarting = true;
@@ -221,11 +222,11 @@ async function startServerRecording() {
         statusLine.textContent = "No audio was recorded. Try again or type your question.";
         return;
       }
-      void transcribeRecordedAudio(audio);
+      void transcribeRecordedAudio(audio, recordingLanguage);
     };
     recorder.start();
     updateServerTranscribeButton("recording");
-    statusLine.textContent = "Recording. Tap Stop or speak for up to 20 seconds.";
+    statusLine.textContent = `Recording in ${recordingLanguage === "hi" ? "Hindi/Hinglish" : "English"}. Tap Stop or speak for up to 20 seconds.`;
     serverRecordingTimer = window.setTimeout(() => {
       statusLine.textContent = "20-second recording limit reached. Transcribing your question.";
       stopServerRecording(false);
@@ -242,17 +243,17 @@ async function startServerRecording() {
   }
 }
 
-async function transcribeRecordedAudio(audio) {
+async function transcribeRecordedAudio(audio, language) {
   const controller = new AbortController();
   activeTranscriptionController = controller;
   updateServerTranscribeButton("busy");
-  statusLine.textContent = "Transcribing your recording. Review the text before asking.";
+  statusLine.textContent = `Transcribing in ${language === "hi" ? "Hindi/Hinglish" : "English"}. Review the text before asking.`;
   try {
     const response = await fetch("/api/transcribe", {
       method: "POST",
       headers: {
         "Content-Type": audio.type.split(";", 1)[0] || "audio/webm",
-        "X-Speech-Language": speechLanguage.value,
+        "X-Speech-Language": language,
       },
       body: audio,
       signal: controller.signal,

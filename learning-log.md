@@ -724,3 +724,8 @@
 - Added three constructed English, Hindi, and Hinglish retrieval examples. The corpus now contains 29 notes and the labeled set contains 100 examples.
 - Verification: corpus and example JSON parsed with 29 unique note IDs and 100 unique labels. The focused retrieval evaluator reports 97% exact match, 100% supported recall@3, and 0% false positives across eight unsupported queries. Three broad-query examples still fail exact match because retrieval returns all 29 notes while their labels list smaller subsets. A focused token-overlap check matched the three Article 39 examples to the new note; `git diff --check` passed.
 - Limitation: the note summarizes constitutional text, not case interpretation or application to any particular law or policy; examples are constructed and do not measure learner or speech performance.
+
+## Keep recorded-file transcription language tied to capture - 2026-10-06
+
+- The optional server-recording flow now captures the selected speech language when recording starts and sends that same language with the clip, even if the selector changes before upload. Recording and transcription status also name the language used.
+- Verification: JavaScript syntax and whitespace checks passed. No browser microphone or provider request was made; the timing behavior remains unverified in a browser.
