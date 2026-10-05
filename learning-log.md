@@ -729,3 +729,9 @@
 
 - The optional server-recording flow now captures the selected speech language when recording starts and sends that same language with the clip, even if the selector changes before upload. Recording and transcription status also name the language used.
 - Verification: JavaScript syntax and whitespace checks passed. No browser microphone or provider request was made; the timing behavior remains unverified in a browser.
+
+
+## Clarify voice input interruption for screen readers - 2026-10-06
+
+- Updated the voice button's accessible name and tooltip to tell users that starting voice input interrupts active tutor audio or a turn.
+- Verification: `node --check web/app.js` and `git diff --check` pass. Screen-reader announcement and browser interaction were not manually checked.

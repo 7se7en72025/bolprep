@@ -82,7 +82,7 @@ function updateMicrophoneButton(listening, disabled = false) {
   const unavailable = !recognitionAvailable;
   const actionLabel = unavailable
     ? "Voice input is unavailable in this browser. You can type your question."
-    : listening ? "Stop voice input" : "Start voice input";
+    : listening ? "Stop voice input" : "Start voice input; interrupts tutor audio or a turn if active";
   micButton.querySelector(".button-label").textContent = label;
   micButton.setAttribute("aria-label", actionLabel);
   micButton.setAttribute("aria-pressed", String(listening));
