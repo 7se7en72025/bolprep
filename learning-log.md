@@ -1,5 +1,11 @@
 # Learning log
 
+## Add Article 31C coverage - 2026-10-06
+
+- Added a bounded English, Hindi, and Hinglish note. It covers the Article 39(b)/(c) scope, the Article 14/19 protection, the assent condition for State laws, and the Constitution source footnotes about Minerva Mills and Kesavananda Bharati without generalizing either holding. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-06.
+- Added three constructed retrieval examples. The corpus now contains 26 notes and the labeled set contains 91 examples.
+- Verification: the corpus loader accepted all 26 notes; focused English, Hindi, and Hinglish retrieval returned only Article 31C. Node confirmed 91 unique examples and valid Article 31C source metadata; `git diff --check` passed. No browser or live-model behavior was exercised; constructed examples do not measure learner or speech performance.
+
 ## Cancel quiz setup when stopping - 2026-10-06
 
 - Starting a quiz now uses the same abortable request slot as tutor turns and quiz scoring. Stop or Escape cancels the browser request, while the turn token continues to reject any late response; this avoids leaving quiz creation running after the learner has stopped.

@@ -87,4 +87,8 @@
   {"id":"en-art31a-estates","language":"English","question":"What kinds of property laws does Article 31A cover?","expected_doc_ids":["article-31a"]},
   {"id":"hi-art31a-zameen","language":"Hindi","question":"अनुच्छेद 31A में संपदा और भूमि से जुड़े किन कानूनों का ज़िक्र है?","expected_doc_ids":["article-31a"]},
   {"id":"hinglish-art31a-property","language":"Hinglish","question":"Article 31A mein estate acquisition aur property management ke baare mein kya hai?","expected_doc_ids":["article-31a"]}
+,
+  {"id":"en-art31c-dpsp","language":"English","question":"What laws does Article 31C protect from rights under Articles 14 and 19?","expected_doc_ids":["article-31c"]},
+  {"id":"hi-art31c-policy","language":"Hindi","question":"अनुच्छेद 31C के तहत अनुच्छेद 39(b) और 39(c) की नीति लागू करने वाले कानूनों को किन अधिकारों से संरक्षण मिलता है?","expected_doc_ids":["article-31c"]},
+  {"id":"hinglish-art31c-policy","language":"Hinglish","question":"Article 31C mein 39(b) aur 39(c) ki policy wale kanoon ko Article 14 aur 19 se kya protection milti hai?","expected_doc_ids":["article-31c"]}
 ]
