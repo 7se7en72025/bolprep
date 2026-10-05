@@ -69,4 +69,14 @@ Run these checks in a browser with speech playback available. Use the same brows
 | Stop while thinking, then follow up | | | | |
 | Follow up after completed answer | | | | |
 
+For each attempt, add one row below before summarizing the totals above. Keep the browser, device, language, and answer fixed across repetitions; if any setting changes, start a separate run sheet. Use the visible browser status or event as the observation, and mark unsupported browser behavior as unavailable rather than pass or fail.
+
+| Case | Trial | Outcome (pass / fail / unavailable) | Browser event or visible symptom |
+| --- | ---: | --- | --- |
+| | 1 | | |
+| | 2 | | |
+| | 3 | | |
+| | 4 | | |
+| | 5 | | |
+
 This is a manual interaction check, not provider cancellation proof. The local client can abort its request and ignore stale client events, but the model provider may continue generating after the browser stops waiting.

@@ -1,4 +1,8 @@
 # Learning log
+## Capture individual interruption trials - 2026-10-05
+
+- The browser voice run sheet now has a row for each interruption attempt, records the outcome and visible browser symptom, and asks users to keep run settings fixed or start a separate sheet when they change.
+- Verification: reviewed the updated run-sheet section and `git diff --check` passed. No browser/device interaction was performed.
 
 ## Preserve answers when stopping quiz score requests - 2026-10-05
 
