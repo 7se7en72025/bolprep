@@ -50,5 +50,8 @@
   {"id": "hinglish-art28-state-funds", "language": "Hinglish", "question": "Article 28 ke mutabik poori tarah State funds se chalne wale school mein religious instruction de sakte hain?", "expected_doc_ids": ["article-28"]},
   {"id": "en-art29-school-admission", "language": "English", "question": "Can a government-aided college refuse admission only because of a student's language under Article 29?", "expected_doc_ids": ["article-29"]},
   {"id": "hi-art29-language-culture", "language": "Hindi", "question": "Article 29 में विशिष्ट भाषा, लिपि और संस्कृति को सुरक्षित रखने का अधिकार क्या है?", "expected_doc_ids": ["article-29"]},
-  {"id": "hinglish-art29-script", "language": "Hinglish", "question": "Article 29 distinct script aur culture ko preserve karne ke baare mein kya kehta hai?", "expected_doc_ids": ["article-29"]}
+  {"id": "hinglish-art29-script", "language": "Hinglish", "question": "Article 29 distinct script aur culture ko preserve karne ke baare mein kya kehta hai?", "expected_doc_ids": ["article-29"]},
+  {"id": "en-art30-minority-school", "language": "English", "question": "Can a religious minority establish and manage its own school under Article 30?", "expected_doc_ids": ["article-30"]},
+  {"id": "hi-art30-aid", "language": "Hindi", "question": "अनुच्छेद 30 के तहत अल्पसंख्यक शैक्षणिक संस्थान को सहायता देने में राज्य भेदभाव कर सकता है?", "expected_doc_ids": ["article-30"]},
+  {"id": "hinglish-art30-acquisition", "language": "Hinglish", "question": "Article 30 mein minority school ki property compulsory acquire karne par kya protection hai?", "expected_doc_ids": ["article-30"]}
 ]

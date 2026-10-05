@@ -518,3 +518,10 @@
 
 - The retrieval evaluator now rejects blank IDs/questions/expected labels, language names outside English/Hindi/Hinglish, and duplicate expected document IDs before scoring.
 - Verification: parsed `evals/run_retrieval_eval.py` with Python's AST parser and ran `git diff --check`. The evaluation runner was not executed.
+
+## Add minority education protections from Article 30 - 2026-10-05
+
+- Added English, Hindi, and Hinglish summaries and retrieval keywords for Article 30(1), (1A), and (2): minority institutions, protection when their property is compulsorily acquired, and nondiscrimination in State aid. Checked against Article 30 in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-05.
+- Added three constructed English, Hindi, and Hinglish retrieval examples. The corpus now contains 15 notes and the labeled set contains 55 examples.
+- Verification: Node parsed the corpus and evaluation JSON (15 notes, 55 examples), checked Article 30 source/language metadata, and a focused lexical-retrieval check ranked all three Article 30 examples first; `git diff --check` passes. The Python retrieval evaluator could not run because the configured `.venv` points to a missing Python 3.11 executable; aggregate retrieval metrics remain unmeasured.
+- Limitation: the note summarizes constitutional text and is not legal advice; examples are constructed, not real learner queries, and retrieval quality remains unmeasured.
