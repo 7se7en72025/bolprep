@@ -105,39 +105,40 @@ def retrieve(question: str, limit: int | None = None) -> list[dict[str, Any]]:
         return []
 
     query_tokens = {token for token in _tokens(question) if not token.isdigit()}
-    normalized_question = question.casefold()
-    if any(phrase in normalized_question for phrase in ("fundamental rights", "मौलिक अधिकार", "maulik adhikar")):
-        has_explicit_article = re.search(
-            r"(?:\b(?:article|art|anuchhed)\s*[-.]?\s*\d+[a-z]?\b|अनुच्छेद\s*[-.]?\s*\d+[a-z]?\b)",
-            question,
-            re.IGNORECASE,
-        )
-        if not has_explicit_article:
-            documents = load_corpus()
-            return documents if limit is None else documents[:limit]
-
     informative_tokens = {
         token for token in query_tokens
-        if token not in GENERIC_ARTICLE_QUERY_TOKENS and not token.isdigit()
+        if token not in GENERIC_ARTICLE_QUERY_TOKENS | {"article", "art", "anuchhed"}
+        and not token.isdigit()
     }
+    normalized_question = question.casefold()
+    article_reference = re.search(
+        r"(?:\b(?:article|art|anuchhed)\s*[-.]?\s*(?P<article_id>\d+[a-z]?)\b|\u0905\u0928\u0941\u091a\u094d\u091b\u0947\u0926\s*[-.]?\s*(?P<hindi_id>\d+[a-z]?)\b)",
+        question,
+        re.IGNORECASE,
+    )
+    documents = load_corpus()
+    if article_reference:
+        article_id = (article_reference.group("article_id") or article_reference.group("hindi_id")).casefold()
+        document = next((item for item in documents if item["id"] == f"article-{article_id}"), None)
+        if document is None:
+            return []
+        if informative_tokens:
+            keyword_tokens = _tokens(" ".join(document["keywords"]))
+            body_tokens = _tokens(f"{document['title']} {document['summary']}")
+            if not informative_tokens & (keyword_tokens | body_tokens):
+                return []
+        return [document][:limit] if limit is not None else [document]
+
+    if any(phrase in normalized_question for phrase in ("fundamental rights", "\u092e\u094c\u0932\u093f\u0915 \u0905\u0927\u093f\u0915\u093e\u0930", "maulik adhikar")):
+        return documents if limit is None else documents[:limit]
+
     scored: list[tuple[int, dict[str, Any]]] = []
-    for document in load_corpus():
+    for document in documents:
         keyword_tokens = _tokens(" ".join(document["keywords"]))
         body_tokens = _tokens(f"{document['title']} {document['summary']}")
         score = 2 * len(query_tokens & keyword_tokens) + len(query_tokens & body_tokens)
-        article_id = document["id"].removeprefix("article-")
-        article_reference = re.search(
-            rf"(?:\b(?:article|art|anuchhed)\s*[-.]?\s*{re.escape(article_id)}\b|अनुच्छेद\s*[-.]?\s*{re.escape(article_id)}\b)",
-            question,
-            re.IGNORECASE,
-        )
-        if article_reference:
-            topic_match = bool(informative_tokens & (keyword_tokens | body_tokens))
-            if topic_match or not informative_tokens:
-                score += 12
         if score >= 2:
             scored.append((score, document))
-
     scored.sort(key=lambda result: (-result[0], result[1]["id"]))
     if not scored:
         return []

@@ -1,10 +1,15 @@
 # Learning log
 
+## Scope retrieval to named articles and abstain on unsupported details - 2026-10-05
+
+- Explicit English, Hinglish, and Hindi article references now search only the named note; if its keywords and summary do not cover the topic, retrieval abstains instead of returning unrelated notes. Broad topic queries retain the full-corpus behavior. This closes false positives where an Article 21 privacy question returned other article notes.
+- Verification: the Python loader read all 21 notes; focused checks confirmed three Article 32 queries return only Article 32, three out-of-domain or uncovered-detail queries return no notes, a generic Article 21 query returns Article 21, an unindexed Article 99 abstains, and a broad Fundamental Rights query returns all notes. Python AST parsing and `git diff --check` passed. The full evaluator and browser interactions were not run; aggregate retrieval quality remains unmeasured.
+
 ## Broaden multilingual retrieval abstention examples - 2026-10-05
 
 - Added Hinglish out-of-domain and Hindi/Hinglish uncovered-detail cases to check that lexical retrieval abstains across all three supported language categories, not only on existing English/Hindi negatives.
 - Updated the README's constructed-set count from 73 to 76 and documented the added coverage. These remain authored text examples, not learner or speech measurements.
-- Verification: Node parsed the JSON dataset, checked 76 unique IDs and the three new records, and `git diff --check` passed. The Python retrieval evaluator could not run because the checked-in virtual environment points to a missing Python 3.11 installation; actual retrieval outcomes and aggregate metrics remain unverified.
+- Verification: Node parsed the JSON dataset and checked 76 unique IDs plus the three new records. The Python retrieval evaluator was not run during this pass; retrieval outcomes and aggregate metrics were not yet checked.
 
 ## Add an end-to-end voice trial record - 2026-10-05
 
