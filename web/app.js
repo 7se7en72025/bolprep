@@ -8,6 +8,7 @@ const stopButton = document.querySelector("#stop-button");
 const modeLabel = document.querySelector("#mode-label");
 const speechLanguage = document.querySelector("#speech-language");
 const speechVoice = document.querySelector("#speech-voice");
+const streamedTtsOption = document.querySelector("#streamed-tts");
 const inputLabel = document.querySelector('label[for="question-input"]');
 const previewVoiceButton = document.querySelector("#preview-voice");
 const copySpeechDiagnosticsButton = document.querySelector("#copy-speech-diagnostics");
@@ -45,6 +46,10 @@ let recognitionStartedAt = null;
 let recognitionHadFinalResult = false;
 let pendingQuestion = null;
 let matchingSpeechVoices = [];
+let streamingTtsAvailable = false;
+let activeSpeechController = null;
+let speechAudioContext = null;
+const scheduledSpeechSources = new Set();
 const speechSamples = [];
 const speechFailures = [];
 const recognitionSamples = [];
@@ -138,9 +143,28 @@ function preserveInterruptedTurn() {
   pendingQuestion = null;
 }
 
-function stopTutor() {
+function stopSpeechOutput() {
   speechTurn += 1;
   window.speechSynthesis?.cancel();
+  activeSpeechController?.abort();
+  activeSpeechController = null;
+  scheduledSpeechSources.forEach((source) => {
+    try { source.stop(); } catch { /* The source may already have ended. */ }
+  });
+  scheduledSpeechSources.clear();
+}
+
+function prepareStreamingAudio() {
+  if (!streamedTtsOption.checked) return null;
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return null;
+  speechAudioContext ||= new AudioContextClass({ sampleRate: 24000 });
+  speechAudioContext.resume().catch(() => {});
+  return speechAudioContext;
+}
+
+function stopTutor() {
+  stopSpeechOutput();
   preserveInterruptedTurn();
   activeRequest?.abort();
   activeRequest = null;
@@ -389,6 +413,126 @@ function splitSpeechText(text, maxCodePoints = 500) {
 }
 
 function speak(text, completionText = "Ready when you are.", kind = "tutor") {
+  stopSpeechOutput();
+  if (streamedTtsOption.checked && streamingTtsAvailable) {
+    if (text.length > 4096) {
+      statusLine.textContent = "This answer is too long for streamed speech; using the browser voice.";
+      speakWithBrowser(text, completionText, kind);
+      return;
+    }
+    void speakStreamed(text, completionText, kind, speechTurn);
+    return;
+  }
+  speakWithBrowser(text, completionText, kind);
+}
+
+async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
+  const context = prepareStreamingAudio();
+  if (!context) {
+    statusLine.textContent = "This browser cannot play streamed audio here. Using the browser voice.";
+    speakWithBrowser(text, completionText, kind);
+    return;
+  }
+  const controller = new AbortController();
+  activeSpeechController = controller;
+  const voice = "coral";
+  const sample = { language: speechLanguage.value, voice: `OpenAI ${voice}`, kind };
+  const queuedAt = performance.now();
+  let firstAudioAt = null;
+  let nextStartAt = 0;
+  let streamFinished = false;
+  let resolvePlayback;
+  const requestSources = new Set();
+  const playbackDone = new Promise((resolve) => { resolvePlayback = resolve; });
+  try {
+    const response = await fetch("/api/speech", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, language: speechLanguage.value, voice }),
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}));
+      throw new Error(payload.error || "Streamed speech is unavailable.");
+    }
+    if (!response.body) throw new Error("This browser cannot receive streamed audio.");
+    await context.resume();
+    const reader = response.body.getReader();
+    let pending = new Uint8Array(0);
+    let audioChunks = 0;
+    const queuePcm = (bytes) => {
+      const sampleCount = Math.floor(bytes.byteLength / 2);
+      if (!sampleCount) return;
+      const view = new DataView(bytes.buffer, bytes.byteOffset, sampleCount * 2);
+      const samples = new Float32Array(sampleCount);
+      for (let index = 0; index < sampleCount; index += 1) {
+        samples[index] = view.getInt16(index * 2, true) / 32768;
+      }
+      const buffer = context.createBuffer(1, sampleCount, 24000);
+      buffer.copyToChannel(samples, 0);
+      const source = context.createBufferSource();
+      source.buffer = buffer;
+      source.connect(context.destination);
+      const startAt = Math.max(nextStartAt, context.currentTime + 0.025);
+      if (firstAudioAt === null) {
+        firstAudioAt = performance.now() + Math.max(0, startAt - context.currentTime) * 1000;
+        statusLine.textContent = "Tutor is speaking with streamed audio. Tap Stop audio or Speak to interrupt.";
+      }
+      nextStartAt = startAt + buffer.duration;
+      requestSources.add(source);
+      scheduledSpeechSources.add(source);
+      source.onended = () => {
+        requestSources.delete(source);
+        scheduledSpeechSources.delete(source);
+        if (streamFinished && requestSources.size === 0) resolvePlayback();
+      };
+      source.start(startAt);
+      audioChunks += 1;
+    };
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      const combined = new Uint8Array(pending.length + value.length);
+      combined.set(pending);
+      combined.set(value, pending.length);
+      const usableLength = combined.length - (combined.length % 2);
+      if (usableLength) queuePcm(combined.subarray(0, usableLength));
+      pending = combined.slice(usableLength);
+    }
+    if (pending.length) throw new Error("The speech stream ended on an incomplete audio sample.");
+    if (!audioChunks) throw new Error("The speech provider returned no audio.");
+    streamFinished = true;
+    if (scheduledSpeechSources.size === 0) resolvePlayback();
+    await playbackDone;
+    if (requestSpeechTurn !== speechTurn) return;
+    const endedAt = performance.now();
+    const startDelay = ((firstAudioAt - queuedAt) / 1000).toFixed(2);
+    const playbackDuration = ((endedAt - firstAudioAt) / 1000).toFixed(2);
+    speechSamples.push({ ...sample, startMs: firstAudioAt - queuedAt, playbackMs: endedAt - firstAudioAt });
+    if (speechSamples.length > 500) speechSamples.shift();
+    statusLine.textContent = `${completionText} Stream start ${startDelay}s, playback ${playbackDuration}s. `
+      + speechTimingSummary(sample);
+  } catch (error) {
+    if (error.name === "AbortError" || requestSpeechTurn !== speechTurn) return;
+    requestSources.forEach((source) => {
+      try { source.stop(); } catch { /* The source may already have ended. */ }
+      scheduledSpeechSources.delete(source);
+    });
+    requestSources.clear();
+    speechFailures.push({ ...sample, reason: "stream-failed" });
+    if (speechFailures.length > 500) speechFailures.shift();
+    if (firstAudioAt === null) {
+      statusLine.textContent = `${error.message} Falling back to the browser voice.`;
+      speakWithBrowser(text, completionText, kind);
+    } else {
+      statusLine.textContent = `${error.message} Streamed speech stopped.`;
+    }
+  } finally {
+    if (activeSpeechController === controller) activeSpeechController = null;
+  }
+}
+
+function speakWithBrowser(text, completionText = "Ready when you are.", kind = "tutor") {
   if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
     statusLine.textContent = "Speech playback is not available in this browser. Read the answer above.";
     return;
@@ -460,6 +604,7 @@ previewVoiceButton.addEventListener("click", () => {
 });
 
 async function sendQuestion(question) {
+  prepareStreamingAudio();
   const requestTurn = ++turn;
   preserveInterruptedTurn();
   activeRequest?.abort();
@@ -521,6 +666,7 @@ async function sendQuestion(question) {
 
 async function startQuiz() {
   stopTutor();
+  prepareStreamingAudio();
   const requestTurn = turn;
   quizButton.disabled = true;
   nextQuestionButton.hidden = true;
@@ -562,6 +708,7 @@ function showQuizQuestion(speakPrompt = true) {
 }
 
 async function submitQuizAnswer(answer) {
+  prepareStreamingAudio();
   if (!quizSession || !quizSession.awaitingAnswer) return;
   const current = quizSession.questions[quizSession.index];
   current.idempotencyKey ||= window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -659,7 +806,8 @@ stopButton.addEventListener("click", () => {
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
   const speechSynthesis = window.speechSynthesis;
-  if (!activeRequest && !recognitionListening && !speechSynthesis?.speaking && !speechSynthesis?.pending) return;
+  if (!activeRequest && !activeSpeechController && !scheduledSpeechSources.size
+    && !recognitionListening && !speechSynthesis?.speaking && !speechSynthesis?.pending) return;
   event.preventDefault();
   const stoppingQuizScore = Boolean(quizSession && !quizSession.awaitingAnswer);
   stopTutor();
@@ -745,10 +893,16 @@ const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecogni
 speechLanguage.addEventListener("change", () => {
   refreshSpeechVoices();
   const speechSynthesis = window.speechSynthesis;
-  if (speechSynthesis?.speaking || speechSynthesis?.pending) {
-    speechTurn += 1;
-    speechSynthesis.cancel();
+  if (activeSpeechController || scheduledSpeechSources.size || speechSynthesis?.speaking || speechSynthesis?.pending) {
+    stopSpeechOutput();
     statusLine.textContent = "Speech language changed. Current playback stopped; the new language applies next time.";
+  }
+});
+streamedTtsOption.addEventListener("change", () => {
+  if (activeSpeechController || scheduledSpeechSources.size) stopSpeechOutput();
+  if (streamedTtsOption.checked && !prepareStreamingAudio()) {
+    streamedTtsOption.checked = false;
+    statusLine.textContent = "This browser cannot play streamed audio. Use the installed browser voice instead.";
   }
 });
 speechLanguage.addEventListener("change", saveSpeechPreferences);
@@ -843,6 +997,11 @@ micButton.addEventListener("click", () => {
 
 fetch("/health").then((response) => response.json()).then((health) => {
   const mode = health.mode === "model" ? "Model answers enabled" : "Offline practice mode";
+  streamingTtsAvailable = Boolean(health.streaming_tts);
+  streamedTtsOption.disabled = !streamingTtsAvailable;
+  streamedTtsOption.title = streamingTtsAvailable
+    ? "Streams generated speech from the server. API usage may be billed."
+    : "Add an API key to the local server configuration to enable streamed speech.";
   modeLabel.textContent = `${mode} · history stays in this tab`;
   if (!recognitionAvailable) statusLine.textContent = "Ready to type. Speech recognition is not available in this browser.";
 }).catch(() => {

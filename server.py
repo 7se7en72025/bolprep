@@ -24,12 +24,19 @@ MAX_BODY_BYTES = 256 * 1024
 
 
 class BolPrepHandler(BaseHTTPRequestHandler):
+    protocol_version = "HTTP/1.1"
+
     def do_GET(self) -> None:
         if self.path == "/health":
             mode = "model" if api_is_configured() else "offline"
             self._send_json(
                 200,
-                {"ok": True, "mode": mode, "study_notes": len(load_corpus())},
+                {
+                    "ok": True,
+                    "mode": mode,
+                    "study_notes": len(load_corpus()),
+                    "streaming_tts": api_is_configured(),
+                },
                 include_session_cookie=False,
             )
             return
@@ -74,11 +81,14 @@ class BolPrepHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         self._ensure_browser_session()
-        if self.path not in {"/api/answer", "/api/agent/turn", "/api/quiz/start", "/api/quiz/score"}:
+        if self.path not in {"/api/answer", "/api/agent/turn", "/api/quiz/start", "/api/quiz/score", "/api/speech"}:
             self.send_error(404, "Not found")
             return
         body = self._read_json_body()
         if body is None:
+            return
+        if self.path == "/api/speech":
+            self._handle_speech(body)
             return
         if self.path == "/api/quiz/start":
             self._handle_quiz_start(body)
@@ -168,6 +178,67 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             self._send_json(502, {"error": "Tutor request failed. Check the server terminal and try again."})
             return
         self._send_json(200, result)
+
+    def _handle_speech(self, body: dict[str, Any]) -> None:
+        text = body.get("text")
+        language = body.get("language")
+        voice = body.get("voice")
+        if not isinstance(text, str) or not text.strip() or len(text) > 4096:
+            self._send_json(400, {"error": "Speech text must contain between 1 and 4,096 characters."})
+            return
+        if not isinstance(language, str) or language not in {"hi-IN", "en-IN"}:
+            self._send_json(400, {"error": "Choose Hindi/Hinglish or English."})
+            return
+        allowed_voices = {"alloy", "ash", "ballad", "coral", "echo", "fable", "marin", "cedar", "nova", "onyx", "sage", "shimmer", "verse"}
+        if not isinstance(voice, str) or voice not in allowed_voices:
+            self._send_json(400, {"error": "Choose a supported streamed voice."})
+            return
+        if not api_is_configured():
+            self._send_json(503, {"error": "Streamed speech needs an API key. Browser speech remains available."})
+            return
+        response_started = False
+        try:
+            from openai import OpenAI
+
+            client = OpenAI(timeout=60.0, max_retries=0)
+            instructions = (
+                "Speak clearly in Hindi with a conversational pace."
+                if language == "hi-IN"
+                else "Speak clearly in Indian English with a conversational pace."
+            )
+            with client.audio.speech.with_streaming_response.create(
+                model="gpt-4o-mini-tts",
+                voice=voice,
+                input=text.strip(),
+                instructions=instructions,
+                response_format="pcm",
+            ) as response:
+                self.send_response(200)
+                self.send_header("Content-Type", "audio/pcm")
+                self.send_header("X-Audio-Sample-Rate", "24000")
+                self.send_header("Transfer-Encoding", "chunked")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("X-Content-Type-Options", "nosniff")
+                self._send_session_cookie_if_needed()
+                self.end_headers()
+                response_started = True
+                for chunk in response.iter_bytes(chunk_size=4096):
+                    if not chunk:
+                        continue
+                    self.wfile.write(f"{len(chunk):X}\r\n".encode("ascii"))
+                    self.wfile.write(chunk)
+                    self.wfile.write(b"\r\n")
+                    self.wfile.flush()
+                self.wfile.write(b"0\r\n\r\n")
+                self.wfile.flush()
+        except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
+            self.close_connection = True
+        except Exception as exc:
+            print(f"Streamed speech request failed: {exc}")
+            if response_started:
+                self.close_connection = True
+            else:
+                self._send_json(502, {"error": "The speech provider could not return audio. Check the server terminal and try again."})
 
     def _read_json_body(self) -> dict[str, Any] | None:
         try:

@@ -9,6 +9,7 @@ Use this sheet to compare browser-provided speech features on the same device an
 - Operating system and device:
 - Network state:
 - Speech language selected in BolPrep:
+- TTS provider and voice selected (browser or streamed OpenAI Coral):
 - Installed TTS voice selected (name and locale):
 - Browser-provided STT available:
 
@@ -16,7 +17,7 @@ Do not record or upload learner audio for this run. The app keeps timing summari
 
 ## TTS checks
 
-Use **Preview** for the fixed English phrase. For Hindi and Hinglish, run BolPrep without an API key, ask the corresponding fixed offline question in the STT table, and repeat the same answer at least ten times. Keep the browser, device, language, and question/answer the same when comparing voices. Reloading the page clears the timing samples. Since Hindi/Hinglish samples use tutor answers while English uses Preview, compare p50/p95 only within the same sample type.
+Use **Preview** for the fixed English phrase. For Hindi and Hinglish, run BolPrep without an API key, ask the corresponding fixed offline question in the STT table, and repeat the same answer at least ten times. To compare streamed speech, configure the server API key, enable **Use experimental streamed OpenAI Coral voice**, and repeat the same phrase; each streamed attempt may incur API usage. Keep the browser, device, provider, voice, language, and question/answer the same within a comparison. Reloading the page clears the timing samples. Since Hindi/Hinglish samples use tutor answers while English uses Preview, compare p50/p95 only within the same sample type.
 
 | Language | TTS phrase / question | Intelligibility (1-5) | Pronunciation (1-5) | Naturalness (1-5) | Notes / failures |
 | --- | --- | ---: | ---: | ---: | --- |
@@ -24,7 +25,7 @@ Use **Preview** for the fixed English phrase. For Hindi and Hinglish, run BolPre
 | Hinglish | Use Hinglish STT prompt below; listen to the offline tutor answer. | | | | |
 | English | Hello, let's study fundamental rights together. | | | | |
 
-From the copied JSON `tts` entries, transfer `start_delay.p50_s` / `start_delay.p95_s` and `playback_duration.p50_s` / `playback_duration.p95_s` into the matching language, voice, and sample-type row (Preview or tutor answer). `completed_count` is Runs; `failure_count` is Failures. A `null` timing means no successful playback was recorded for that group.
+From the copied JSON `tts` entries, transfer `start_delay.p50_s` / `start_delay.p95_s` and `playback_duration.p50_s` / `playback_duration.p95_s` into the matching language, voice, and sample-type row (Preview or tutor answer). Streamed runs are labeled `OpenAI coral`. `completed_count` is Runs; `failure_count` is Failures. A `null` timing means no successful playback was recorded for that group.
 
 | Language / voice | Sample type | Runs | Start p50 / p95 (s) | Playback p50 / p95 (s) | Failures |
 | --- | --- | ---: | ---: | ---: | --- |
