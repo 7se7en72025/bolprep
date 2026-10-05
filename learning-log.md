@@ -1,5 +1,10 @@
 # Learning log
 
+## Cancel quiz setup when stopping - 2026-10-06
+
+- Starting a quiz now uses the same abortable request slot as tutor turns and quiz scoring. Stop or Escape cancels the browser request, while the turn token continues to reject any late response; this avoids leaving quiz creation running after the learner has stopped.
+- Updated the README's keyboard shortcut note. Verification: `node --check web/app.js` and `git diff --check` passed. Browser interaction and server-side cancellation were not exercised.
+
 ## Add experimental streamed TTS - 2026-10-06
 
 - Added an opt-in server-side OpenAI speech endpoint that streams 24 kHz PCM chunks to the browser, based on the [official TTS guide](https://developers.openai.com/api/docs/guides/text-to-speech). The key stays on the server; the user must enable the checkbox before streamed speech is used, and browser speech remains the default and fallback. Hindi speech is requested for `hi-IN`, but the built-in voice is optimized for English and has not been pronunciation-checked.

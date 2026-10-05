@@ -668,6 +668,8 @@ async function startQuiz() {
   stopTutor();
   prepareStreamingAudio();
   const requestTurn = turn;
+  const controller = new AbortController();
+  activeRequest = controller;
   quizButton.disabled = true;
   nextQuestionButton.hidden = true;
   statusLine.textContent = "Preparing a three-question Fundamental Rights quiz…";
@@ -676,6 +678,7 @@ async function startQuiz() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ topic: "fundamental rights", question_count: 3, language: speechLanguage.value }),
+      signal: controller.signal,
     });
     const payload = await response.json();
     if (!response.ok) throw new Error(payload.error || "Could not start the quiz.");
@@ -689,6 +692,7 @@ async function startQuiz() {
     }
   } finally {
     quizButton.disabled = false;
+    if (activeRequest === controller) activeRequest = null;
   }
 }
 
