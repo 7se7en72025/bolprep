@@ -4,7 +4,7 @@
 
 - Added English, Hindi, and Hinglish notes for Article 17's abolition of untouchability and Article 18's restrictions on State-conferred and foreign titles. Checked against Articles 17 and 18 in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-05.
 - Added three constructed English, Hindi, and Hinglish retrieval examples per article. The corpus now contains 18 notes and the labeled set contains 64 examples.
-- Verification: Node parsed both JSON files (18 notes, 64 examples) and a focused check mirroring lexical ranking put all six Article 17/18 examples first; `git diff --check` passes. The Python retrieval evaluator was not run because Python is unavailable in this task environment; aggregate retrieval metrics remain unmeasured. Browser interactions were not run.
+- Verification: Node parsed both JSON files (18 notes, 64 examples) and a focused check mirroring lexical ranking put all six Article 17/18 examples first; `git diff --check` passes. The Python retrieval evaluator was not run; aggregate retrieval metrics remain unmeasured. Browser interactions were not run.
 - Limitation: these concise notes summarize the stated text and do not cover legal interpretation; examples are constructed, not real learner queries, and retrieval quality remains unmeasured.
 
 ## Cover protections for accused persons in Article 20 - 2026-10-05
