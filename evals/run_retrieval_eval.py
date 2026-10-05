@@ -84,6 +84,26 @@ def evaluate(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
     unsupported_rows = [row for row in rows if not row["expected_doc_ids"]]
     expected_total = sum(len(row["expected_doc_ids"]) for row in supported_rows)
     retrieved_expected_total = sum(len(row["retrieved_expected"]) for row in supported_rows)
+    per_language_metrics: dict[str, dict[str, Any]] = {}
+    for language, language_rows in sorted(per_language.items()):
+        language_supported = [row for row in language_rows if row["expected_doc_ids"]]
+        language_unsupported = [row for row in language_rows if not row["expected_doc_ids"]]
+        language_expected_total = sum(len(row["expected_doc_ids"]) for row in language_supported)
+        language_retrieved_total = sum(len(row["retrieved_expected"]) for row in language_supported)
+        per_language_metrics[language] = {
+            "example_count": len(language_rows),
+            "supported_count": len(language_supported),
+            "unsupported_count": len(language_unsupported),
+            "exact_match_rate": round(sum(row["passed"] for row in language_rows) / len(language_rows), 4),
+            "supported_recall_at_3": (
+                round(language_retrieved_total / language_expected_total, 4)
+                if language_expected_total else None
+            ),
+            "unsupported_false_positive_rate": (
+                round(sum(bool(row["retrieved_doc_ids"]) for row in language_unsupported) / len(language_unsupported), 4)
+                if language_unsupported else None
+            ),
+        }
 
     return {
         "dataset": str(dataset_path.relative_to(REPO_ROOT)),
@@ -99,6 +119,7 @@ def evaluate(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
             language: round(sum(row["passed"] for row in language_rows) / len(language_rows), 4)
             for language, language_rows in sorted(per_language.items())
         },
+        "per_language": per_language_metrics,
         "failures": [row for row in rows if not row["passed"]],
         "results": rows,
         "note": "Constructed text examples only; these figures do not estimate real learner or speech performance.",

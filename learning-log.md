@@ -1,5 +1,10 @@
 # Learning log
 
+## Add per-language retrieval reporting - 2026-10-06
+
+- Extended the labeled retrieval report with per-language example and support counts, exact match, supported recall@3, and unsupported false-positive rate. Rates with no applicable examples are reported as `null`.
+- Documented the added JSON metrics in the README. `python -m py_compile evals/run_retrieval_eval.py` and `git diff --check` passed. The labeled evaluator was not run; the reported examples remain constructed text cases and do not measure learner or speech performance.
+
 ## Add Article 31A coverage - 2026-10-06
 
 - Added bounded English, Hindi, and Hinglish summaries of Article 31A(1)'s specified property, corporate, and mineral-related laws. The note says these laws are not void solely for inconsistency with Article 14 or 19, and leaves conditions, definitions, exceptions, assent requirements, compensation, and court interpretation outside its scope. Checked against the Constitution of India published by the Legislative Department, Government of India (https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-06.
