@@ -9,6 +9,7 @@ const modeLabel = document.querySelector("#mode-label");
 const speechLanguage = document.querySelector("#speech-language");
 const speechVoice = document.querySelector("#speech-voice");
 const streamedTtsOption = document.querySelector("#streamed-tts");
+const streamedTtsVoice = document.querySelector("#streamed-tts-voice");
 const inputLabel = document.querySelector('label[for="question-input"]');
 const previewVoiceButton = document.querySelector("#preview-voice");
 const copySpeechDiagnosticsButton = document.querySelector("#copy-speech-diagnostics");
@@ -22,6 +23,9 @@ try {
 }
 if (["hi-IN", "en-IN"].includes(speechPreferences.language)) {
   speechLanguage.value = speechPreferences.language;
+}
+if ([...streamedTtsVoice.options].some((option) => option.value === speechPreferences.streamedTtsVoice)) {
+  streamedTtsVoice.value = speechPreferences.streamedTtsVoice;
 }
 const savedVoices = speechPreferences.voices && typeof speechPreferences.voices === "object"
   ? speechPreferences.voices
@@ -212,7 +216,11 @@ function refreshSpeechVoices() {
 
 function saveSpeechPreferences() {
   savedVoices[speechLanguage.value] = speechVoice.value;
-  speechPreferences = { language: speechLanguage.value, voices: savedVoices };
+  speechPreferences = {
+    language: speechLanguage.value,
+    voices: savedVoices,
+    streamedTtsVoice: streamedTtsVoice.value,
+  };
   try {
     window.localStorage.setItem(speechPreferencesKey, JSON.stringify(speechPreferences));
   } catch {
@@ -438,7 +446,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
   }
   const controller = new AbortController();
   activeSpeechController = controller;
-  const voice = "coral";
+  const voice = streamedTtsVoice.value;
   const sample = {
     language: speechLanguage.value,
     voice: `OpenAI ${voice}`,
@@ -918,6 +926,14 @@ streamedTtsOption.addEventListener("change", () => {
     streamedTtsOption.checked = false;
     statusLine.textContent = "This browser cannot play streamed audio. Use the installed browser voice instead.";
   }
+  streamedTtsVoice.disabled = !streamingTtsAvailable || !streamedTtsOption.checked;
+});
+streamedTtsVoice.addEventListener("change", () => {
+  if (activeSpeechController || scheduledSpeechSources.size) {
+    stopSpeechOutput();
+    statusLine.textContent = "Streamed voice changed. The new voice applies to the next playback.";
+  }
+  saveSpeechPreferences();
 });
 speechLanguage.addEventListener("change", saveSpeechPreferences);
 speechVoice.addEventListener("change", saveSpeechPreferences);
@@ -1017,6 +1033,7 @@ fetch("/health").then((response) => response.json()).then((health) => {
   const mode = health.mode === "model" ? "Model answers enabled" : "Offline practice mode";
   streamingTtsAvailable = Boolean(health.streaming_tts);
   streamedTtsOption.disabled = !streamingTtsAvailable;
+  streamedTtsVoice.disabled = !streamingTtsAvailable || !streamedTtsOption.checked;
   streamedTtsOption.title = streamingTtsAvailable
     ? "Streams generated speech from the server. API usage may be billed."
     : "Add an API key to the local server configuration to enable streamed speech.";

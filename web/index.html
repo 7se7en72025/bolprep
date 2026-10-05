@@ -58,7 +58,24 @@
             <button class="send-button" id="send-button" type="submit"><span id="send-label">Ask tutor</span><span aria-hidden="true">↗</span></button>
           </div>
         </form>
-        <label class="streamed-tts-toggle"><input id="streamed-tts" type="checkbox" disabled> Use experimental streamed OpenAI Coral voice (API usage may be billed)</label>
+        <label class="streamed-tts-toggle"><input id="streamed-tts" type="checkbox" disabled> Use experimental streamed OpenAI speech (API usage may be billed)</label>
+        <label class="streamed-tts-toggle" for="streamed-tts-voice">Streamed voice
+          <select id="streamed-tts-voice" class="language-select" disabled>
+            <option value="alloy">alloy</option>
+            <option value="ash">ash</option>
+            <option value="ballad">ballad</option>
+            <option value="coral" selected>coral</option>
+            <option value="echo">echo</option>
+            <option value="fable">fable</option>
+            <option value="nova">nova</option>
+            <option value="onyx">onyx</option>
+            <option value="sage">sage</option>
+            <option value="shimmer">shimmer</option>
+            <option value="verse">verse</option>
+            <option value="marin">marin</option>
+            <option value="cedar">cedar</option>
+          </select>
+        </label>
         <p id="status" class="status" role="status">Ready when you are.</p>
         <details class="speech-diagnostics">
           <summary>Speech diagnostics</summary>

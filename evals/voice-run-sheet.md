@@ -9,7 +9,7 @@ Use this sheet to compare browser-provided speech features on the same device an
 - Operating system and device:
 - Network state:
 - Speech language selected in BolPrep:
-- TTS provider and voice selected (browser or streamed OpenAI Coral):
+- TTS provider and voice selected (browser or streamed OpenAI voice):
 - Installed TTS voice selected (name and locale):
 - Browser-provided STT available:
 
@@ -17,7 +17,7 @@ Do not record or upload learner audio for this run. The app keeps timing summari
 
 ## TTS checks
 
-Use **Preview** for the fixed English phrase. For Hindi and Hinglish, run BolPrep without an API key, ask the corresponding fixed offline question in the STT table, and repeat the same answer at least ten times. To compare streamed speech, configure the server API key, enable **Use experimental streamed OpenAI Coral voice**, and repeat the same phrase; each streamed attempt may incur API usage. Keep the browser, device, provider, voice, language, and question/answer the same within a comparison. Reloading the page clears the timing samples. Since Hindi/Hinglish samples use tutor answers while English uses Preview, compare p50/p95 only within the same sample type.
+Use **Preview** for the fixed English phrase. For Hindi and Hinglish, run BolPrep without an API key, ask the corresponding fixed offline question in the STT table, and repeat the same answer at least ten times. To compare streamed speech, configure the server API key, enable **Use experimental streamed OpenAI speech**, choose a provider voice, and repeat the same phrase; each streamed attempt may incur API usage. The [official TTS guide](https://developers.openai.com/api/docs/guides/text-to-speech) lists the 13 available voices and notes they are optimized for English. Keep the browser, device, provider, voice, language, and question/answer the same within a comparison. Reloading the page clears the timing samples. Since Hindi/Hinglish samples use tutor answers while English uses Preview, compare p50/p95 only within the same sample type.
 
 | Language | TTS phrase / question | Intelligibility (1-5) | Pronunciation (1-5) | Naturalness (1-5) | Notes / failures |
 | --- | --- | ---: | ---: | ---: | --- |

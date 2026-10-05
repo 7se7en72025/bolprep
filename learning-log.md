@@ -671,3 +671,10 @@
 
 - Speech recognition now creates a fresh recognizer per listening run and guards event handlers with a run ID. Delayed start, transcript, error, or end events from a stopped/replaced run cannot update the active transcript or its state.
 - Verification: `node --check web/app.js` and `git diff --check` passed. Browser recognition event timing was not exercised on a device; the project test suite was not run.
+
+
+## Make streamed TTS voice selectable - 2026-10-06
+
+- Added a separately selectable streamed provider voice, defaulting to Coral to preserve existing behavior. The choice is saved with speech preferences and appears in timing groups, allowing repeatable comparisons across voices. Updated the TTS run sheet and corrected the roadmap status from ?consider streaming TTS? to the existing streamed implementation.
+- Checked voice options against the [official text-to-speech guide](https://developers.openai.com/api/docs/guides/text-to-speech), which lists 13 voices and says they are optimized for English. Hindi/Hinglish quality remains unevaluated; streamed requests may incur usage.
+- Verification: JavaScript syntax passed; the UI voice choices match the server allowlist and default to Coral; `git diff --check` passed. No provider request or browser playback was made.

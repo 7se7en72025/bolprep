@@ -62,6 +62,7 @@ textarea::placeholder { color: #a3aaa2; }
 .streamed-tts-toggle { display: flex; width: fit-content; align-items: center; gap: 7px; margin: 9px 22px 0; color: var(--muted); font-size: 12px; }
 .streamed-tts-toggle input { accent-color: var(--green); }
 .streamed-tts-toggle input:disabled { cursor: not-allowed; }
+.streamed-tts-toggle select { max-width: 120px; }
 .diagnostics-content { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 8px; }
 .diagnostics-content p { margin: 0; line-height: 1.5; }
 .diagnostics-actions { display: flex; gap: 8px; flex-shrink: 0; }
