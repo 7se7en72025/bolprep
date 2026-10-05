@@ -1,5 +1,11 @@
 # Learning log
 
+## Add Article 31A coverage - 2026-10-06
+
+- Added bounded English, Hindi, and Hinglish summaries of Article 31A(1)'s specified property, corporate, and mineral-related laws. The note says these laws are not void solely for inconsistency with Article 14 or 19, and leaves conditions, definitions, exceptions, assent requirements, compensation, and court interpretation outside its scope. Checked against the Constitution of India published by the Legislative Department, Government of India (https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-06.
+- Added one constructed retrieval example per language. The corpus now contains 25 notes and the labeled set contains 88 examples.
+- Verification: corpus loader accepted all notes; focused English, Hindi, and Hinglish retrieval checks returned only Article 31A; Node confirmed 25 notes, 88 uniquely identified examples, three Article 31A examples, and source metadata. `node --check web/app.js` and `git diff --check` passed. Browser and live-model behavior were not exercised; retrieval quality remains unmeasured.
+
 ## Add Article 35 coverage - 2026-10-06
 
 - Added a bounded English, Hindi, and Hinglish summary of Article 35: Parliament has exclusive power over the specified lawmaking matters listed in Article 16(3), Article 32(3), Articles 33 and 34, and over prescribing punishments for acts declared offences under Part III. Existing laws on those specified matters continue until Parliament changes them. Checked against Article 35 in the Constitution of India published by the Legislative Department, Government of India (https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-06.

@@ -83,5 +83,8 @@
   {"id":"hinglish-art34-indemnity","language":"Hinglish","question":"Article 34 mein martial law ke dauran order restore karne wale acts ke liye Parliament kya kar sakti hai?","expected_doc_ids":["article-34"]},
   {"id":"en-art35-law-making","language":"English","question":"Who has exclusive law-making power on the specified Fundamental Rights matters in Article 35?","expected_doc_ids":["article-35"]},
   {"id":"hi-art35-parliament","language":"Hindi","question":"अनुच्छेद 35 के तहत बताए गए मामलों पर कानून बनाने का अधिकार किसे है?","expected_doc_ids":["article-35"]},
-  {"id":"hinglish-art35-laws","language":"Hinglish","question":"Article 35 ke specified matters par law banane ki power Parliament ke paas hai ya State Legislature ke paas?","expected_doc_ids":["article-35"]}
+  {"id":"hinglish-art35-laws","language":"Hinglish","question":"Article 35 ke specified matters par law banane ki power Parliament ke paas hai ya State Legislature ke paas?","expected_doc_ids":["article-35"]},
+  {"id":"en-art31a-estates","language":"English","question":"What kinds of property laws does Article 31A cover?","expected_doc_ids":["article-31a"]},
+  {"id":"hi-art31a-zameen","language":"Hindi","question":"अनुच्छेद 31A में संपदा और भूमि से जुड़े किन कानूनों का ज़िक्र है?","expected_doc_ids":["article-31a"]},
+  {"id":"hinglish-art31a-property","language":"Hinglish","question":"Article 31A mein estate acquisition aur property management ke baare mein kya hai?","expected_doc_ids":["article-31a"]}
 ]

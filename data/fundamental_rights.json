@@ -430,6 +430,22 @@
     }
   },
   {
+    "id": "article-31a",
+    "title": "Article 31A - Protection for certain laws about estates and property",
+    "title_hi": "अनुच्छेद 31A - संपत्ति से जुड़े कुछ कानूनों का संरक्षण",
+    "title_hinglish": "Article 31A - estates aur property se jude kuch laws ka protection",
+    "summary": "Article 31A covers certain laws about acquiring estates or rights in them, temporary State management of property, merging corporations, changing specified corporate management or shareholder voting rights, and mineral agreements. Subject to the article's conditions, such laws are not void solely because they conflict with rights under Articles 14 or 19. This short note does not explain the definitions, exceptions, assent requirements, compensation rule, or court interpretation.",
+    "summary_hi": "अनुच्छेद 31A कुछ ऐसे कानूनों से जुड़ा है जो संपदा या उसमें अधिकारों के अधिग्रहण, राज्य द्वारा सीमित समय के लिए संपत्ति का प्रबंधन लेने, निगमों के विलय, निगम के कुछ प्रबंधन या शेयरधारक मतदान अधिकारों में बदलाव, और खनिज समझौतों के बारे में हैं। इस अनुच्छेद की शर्तों के अधीन, ऐसे कानून केवल अनुच्छेद 14 या 19 के अधिकारों से असंगत होने के कारण शून्य नहीं होते। यह छोटा नोट परिभाषाएँ, अपवाद, राष्ट्रपति की स्वीकृति की शर्तें, मुआवज़े का नियम या न्यायालयों की व्याख्या नहीं बताता।",
+    "summary_hinglish": "Article 31A kuch laws cover karta hai: estate ya uske rights ka acquisition, State ka limited time ke liye property management lena, corporations ka merger, corporate management ya shareholders ke kuch voting rights badalna, aur mineral agreements. Article ki conditions ke subject mein, aise laws sirf Article 14 ya 19 ke rights se conflict hone ki wajah se void nahi hote. Yeh short note definitions, exceptions, President ki assent requirements, compensation rule, ya court interpretation explain nahi karta.",
+    "keywords": ["fundamental rights", "estate", "land reform", "property acquisition", "state management", "corporation merger", "corporate management", "shareholder voting rights", "mineral agreement", "article 14", "article 19", "article 31a", "art 31a", "anuchhed 31a", "zameen", "sampatti", "nigam", "shareholder", "खनिज", "संपत्ति", "भूमि", "निगम", "अनुच्छेद 31A"],
+    "source": {
+      "title": "The Constitution of India - Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 31A(1)",
+      "checked_on": "2026-10-06"
+    }
+  },
+  {
     "id": "article-33",
     "title": "Article 33 - Parliament may modify rights for specified forces and services",
     "title_hi": "अनुच्छेद 33 - कुछ बलों और सेवाओं के लिए अधिकारों में संसद द्वारा बदलाव",
