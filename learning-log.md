@@ -649,3 +649,9 @@
 - Added three constructed retrieval examples, one each in English, Hindi, and Hinglish. The corpus now contains 27 notes and the labeled set contains 94 examples.
 - Verification: parsed both JSON files and checked that focused English, Hindi, and Hinglish Article 31B queries retrieve `article-31b` first; `git diff --check` passes. The retrieval evaluation suite was not run, and aggregate retrieval quality remains unmeasured.
 - Limitation: the note summarizes constitutional text and is not legal advice; examples are constructed, not real learner queries.
+
+
+## Restore Hindi offline quiz and revision cues - 2026-10-06
+
+- Replaced corrupted mojibake literals in the offline agent intent patterns with explicit Devanagari regex escapes, so Hindi quiz and weak-topic/revision phrases can be recognized again.
+- Verification: Python syntax compilation passed; focused regex checks matched the Devanagari quiz and revision cues; `git diff --check` passed. The project test suite was not run.

@@ -216,8 +216,8 @@ def _offline_turn(
 ) -> dict[str, Any]:
     tool_events: list[dict[str, Any]] = []
     normalized = question.casefold()
-    quiz_intent = re.search(r"\b(quiz|test|viva)\b|à¤•à¥à¤µà¤¿à¤œ", normalized)
-    revision_intent = re.search(r"\b(revis(e|ion)|weak|practice more|what should i study)\b|à¤•à¤®à¤œà¥‹à¤°|à¤¦à¥‹à¤¹à¤°à¤¾", normalized)
+    quiz_intent = re.search(r"\b(quiz|test|viva)\b|\u0915\u094d\u0935\u093f\u091c", normalized)
+    revision_intent = re.search(r"\b(revis(e|ion)|weak|practice more|what should i study)\b|\u0915\u092e\u091c\u094b\u0930|\u0926\u094b\u0939\u0930\u093e", normalized)
     if quiz_intent:
         quiz = start_quiz(language=language)
         quiz_id = str(uuid.uuid4())
