@@ -1,5 +1,10 @@
 # Learning log
 
+## Add a streamed speech interruption trial - 2026-10-06
+
+- Added a separate manual run-sheet case for interrupting experimental streamed TTS and immediately starting a new turn. It checks that old audio stays stopped when late chunks arrive and records the selected voice; attempts may incur API usage.
+- Verification: reviewed the new case and summary row against the streamed playback controls in `web/app.js`; `git diff --check` passed. No browser/device trial or provider request was performed, so streamed interruption behavior remains unmeasured.
+
 ## Add a stale recognition run-sheet case - 2026-10-06
 
 - Added a repeatable manual check for stopping speech recognition and immediately starting a new capture, watching whether delayed events from the stopped capture overwrite the new transcript or status. The instructions distinguish an observed pass from browsers that do not expose delayed events, which should be marked unavailable.

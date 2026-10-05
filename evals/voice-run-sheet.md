@@ -74,6 +74,7 @@ Run these checks in a browser with speech playback available. Use the same brows
 3. Stop a tutor request while it is still thinking, then send a follow-up about the same topic. Record whether the interrupted question remains in the conversation context and whether any late answer appears after the follow-up.
 4. Let a long answer finish, then ask a follow-up question. Record whether the follow-up is answered without old audio restarting.
 5. Start microphone capture, press **Stop**, then start a fresh capture and speak a different question. Record whether any late result from the stopped capture changes the fresh transcript or status. If the browser does not deliver delayed recognition events, mark this case unavailable rather than assuming stale-event handling passed.
+6. With experimental streamed speech enabled, start a tutor answer and press **Stop** while its audio is arriving or playing. Start a new answer immediately. Record whether the old audio stops and stays stopped, with no late chunk playing over the new turn. Note the selected streamed voice; each attempt may incur API usage. If no API key or supported audio browser is available, mark this case unavailable.
 
 | Case | Attempts | Passes | Failures / unavailable | Browser event or visible symptom |
 | --- | ---: | ---: | ---: | --- |
@@ -82,6 +83,7 @@ Run these checks in a browser with speech playback available. Use the same brows
 | Stop while thinking, then follow up | | | | |
 | Follow up after completed answer | | | | |
 | Stop and restart microphone capture | | | | |
+| Interrupt streamed speech, then start a new turn | | | | |
 
 For each attempt, add one row below before summarizing the totals above. Keep the browser, device, language, and answer fixed across repetitions; if any setting changes, start a separate run sheet. Use the visible browser status or event as the observation, and mark unsupported browser behavior as unavailable rather than pass or fail.
 
