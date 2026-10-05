@@ -1,5 +1,11 @@
 # Learning log
 
+## Announce saved-progress updates to assistive technology — 2026-10-05
+
+- Changed: marked the saved-progress summary as a status region so loading, empty, error, and refreshed-result messages are announced politely by assistive technology.
+- Verification: `node --check web/app.js` and `git diff --check` pass. No screen-reader/browser interaction or test suite was run.
+- Limitation: announcement behavior can vary by browser and screen reader and was not manually checked.
+
 ## Keep saved progress clear during deletion — 2026-10-05
 
 - Changed: confirming saved-progress deletion immediately clears the panel, invalidates earlier refreshes, disables its controls during the request, then reloads the actual state after success or failure.
