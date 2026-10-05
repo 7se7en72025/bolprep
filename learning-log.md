@@ -1,5 +1,11 @@
 # Learning log
 
+## Ignore stale progress refresh responses — 2026-10-05
+
+- Changed: overlapping saved-progress refreshes now use a request generation ID; older responses cannot overwrite the newest result or error state.
+- Verification: `node --check web/app.js` and `git diff --check` pass. No browser interaction or test suite was run.
+- Limitation: out-of-order network responses were not simulated in a browser during this change.
+
 ## Update broad retrieval labels for Article 22 — 2026-10-05
 
 - Changed: English, Hindi, and Hinglish broad Fundamental Rights examples now expect Article 22 alongside the six existing notes, matching the corpus-wide retrieval behavior.
