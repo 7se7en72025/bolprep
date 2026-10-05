@@ -123,6 +123,46 @@
     }
   },
   {
+    "id": "article-23",
+    "title": "Article 23 — Prohibition of trafficking and forced labour",
+    "title_hi": "अनुच्छेद 23 — मानव तस्करी और बेगार का निषेध",
+    "title_hinglish": "Article 23 — trafficking aur forced labour par rok",
+    "summary": "Article 23(1) prohibits traffic in human beings, begar, and other similar forms of forced labour. It says violations are offences punishable according to law. Clause (2) permits compulsory service for public purposes, subject to its stated non-discrimination rule; this short note does not explain that clause in detail.",
+    "summary_hi": "अनुच्छेद 23(1) मानव तस्करी, बेगार और जबरन श्रम के ऐसे ही दूसरे रूपों पर रोक लगाता है। इसके उल्लंघन कानून के अनुसार दंडनीय अपराध हैं। खंड (2) सार्वजनिक उद्देश्यों के लिए अनिवार्य सेवा की अनुमति देता है और उसके साथ भेदभाव न करने की शर्त रखता है; यह छोटा नोट उस खंड की पूरी व्याख्या नहीं करता।",
+    "summary_hinglish": "Article 23(1) human trafficking, begar aur isi tarah ke forced labour par rok lagata hai. Iska violation kanoon ke mutabik punishable offence hai. Clause (2) public purpose ke liye compulsory service allow karta hai, ek non-discrimination condition ke saath; yeh short note us clause ko detail mein explain nahi karta.",
+    "keywords": [
+      "fundamental rights", "right against exploitation", "human trafficking", "traffic in human beings",
+      "forced labour", "begar", "compulsory service", "article 23", "art 23", "manav taskari",
+      "jabran shram", "मानव तस्करी", "बेगार", "जबरन श्रम"
+    ],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 23",
+      "checked_on": "2026-10-05"
+    }
+  },
+  {
+    "id": "article-24",
+    "title": "Article 24 — Prohibition of hazardous work by children",
+    "title_hi": "अनुच्छेद 24 — बच्चों से खतरनाक काम कराने का निषेध",
+    "title_hinglish": "Article 24 — bachchon se hazardous kaam par rok",
+    "summary": "Article 24 prohibits employing a child below fourteen years of age to work in a factory or mine, or engaging the child in any other hazardous employment. This short note does not cover other child-labour rules.",
+    "summary_hi": "अनुच्छेद 24 के अनुसार, चौदह वर्ष से कम उम्र के बच्चे को किसी कारखाने या खान में काम पर नहीं लगाया जा सकता और न ही किसी अन्य खतरनाक काम में लगाया जा सकता है। यह छोटा नोट बाल श्रम से जुड़े दूसरे नियमों को शामिल नहीं करता।",
+    "summary_hinglish": "Article 24 kehta hai ki 14 saal se kam umar ke bachche ko factory ya mine mein kaam par nahi laga sakte, aur kisi doosre hazardous employment mein bhi nahi laga sakte. Yeh short note child labour ke baaki rules cover nahi karta.",
+    "keywords": [
+      "fundamental rights", "right against exploitation", "child labour", "children", "factory",
+      "mine", "hazardous employment", "below fourteen", "under 14", "article 24", "art 24",
+      "bachchon ka kaam", "khatarnak kaam", "14 saal", "बाल श्रम", "बच्चे", "कारखाना", "खतरनाक काम"
+    ],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 24",
+      "checked_on": "2026-10-05"
+    }
+  },
+  {
     "id": "article-22",
     "title": "Article 22 — Protection against arrest and detention",
     "title_hi": "अनुच्छेद 22 — गिरफ्तारी और निरोध के विरुद्ध संरक्षण",

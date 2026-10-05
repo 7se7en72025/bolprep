@@ -31,5 +31,9 @@
   {"id": "hinglish-art21a-ages", "language": "Hinglish", "question": "Article 21A mein 6 se 14 age ke children ke liye kaunsi shiksha hai?", "expected_doc_ids": ["article-21a"]},
   {"id": "en-arrest-magistrate", "language": "English", "question": "Within how many hours must an arrested person be produced before a magistrate under Article 22?", "expected_doc_ids": ["article-22"]},
   {"id": "hi-arrest-lawyer", "language": "Hindi", "question": "गिरफ्तार व्यक्ति को अपनी पसंद के वकील से सलाह लेने का कौन सा अधिकार है?", "expected_doc_ids": ["article-22"]},
-  {"id": "hinglish-arrest-magistrate", "language": "Hinglish", "question": "Arrest ke baad nearest magistrate ke saamne kitne ghante mein pesh karna hota hai?", "expected_doc_ids": ["article-22"]}
+  {"id": "hinglish-arrest-magistrate", "language": "Hinglish", "question": "Arrest ke baad nearest magistrate ke saamne kitne ghante mein pesh karna hota hai?", "expected_doc_ids": ["article-22"]},
+  {"id": "en-art23-trafficking-forced-labour", "language": "English", "question": "What does Article 23 prohibit about human trafficking and forced labour?", "expected_doc_ids": ["article-23"]},
+  {"id": "hi-art23-trafficking-begar", "language": "Hindi", "question": "\u0905\u0928\u0941\u091a\u094d\u091b\u0947\u0926 23 \u092e\u0947\u0902 \u092e\u093e\u0928\u0935 \u0924\u0938\u094d\u0915\u0930\u0940 \u0914\u0930 \u092c\u0947\u0917\u093e\u0930 \u092a\u0930 \u0915\u094d\u092f\u093e \u0930\u094b\u0915 \u0939\u0948?", "expected_doc_ids": ["article-23"]},
+  {"id": "en-art24-children-hazardous-work", "language": "English", "question": "What work is prohibited for children under fourteen by Article 24?", "expected_doc_ids": ["article-24"]},
+  {"id": "hinglish-art24-age-work", "language": "Hinglish", "question": "Article 24 mein 14 saal se kam bachchon ko kis tarah ke kaam se roka gaya hai?", "expected_doc_ids": ["article-24"]}
 ]

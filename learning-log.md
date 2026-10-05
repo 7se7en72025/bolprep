@@ -1,5 +1,11 @@
 # Learning log
 
+## Expand the checked corpus with Articles 23 and 24 - 2026-10-05
+
+- Added English, Hindi, and Hinglish notes and retrieval keywords for Articles 23 and 24, extending the starter corpus from seven to nine articles. The summaries were checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), Articles 23 and 24, checked on 2026-10-05.
+- Added four English, Hindi, and Hinglish retrieval examples for the two notes. The labeled set now contains 37 constructed examples.
+- Verification: parsed both JSON files and checked the new expected document IDs against the corpus. The retrieval evaluation was not run, so no retrieval quality change is claimed.
+
 ## Explain unavailable voice input on the mic button — 2026-10-05
 
 - Changed: when browser speech recognition is unavailable, the disabled microphone button's accessible name and tooltip now explain that voice input is unavailable and typing still works.
