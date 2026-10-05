@@ -1,5 +1,11 @@
 # Learning log
 
+## Count empty final speech results as failed attempts - 2026-10-05
+
+- Changed: speech recognition timing is recorded as successful only when the browser returns a non-empty final transcript. Empty final results now reach the existing failed/empty attempt count when recognition ends.
+- Verification: `node --check web/app.js` and `git diff --check` pass. No browser interaction or test suite was run.
+- Limitation: the empty-final browser event sequence was not manually reproduced; behavior is verified by inspecting the guarded final-result handler.
+
 ## Correct the documented corpus count - 2026-10-05
 
 - Changed: corrected the README's offline-mode description from nine notes to ten, matching the current corpus.
