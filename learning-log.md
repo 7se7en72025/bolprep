@@ -1,5 +1,11 @@
 # Learning log
 
+## Focus the question box after starting a new session — 2026-10-05
+
+- Changed: after clearing the conversation, keyboard focus moves to the question box so the learner can start typing immediately.
+- Verification: `node --check web/app.js` and `git diff --check` pass. No browser interaction or test suite was run.
+- Limitation: focus behavior was not manually checked with a screen reader or browser.
+
 ## Announce saved-progress updates to assistive technology — 2026-10-05
 
 - Changed: marked the saved-progress summary as a status region so loading, empty, error, and refreshed-result messages are announced politely by assistive technology.

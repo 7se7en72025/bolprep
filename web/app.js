@@ -638,6 +638,7 @@ document.querySelector("#clear-button").addEventListener("click", () => {
   input.maxLength = 1200;
   input.placeholder = "Type a question… e.g. Right to Equality kya hai?";
   statusLine.textContent = "New session started.";
+  input.focus();
 });
 
 quizButton.addEventListener("click", startQuiz);
