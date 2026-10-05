@@ -185,5 +185,26 @@
       "section": "Part III, Article 22(1)–(3)",
       "checked_on": "2026-10-05"
     }
+  },
+  {
+    "id": "article-25",
+    "title": "Article 25 — Freedom of conscience and religion",
+    "title_hi": "अनुच्छेद 25 — अंतःकरण और धर्म की स्वतंत्रता",
+    "title_hinglish": "Article 25 — conscience aur religion ki freedom",
+    "summary": "Article 25(1) gives all persons freedom of conscience and the right to profess, practise, and propagate religion, subject to public order, morality, health, and the other provisions of Part III. Clause (2), its explanations, and related legal interpretation are outside this short note.",
+    "summary_hi": "अनुच्छेद 25(1) सभी व्यक्तियों को अंतःकरण की स्वतंत्रता और धर्म को मानने, आचरण करने तथा प्रचार करने का अधिकार देता है। यह अधिकार सार्वजनिक व्यवस्था, सदाचार, स्वास्थ्य और भाग III के अन्य प्रावधानों के अधीन है। खंड (2), इसकी व्याख्याएँ और संबंधित कानूनी विवेचन इस छोटे नोट में शामिल नहीं हैं।",
+    "summary_hinglish": "Article 25(1) sabhi persons ko conscience ki freedom aur religion ko profess, practise aur propagate karne ka right deta hai. Yeh public order, morality, health aur Part III ke doosre provisions ke subject hai. Clause (2), explanations aur related legal interpretation is short note mein cover nahi hain.",
+    "keywords": [
+      "fundamental rights", "right to freedom of religion", "freedom of conscience", "religious freedom",
+      "profess religion", "practise religion", "practice religion", "propagate religion", "public order",
+      "morality", "health", "article 25", "art 25", "dharmik swatantrata", "antaratma ki swatantrata",
+      "धर्म की स्वतंत्रता", "अंतःकरण की स्वतंत्रता", "धर्म मानना", "धर्म का प्रचार"
+    ],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 25(1)",
+      "checked_on": "2026-10-05"
+    }
   }
 ]

@@ -35,5 +35,8 @@
   {"id": "en-art23-trafficking-forced-labour", "language": "English", "question": "What does Article 23 prohibit about human trafficking and forced labour?", "expected_doc_ids": ["article-23"]},
   {"id": "hi-art23-trafficking-begar", "language": "Hindi", "question": "\u0905\u0928\u0941\u091a\u094d\u091b\u0947\u0926 23 \u092e\u0947\u0902 \u092e\u093e\u0928\u0935 \u0924\u0938\u094d\u0915\u0930\u0940 \u0914\u0930 \u092c\u0947\u0917\u093e\u0930 \u092a\u0930 \u0915\u094d\u092f\u093e \u0930\u094b\u0915 \u0939\u0948?", "expected_doc_ids": ["article-23"]},
   {"id": "en-art24-children-hazardous-work", "language": "English", "question": "What work is prohibited for children under fourteen by Article 24?", "expected_doc_ids": ["article-24"]},
-  {"id": "hinglish-art24-age-work", "language": "Hinglish", "question": "Article 24 mein 14 saal se kam bachchon ko kis tarah ke kaam se roka gaya hai?", "expected_doc_ids": ["article-24"]}
+  {"id": "hinglish-art24-age-work", "language": "Hinglish", "question": "Article 24 mein 14 saal se kam bachchon ko kis tarah ke kaam se roka gaya hai?", "expected_doc_ids": ["article-24"]},
+  {"id": "en-art25-freedom-of-conscience", "language": "English", "question": "What freedom of conscience and religious practice does Article 25 protect?", "expected_doc_ids": ["article-25"]},
+  {"id": "hi-art25-religion", "language": "Hindi", "question": "अनुच्छेद 25 में धर्म को मानने और उसका प्रचार करने की स्वतंत्रता किन शर्तों के अधीन है?", "expected_doc_ids": ["article-25"]},
+  {"id": "hinglish-art25-conscience", "language": "Hinglish", "question": "Article 25 conscience aur religion practice karne ki freedom par kya conditions rakhta hai?", "expected_doc_ids": ["article-25"]}
 ]
