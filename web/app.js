@@ -777,6 +777,7 @@ previewVoiceButton.addEventListener("click", () => {
 
 async function sendQuestion(question) {
   prepareStreamingAudio();
+  stopSpeechOutput();
   const requestTurn = ++turn;
   preserveInterruptedTurn();
   activeRequest?.abort();

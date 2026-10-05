@@ -1,5 +1,10 @@
 # Learning log
 
+## Stop speech when a typed follow-up starts - 2026-10-06
+
+- Submitting a question now cancels active browser speech synthesis and aborts or stops streamed PCM playback before starting the next tutor request. Added a manual run-sheet scenario for sending a typed follow-up during playback.
+- Verification: `node --check web/app.js` and `git diff --check` passed. Browser/device playback behavior was not manually exercised, and provider-side generation cancellation remains unimplemented.
+
 ## Cover the omitted Article 31 status - 2026-10-06
 
 - Added a concise Article 31 note in English, Hindi, and Hinglish that records its omission from the current constitutional text and links the official footnote to the Forty-fourth Amendment, effective 20 June 1979. The note explicitly avoids interpreting current property law.
