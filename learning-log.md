@@ -1,5 +1,10 @@
 # Learning log
 
+## Correct the documented corpus count - 2026-10-05
+
+- Changed: corrected the README's offline-mode description from nine notes to ten, matching the current corpus.
+- Verification: Node confirmed the corpus JSON contains 10 notes, and `git diff --check` passes. No application behavior changed.
+
 ## Expand the checked corpus with Article 25 - 2026-10-05
 
 - Added English, Hindi, and Hinglish notes and retrieval keywords for Article 25, covering clause (1)'s freedom of conscience and religious practice with its stated conditions. The note excludes clause (2) and the explanations. The text was checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), Article 25(1), checked on 2026-10-05.
