@@ -1,5 +1,11 @@
 # Learning log
 
+## Cover Article 22 in retrieval examples — 2026-10-05
+
+- Changed: extended the labeled retrieval examples with English, Hindi, and Hinglish questions about Article 22's grounds-of-arrest, lawyer, and magistrate protections; README count updated from 30 to 33.
+- Verification: the evaluation JSON parses with Node and `git diff --check` passes. The retrieval evaluator was not run.
+- Limitation: expected labels were added from the checked corpus note but retrieval metrics for the expanded set remain unmeasured in this change.
+
 ## Bound autonomous task duration — 2026-10-05
 
 - Changed: each Codex task now runs in a helper process with a configurable 60-minute default timeout. On timeout or when the overall deadline arrives, the runner terminates the helper process tree, records the timeout, and retries with backoff if time remains.

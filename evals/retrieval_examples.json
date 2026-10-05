@@ -28,5 +28,8 @@
   {"id": "hinglish-art14-roman-variant", "language": "Hinglish", "question": "Art 14 mein samanta before law ka matlab kya hai?", "expected_doc_ids": ["article-14"]},
   {"id": "hinglish-art16-code-switch", "language": "Hinglish", "question": "Article 16 mein सरकारी नौकरी ke liye equal opportunity kya hai?", "expected_doc_ids": ["article-16"]},
   {"id": "hinglish-art19-devanagari-switch", "language": "Hinglish", "question": "Article 19 में speech and expression ki आज़ादी kya hai?", "expected_doc_ids": ["article-19"]},
-  {"id": "hinglish-art21a-ages", "language": "Hinglish", "question": "Article 21A mein 6 se 14 age ke children ke liye kaunsi shiksha hai?", "expected_doc_ids": ["article-21a"]}
+  {"id": "hinglish-art21a-ages", "language": "Hinglish", "question": "Article 21A mein 6 se 14 age ke children ke liye kaunsi shiksha hai?", "expected_doc_ids": ["article-21a"]},
+  {"id": "en-arrest-magistrate", "language": "English", "question": "Within how many hours must an arrested person be produced before a magistrate under Article 22?", "expected_doc_ids": ["article-22"]},
+  {"id": "hi-arrest-lawyer", "language": "Hindi", "question": "गिरफ्तार व्यक्ति को अपनी पसंद के वकील से सलाह लेने का कौन सा अधिकार है?", "expected_doc_ids": ["article-22"]},
+  {"id": "hinglish-arrest-magistrate", "language": "Hinglish", "question": "Arrest ke baad nearest magistrate ke saamne kitne ghante mein pesh karna hota hai?", "expected_doc_ids": ["article-22"]}
 ]
