@@ -96,5 +96,8 @@
   {"id":"hinglish-art31b-protection","language":"Hinglish","question":"Article 31B ke under Ninth Schedule ke listed laws ko Part III rights se kya protection milti hai?","expected_doc_ids":["article-31b"]},
   {"id":"en-art31-omitted","language":"English","question":"Was Article 31 omitted from the current Constitution?","expected_doc_ids":["article-31"]},
   {"id":"hi-art31-omitted","language":"Hindi","question":"क्या अनुच्छेद 31 हटाया गया?","expected_doc_ids":["article-31"]},
-  {"id":"hinglish-art31-omitted","language":"Hinglish","question":"Article 31 ko Constitution se omit kab kiya gaya?","expected_doc_ids":["article-31"]}
+  {"id":"hinglish-art31-omitted","language":"Hinglish","question":"Article 31 ko Constitution se omit kab kiya gaya?","expected_doc_ids":["article-31"]},
+  {"id":"en-art39-resources","language":"English","question":"What does Article 39(b) say about distributing material resources?","expected_doc_ids":["article-39"]},
+  {"id":"hi-art39-wealth","language":"Hindi","question":"अनुच्छेद 39(c) धन और उत्पादन के साधनों के केंद्रीकरण के बारे में क्या कहता है?","expected_doc_ids":["article-39"]},
+  {"id":"hinglish-art39-common-good","language":"Hinglish","question":"Article 39(b) mein material resources ko common good ke liye kaise distribute karna hai?","expected_doc_ids":["article-39"]}
 ]

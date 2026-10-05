@@ -701,3 +701,11 @@
 - Added a separate 20-second MediaRecorder path that uploads WebM or MP4 only after the user stops, returns editable Hindi/English text for review, and does not persist audio in BolPrep. The browser-native recognition button remains available. Server uploads are capped at 5 MB and 1,200 transcript characters.
 - The endpoint uses `gpt-transcribe` with an explicit input language. The [official speech-to-text guide](https://developers.openai.com/api/docs/guides/speech-to-text) recommends this model for recorded files and lists WebM among accepted formats. This is recorded-file transcription, not live streaming STT; provider calls may incur usage.
 - Verification: Python syntax compilation and JavaScript syntax checks passed; local offline HTTP checks confirmed health and that the transcription route reports unavailable without an API key; `git diff --check` passed. No real audio or provider request was used. Browser microphone behavior remains unverified.
+
+
+## Cover the Article 39(b) and (c) link in Article 31C - 2026-10-06
+
+- Added a concise Article 39(b) and (c) note in English, Hindi, and Hinglish. It covers distribution of community material resources for the common good and preventing harmful concentration of wealth and means of production; other Article 39 clauses and case interpretation are outside the note. Checked against Part IV, Article 39(b) and (c), in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-06.
+- Added three constructed English, Hindi, and Hinglish retrieval examples. The corpus now contains 29 notes and the labeled set contains 100 examples.
+- Verification: corpus and example JSON parsed with 29 unique note IDs and 100 unique labels. A focused token-overlap check matched all three Article 39 queries to the new note. `git diff --check` passed. The Python evaluation runner could not run because the project `.venv` Python target is unavailable and `py -3.11` found no installed Python runtime.
+- Limitation: the note summarizes constitutional text, not case interpretation or application to any particular law or policy; examples are constructed and do not measure learner or speech performance.
