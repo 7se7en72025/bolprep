@@ -206,5 +206,26 @@
       "section": "Part III, Article 25(1)",
       "checked_on": "2026-10-05"
     }
+  },
+  {
+    "id": "article-26",
+    "title": "Article 26 — Freedom to manage religious affairs",
+    "title_hi": "अनुच्छेद 26 — धार्मिक मामलों के प्रबंधन की स्वतंत्रता",
+    "title_hinglish": "Article 26 — religious affairs manage karne ki freedom",
+    "summary": "Article 26 gives every religious denomination or a section of one rights to establish and maintain institutions for religious or charitable purposes, manage its own affairs in matters of religion, own and acquire property, and administer that property according to law. These rights are subject to public order, morality, and health.",
+    "summary_hi": "अनुच्छेद 26 प्रत्येक धार्मिक संप्रदाय या उसके किसी भाग को धार्मिक या धर्मार्थ संस्थाएँ स्थापित करने और बनाए रखने, धर्म के मामलों में अपने कामकाज का प्रबंधन करने, संपत्ति रखने और प्राप्त करने, तथा कानून के अनुसार उस संपत्ति का प्रशासन करने का अधिकार देता है। ये अधिकार सार्वजनिक व्यवस्था, सदाचार और स्वास्थ्य के अधीन हैं।",
+    "summary_hinglish": "Article 26 har religious denomination ya uske kisi section ko religious ya charitable institutions establish aur maintain karne, religion ke matters mein apne affairs manage karne, property own aur acquire karne, aur law ke according us property ka administration karne ka right deta hai. Yeh rights public order, morality aur health ke subject hain.",
+    "keywords": [
+      "fundamental rights", "religious affairs", "religious denomination", "religious institution",
+      "charitable institution", "manage religious affairs", "own property", "acquire property",
+      "article 26", "art 26", "dharmik mamle", "dharmik sampraday", "sampatti",
+      "अनुच्छेद 26", "धार्मिक मामले", "धार्मिक संप्रदाय", "संपत्ति", "धर्मार्थ संस्था"
+    ],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 26",
+      "checked_on": "2026-10-05"
+    }
   }
 ]

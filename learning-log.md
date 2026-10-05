@@ -1,5 +1,12 @@
 # Learning log
 
+## Cover religious-affairs rights in Article 26 - 2026-10-05
+
+- Added English, Hindi, and Hinglish notes and retrieval keywords for Article 26, summarizing the rights of religious denominations subject to public order, morality, and health. The text was checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), Article 26, checked on 2026-10-05.
+- Added three constructed English, Hindi, and Hinglish retrieval examples. The labeled set now contains 43 examples.
+- Verification: Node parsed both JSON files and a focused Node check mirroring the lexical ranking rule ranked all three Article 26 examples correctly; `node --check web/app.js` and `git diff --check` pass. The Python retrieval evaluator was not run; retrieval metrics remain unmeasured.
+- Limitation: the short note does not explain legal interpretation or detailed limits; retrieval examples are constructed, not real learner queries, and retrieval quality remains unmeasured.
+
 ## Count empty final speech results as failed attempts - 2026-10-05
 
 - Changed: speech recognition timing is recorded as successful only when the browser returns a non-empty final transcript. Empty final results now reach the existing failed/empty attempt count when recognition ends.

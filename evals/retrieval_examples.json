@@ -38,5 +38,8 @@
   {"id": "hinglish-art24-age-work", "language": "Hinglish", "question": "Article 24 mein 14 saal se kam bachchon ko kis tarah ke kaam se roka gaya hai?", "expected_doc_ids": ["article-24"]},
   {"id": "en-art25-freedom-of-conscience", "language": "English", "question": "What freedom of conscience and religious practice does Article 25 protect?", "expected_doc_ids": ["article-25"]},
   {"id": "hi-art25-religion", "language": "Hindi", "question": "अनुच्छेद 25 में धर्म को मानने और उसका प्रचार करने की स्वतंत्रता किन शर्तों के अधीन है?", "expected_doc_ids": ["article-25"]},
-  {"id": "hinglish-art25-conscience", "language": "Hinglish", "question": "Article 25 conscience aur religion practice karne ki freedom par kya conditions rakhta hai?", "expected_doc_ids": ["article-25"]}
+  {"id": "hinglish-art25-conscience", "language": "Hinglish", "question": "Article 25 conscience aur religion practice karne ki freedom par kya conditions rakhta hai?", "expected_doc_ids": ["article-25"]},
+  {"id": "en-art26-religious-affairs", "language": "English", "question": "What rights does Article 26 give religious denominations to manage their affairs?", "expected_doc_ids": ["article-26"]},
+  {"id": "hi-art26-property", "language": "Hindi", "question": "अनुच्छेद 26 धार्मिक संप्रदायों को संपत्ति के बारे में क्या अधिकार देता है?", "expected_doc_ids": ["article-26"]},
+  {"id": "hinglish-art26-institutions", "language": "Hinglish", "question": "Article 26 religious denomination ko institutions aur property ke baare mein kya rights deta hai?", "expected_doc_ids": ["article-26"]}
 ]
