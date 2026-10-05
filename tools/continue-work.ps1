@@ -2,12 +2,16 @@ param(
     [ValidateRange(1, 24)]
     [int]$DurationHours = 8,
     [ValidateRange(1, 100)]
-    [int]$MaxRuns = 24
+    [int]$MaxRuns = 24,
+    [ValidateRange(1, 180)]
+    [int]$TaskTimeoutMinutes = 60
 )
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $instructionsPath = Join-Path $repoRoot 'AUTONOMOUS_WORK.md'
+$invokePath = Join-Path $PSScriptRoot 'invoke-codex-run.ps1'
+$powerShellPath = Join-Path $PSHOME 'powershell.exe'
 $statePath = Join-Path $repoRoot '.codex\overnight'
 $pidPath = Join-Path $statePath 'loop.pid'
 $stopPath = Join-Path $statePath 'stop.request'
@@ -50,6 +54,8 @@ try {
         $stdoutPath = Join-Path $statePath "$runTag.jsonl"
         $stderrPath = Join-Path $statePath "$runTag.stderr.log"
         $lastMessagePath = Join-Path $statePath "$runTag.final.txt"
+        $configPath = Join-Path $statePath "$runTag.config.json"
+        $runnerPidPath = Join-Path $statePath "$runTag.runner.pid"
         $prompt = Get-Content -Raw -LiteralPath $instructionsPath
         $arguments = @(
             'exec', '--json', '--approve-for-me',
@@ -59,12 +65,48 @@ try {
         Write-Status "Run $runNumber started."
         $exitCode = 1
         $retryNeeded = $true
+        $timedOut = $false
         try {
-            & $codexPath @arguments 1> $stdoutPath 2> $stderrPath
-            $exitCode = $LASTEXITCODE
+            $config = @{
+                codex_path = $codexPath
+                arguments = $arguments
+                stdout_path = $stdoutPath
+                stderr_path = $stderrPath
+            } | ConvertTo-Json -Depth 4
+            Set-Content -LiteralPath $configPath -Value $config -Encoding utf8
+            $helperArguments = "-NoProfile -ExecutionPolicy Bypass -File `"$invokePath`" -ConfigPath `"$configPath`""
+            $taskProcess = Start-Process -FilePath $powerShellPath -ArgumentList $helperArguments -WindowStyle Hidden -PassThru
+            Set-Content -LiteralPath $runnerPidPath -Value $taskProcess.Id -Encoding ascii
+            Write-Status "Run $runNumber is executing in helper PID $($taskProcess.Id); timeout is $TaskTimeoutMinutes minute(s)."
+
+            $remainingMilliseconds = [Math]::Max(1, [int]($deadline - [DateTimeOffset]::UtcNow).TotalMilliseconds)
+            $taskWaitMilliseconds = [Math]::Min($TaskTimeoutMinutes * 60 * 1000, $remainingMilliseconds)
+            if (-not $taskProcess.WaitForExit($taskWaitMilliseconds)) {
+                $timedOut = $true
+                if ([DateTimeOffset]::UtcNow -ge $deadline) {
+                    Write-Status "Run $runNumber reached the loop deadline; terminating its helper process tree."
+                }
+                else {
+                    Write-Status "Run $runNumber exceeded its task timeout; terminating helper process tree."
+                }
+                $taskkillPath = Join-Path $env:SystemRoot 'System32\taskkill.exe'
+                & $taskkillPath /PID $taskProcess.Id /T /F *> $null
+                [void]$taskProcess.WaitForExit(5000)
+                if (Get-Process -Id $taskProcess.Id -ErrorAction SilentlyContinue) {
+                    Stop-Process -Id $taskProcess.Id -Force -ErrorAction SilentlyContinue
+                }
+                $exitCode = 124
+            }
+            else {
+                $taskProcess.Refresh()
+                $exitCode = $taskProcess.ExitCode
+            }
         }
         catch {
             Add-Content -LiteralPath $stderrPath -Value $_.ToString() -Encoding utf8
+        }
+        finally {
+            Remove-Item -LiteralPath $configPath, $runnerPidPath -Force -ErrorAction SilentlyContinue
         }
 
         if ($exitCode -eq 0 -and (Test-Path $lastMessagePath)) {
@@ -86,7 +128,12 @@ try {
             }
         }
         else {
-            Write-Status "Run $runNumber failed with exit code $exitCode; retrying after backoff."
+            if ($timedOut) {
+                Write-Status "Run $runNumber timed out; retrying after backoff."
+            }
+            else {
+                Write-Status "Run $runNumber failed with exit code $exitCode; retrying after backoff."
+            }
             $retryDelaySeconds = [Math]::Min(300, $retryDelaySeconds * 2)
         }
 

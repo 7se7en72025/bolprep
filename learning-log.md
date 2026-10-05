@@ -1,5 +1,11 @@
 # Learning log
 
+## Bound autonomous task duration — 2026-10-05
+
+- Changed: each Codex task now runs in a helper process with a configurable 60-minute default timeout. On timeout or when the overall deadline arrives, the runner terminates the helper process tree, records the timeout, and retries with backoff if time remains.
+- Verification: PowerShell parser reports no syntax errors for the three loop scripts and `git diff --check` passes. No timed task was launched to exercise process-tree termination.
+- Limitation: timeout cleanup relies on Windows `taskkill.exe`; the eight-hour loop has not yet been relaunched with this version.
+
 ## Reject empty study-note content — 2026-10-05
 
 - Changed: corpus loading now rejects blank localized titles or summaries, empty keyword lists or entries, and blank source titles or sections.
