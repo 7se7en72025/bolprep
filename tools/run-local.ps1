@@ -4,7 +4,11 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 Set-Location -LiteralPath $repoRoot
 
+$venvPython = Join-Path $repoRoot '.venv\Scripts\python.exe'
 $pythonCandidates = @()
+if (Test-Path -LiteralPath $venvPython) {
+    $pythonCandidates += [pscustomobject]@{ Path = $venvPython; Arguments = @() }
+}
 $pythonCommand = Get-Command python -ErrorAction SilentlyContinue
 if ($pythonCommand) {
     $pythonCandidates += [pscustomobject]@{ Path = $pythonCommand.Source; Arguments = @() }
@@ -14,7 +18,7 @@ if ($pyCommand) {
     $pythonCandidates += [pscustomobject]@{ Path = $pyCommand.Source; Arguments = @('-3') }
 }
 if (-not $pythonCandidates.Count) {
-    throw 'Python 3.11 or later was not found. Install Python or its Windows py launcher, then run this command again.'
+    throw 'Python 3.11 or later was not found in .venv, PATH, or the Windows py launcher. Install Python, then run this command again.'
 }
 $pythonPath = $null
 $pythonArguments = @()
@@ -39,10 +43,9 @@ foreach ($candidate in $pythonCandidates) {
 }
 if (-not $pythonPath) {
     $foundVersion = if ($pythonVersionText) { "Found Python $pythonVersionText." } else { 'No usable Python version was reported.' }
-    throw "Python 3.11 or later is required. Checked python and the py launcher. $foundVersion"
+    throw "Python 3.11 or later is required. Checked the existing .venv, python, and the py launcher. $foundVersion"
 }
 
-$venvPython = Join-Path $repoRoot '.venv\Scripts\python.exe'
 if (-not (Test-Path -LiteralPath $venvPython)) {
     Write-Output 'Creating the project virtual environment...'
     & $pythonPath @pythonArguments -m venv (Join-Path $repoRoot '.venv')

@@ -17,13 +17,13 @@ For the original input/function/output exercise, see [step0.py](step0.py). For t
 
 ## Run the text tutor
 
-On Windows with Python 3.11 or later (`python` or the Windows `py` launcher), start the complete local setup with one command from the project folder:
+On Windows, start the complete local setup with one command from the project folder. The launcher uses an existing Python 3.11+ virtual environment or finds Python through `python` or the Windows `py` launcher:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\run-local.ps1
 ```
 
-The launcher creates `.venv` if needed, installs `requirements.txt`, copies `.env.example` to `.env` only when `.env` does not already exist, and starts the server. Open <http://127.0.0.1:8000>; press Ctrl+C in PowerShell to stop. Add an API key to `.env` before starting if you want model answers. Offline mode works without a key.
+The launcher reuses an existing Python 3.11+ `.venv` when available; otherwise it checks `python` and the Windows `py` launcher before creating `.venv`. It installs `requirements.txt`, copies `.env.example` to `.env` only when `.env` does not already exist, and starts the server. Open <http://127.0.0.1:8000>; press Ctrl+C in PowerShell to stop. Add an API key to `.env` before starting if you want model answers. Offline mode works without a key.
 
 For manual setup, create and activate the environment, then install dependencies:
 

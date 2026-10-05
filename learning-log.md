@@ -740,3 +740,8 @@
 
 - The language selector uses locale tags (`hi-IN` and `en-IN`), so comparing the captured value to `hi` mislabeled Hindi recordings as English. Recording and transcription status now map the full locale to the displayed language name.
 - Verification: `node --check web/app.js` and `git diff --check` passed. No browser microphone or provider request was made.
+
+## Reuse the existing Python environment in the Windows launcher - 2026-10-06
+
+- The local launcher now checks `.venv\Scripts\python.exe` before requiring a system `python` command or the Windows `py` launcher. This lets an existing Python 3.11+ project environment start BolPrep even when Python is not on `PATH`.
+- Verification: ran `tools/run-local.ps1` with no system `python` command available; dependency requirements were already satisfied, the server started in offline mode, and `/health`, `/`, and `/app.js` each returned HTTP 200. The server was stopped after verification. No provider API or speech input was used.
