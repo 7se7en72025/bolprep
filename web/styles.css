@@ -1,5 +1,6 @@
 :root { color-scheme: light; --ink: #1e2824; --muted: #718078; --green: #315b48; --pale: #e6ede5; --line: #e7e8e1; --paper: #fffefa; --canvas: #f6f3eb; }
 * { box-sizing: border-box; }
+:focus-visible { outline: 3px solid #176b45; outline-offset: 3px; }
 body { margin: 0; background: var(--canvas); color: var(--ink); font-family: 'Segoe UI', 'Noto Sans Devanagari', sans-serif; min-height: 100vh; }
 button, textarea { font: inherit; }
 .shell { width: min(100% - 40px, 800px); margin: 0 auto; padding: 28px 0 24px; min-height: 100vh; display: flex; flex-direction: column; }
