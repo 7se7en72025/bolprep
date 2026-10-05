@@ -1,5 +1,10 @@
 # Learning log
 
+## Preserve answers when stopping quiz score requests - 2026-10-05
+
+- Escape and Stop now keep the submitted quiz answer available for retry, restore microphone availability, and announce when quiz scoring was stopped. Retrying reuses the same idempotency key so an already completed server-side score is not duplicated.
+- Verification: `node --check web/app.js` and `git diff --check` passed. Browser interaction and server-side abort behavior have not been exercised.
+
 ## Abort in-flight quiz scoring requests - 2026-10-05
 
 - Connected quiz scoring fetches to the shared request abort controller, so Stop and Escape can cancel the browser request and stale results remain ignored by the turn counter. Stopping during scoring returns the quiz to answer entry so the learner can retry.

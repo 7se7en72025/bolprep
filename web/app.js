@@ -146,11 +146,13 @@ function stopTutor() {
   activeRequest = null;
   if (quizSession && !quizSession.awaitingAnswer) {
     quizSession.awaitingAnswer = true;
-    input.value = "";
+    input.value = quizSession.pendingAnswer || "";
+    quizSession.pendingAnswer = "";
   }
   stopRecognition();
   turn += 1;
   sendButton.disabled = false;
+  micButton.disabled = !recognitionAvailable;
 }
 
 function refreshSpeechVoices() {
@@ -553,6 +555,7 @@ async function submitQuizAnswer(answer) {
   const current = quizSession.questions[quizSession.index];
   current.idempotencyKey ||= window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   quizSession.awaitingAnswer = false;
+  quizSession.pendingAnswer = answer;
   const requestTurn = ++turn;
   activeRequest = new AbortController();
   const controller = activeRequest;
@@ -570,6 +573,7 @@ async function submitQuizAnswer(answer) {
     const result = await response.json();
     if (!response.ok) throw new Error(result.error || "Could not score the answer.");
     if (requestTurn !== turn) return;
+    quizSession.pendingAnswer = "";
     quizSession.results.push(result);
     loadProgress();
     const feedback = `${result.feedback} Score: ${result.score}%.`;
@@ -593,6 +597,7 @@ async function submitQuizAnswer(answer) {
   } catch (error) {
     if (requestTurn === turn) {
       quizSession.awaitingAnswer = true;
+      quizSession.pendingAnswer = "";
       input.value = answer;
       addMessage("assistant", error.message);
       statusLine.textContent = "Scoring failed. You can try submitting the answer again.";
@@ -632,9 +637,12 @@ form.addEventListener("submit", (event) => {
 });
 
 stopButton.addEventListener("click", () => {
+  const stoppingQuizScore = Boolean(quizSession && !quizSession.awaitingAnswer);
   stopTutor();
   sendButton.disabled = false;
-  statusLine.textContent = "Tutor turn stopped. You can continue the conversation.";
+  statusLine.textContent = stoppingQuizScore
+    ? "Quiz scoring stopped. Your answer is ready to retry."
+    : "Tutor turn stopped. You can continue the conversation.";
 });
 
 document.addEventListener("keydown", (event) => {
@@ -642,8 +650,11 @@ document.addEventListener("keydown", (event) => {
   const speechSynthesis = window.speechSynthesis;
   if (!activeRequest && !recognitionListening && !speechSynthesis?.speaking && !speechSynthesis?.pending) return;
   event.preventDefault();
+  const stoppingQuizScore = Boolean(quizSession && !quizSession.awaitingAnswer);
   stopTutor();
-  statusLine.textContent = "Tutor turn stopped. You can continue the conversation.";
+  statusLine.textContent = stoppingQuizScore
+    ? "Quiz scoring stopped. Your answer is ready to retry."
+    : "Tutor turn stopped. You can continue the conversation.";
 });
 
 document.querySelector("#clear-button").addEventListener("click", () => {

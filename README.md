@@ -122,7 +122,7 @@ The intended story is to pair multilingual speech infrastructure work with a sep
 - STT timing summaries include failed or empty recognition attempts grouped by language. Deliberate stops and language-change cancellations are excluded; transcript text is not retained by the metrics.
 - The microphone control switches to **Stop** while recognition is active, so learners can end capture and review the transcript before sending it.
 - Press **Escape** to stop an active tutor request, speech playback, or microphone capture; the on-screen stop control advertises the same shortcut.
-- Escape and Stop also abort an in-flight quiz scoring request in the browser; if the server already received it, the idempotency key makes a retry safe.
+- Escape and Stop also abort an in-flight quiz scoring request in the browser, preserve the submitted answer for retry, and restore microphone access. If the server already received the request, its idempotency key makes retrying safe.
 - Changing the speech language stops any current or queued tutor audio; the new language and voice selection apply to the next playback. Real browser behavior still depends on its installed speech voices.
 - Common speech-recognition failures now explain a next step, such as allowing microphone access or checking for a connected microphone; unknown browser errors remain visible with a typing fallback.
 - Active microphone capture also has a visible color state and an `aria-pressed` value for assistive technology.
