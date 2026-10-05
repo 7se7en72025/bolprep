@@ -83,6 +83,27 @@
     }
   },
   {
+    "id": "article-20",
+    "title": "Article 20 — Protection in respect of conviction for offences",
+    "title_hi": "अनुच्छेद 20 — अपराधों के लिए दोषसिद्धि से संरक्षण",
+    "title_hinglish": "Article 20 — offences mein conviction se protection",
+    "summary": "Article 20 protects a person accused or convicted of an offence from retrospective criminal penalties, being prosecuted and punished more than once for the same offence, and being compelled to testify against themselves. This note summarizes clauses (1)–(3) and does not explain their legal interpretation.",
+    "summary_hi": "अनुच्छेद 20 किसी अपराध के आरोपी या दोषी व्यक्ति को अपराध किए जाने के समय लागू कानून से अधिक दंड, उसी अपराध के लिए एक से अधिक बार अभियोजन और दंड, तथा अपने ही विरुद्ध गवाही देने के लिए मजबूर किए जाने से संरक्षण देता है। यह नोट खंड (1)–(3) का सार है और उनकी कानूनी व्याख्या नहीं बताता।",
+    "summary_hinglish": "Article 20 offence ke accused ya convicted person ko teen protections deta hai: offence ke waqt ke law se zyada penalty nahi, same offence ke liye dobara prosecute aur punish nahi, aur apne khilaaf witness banne ke liye force nahi. Yeh note clauses (1)–(3) ka summary hai; legal interpretation cover nahi karta.",
+    "keywords": [
+      "fundamental rights", "protection in respect of conviction", "criminal offence", "retrospective punishment",
+      "retroactive penalty", "double jeopardy", "self incrimination", "self-incrimination", "compelled testimony",
+      "article 20", "art 20", "conviction", "same offence", "do baar saza", "apne khilaf gawahi",
+      "अपराध", "दोषसिद्धि", "दोहरा दंड", "अपने विरुद्ध गवाही"
+    ],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 20(1)–(3)",
+      "checked_on": "2026-10-05"
+    }
+  },
+  {
     "id": "article-21",
     "title": "Article 21 — Life and personal liberty",
     "title_hi": "अनुच्छेद 21 — जीवन और व्यक्तिगत स्वतंत्रता",
