@@ -61,6 +61,46 @@
     }
   },
   {
+    "id": "article-17",
+    "title": "Article 17 — Abolition of untouchability",
+    "title_hi": "अनुच्छेद 17 — अस्पृश्यता का उन्मूलन",
+    "title_hinglish": "Article 17 — untouchability par rok",
+    "summary": "Article 17 abolishes untouchability and forbids its practice in any form. Enforcing a disability arising from untouchability is an offence punishable according to law.",
+    "summary_hi": "अनुच्छेद 17 अस्पृश्यता को समाप्त करता है और किसी भी रूप में इसके आचरण को मना करता है। अस्पृश्यता से उत्पन्न किसी अक्षमता को लागू करना कानून के अनुसार दंडनीय अपराध है।",
+    "summary_hinglish": "Article 17 untouchability ko khatam karta hai aur kisi bhi roop mein iska practice mana karta hai. Untouchability se judi disability lagu karna kanoon ke mutabik punishable offence hai.",
+    "keywords": [
+      "fundamental rights", "abolition of untouchability", "untouchability", "practice of untouchability",
+      "disability", "enforce disability", "article 17", "art 17", "chhua chhoot", "achhoot",
+      "asprishyata", "छुआछूत", "अस्पृश्यता", "अस्पृश्यता का उन्मूलन"
+    ],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 17",
+      "checked_on": "2026-10-05"
+    }
+  },
+  {
+    "id": "article-18",
+    "title": "Article 18 — Abolition of titles",
+    "title_hi": "अनुच्छेद 18 — उपाधियों का उन्मूलन",
+    "title_hinglish": "Article 18 — titles par rok",
+    "summary": "Article 18 bars the State from conferring titles, except military or academic distinctions. It also restricts accepting titles from foreign States: Indian citizens may not accept them, and a non-citizen holding an office of profit or trust under the State needs the President's consent.",
+    "summary_hi": "अनुच्छेद 18 राज्य को सैन्य या शैक्षणिक सम्मान के अलावा उपाधियाँ देने से रोकता है। भारतीय नागरिक विदेशी राज्य से उपाधि स्वीकार नहीं कर सकते; राज्य के अधीन लाभ या विश्वास का पद रखने वाले गैर-नागरिक को विदेशी उपाधि के लिए राष्ट्रपति की सहमति चाहिए।",
+    "summary_hinglish": "Article 18 State ko military ya academic distinction ke alawa titles dene se rokta hai. Indian citizen foreign State se title accept nahi kar sakta; State ke under office of profit ya trust rakhne wale non-citizen ko foreign title ke liye President ki consent chahiye.",
+    "keywords": [
+      "fundamental rights", "abolition of titles", "state titles", "military distinction", "academic distinction",
+      "foreign title", "foreign state", "office of profit", "president consent", "article 18", "art 18",
+      "upadhi", "title accept", "उपाधि", "उपाधियों का उन्मूलन", "विदेशी राज्य"
+    ],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 18(1)–(3)",
+      "checked_on": "2026-10-05"
+    }
+  },
+  {
     "id": "article-19",
     "title": "Article 19 — Certain freedoms",
     "title_hi": "अनुच्छेद 19 — कुछ स्वतंत्रताएँ",
