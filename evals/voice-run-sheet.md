@@ -52,3 +52,21 @@ From the copied JSON `stt` entries, transfer `time_to_first_final.p50_s` / `time
 - The UI reports browser event timings, not end-to-end model latency. It does not measure speech quality automatically.
 - Listener ratings are subjective. Record them with the rater's consent; do not treat one person's ratings as a general result.
 - Never describe these small manual samples as production, learner, or population-level benchmarks.
+
+## Turn-taking and interruption checks
+
+Run these checks in a browser with speech playback available. Use the same browser, device, language, and answer for each repetition. Repeat each case at least five times; record each attempt as pass, fail, or not available. Do not use real learner recordings.
+
+1. Start a tutor answer and press **Stop** while it is speaking. Record whether audio stops promptly and whether the status remains stopped.
+2. Start another answer and press **Speak** while it is speaking. Record whether old audio stops, the recognized text stays editable, and no old speech resumes after recognition ends.
+3. Stop a tutor request while it is still thinking, then send a follow-up about the same topic. Record whether the interrupted question remains in the conversation context and whether any late answer appears after the follow-up.
+4. Let a long answer finish, then ask a follow-up question. Record whether the follow-up is answered without old audio restarting.
+
+| Case | Attempts | Passes | Failures / unavailable | Browser event or visible symptom |
+| --- | ---: | ---: | ---: | --- |
+| Stop during playback | | | | |
+| Start microphone during playback | | | | |
+| Stop while thinking, then follow up | | | | |
+| Follow up after completed answer | | | | |
+
+This is a manual interaction check, not provider cancellation proof. The local client can abort its request and ignore stale client events, but the model provider may continue generating after the browser stops waiting.

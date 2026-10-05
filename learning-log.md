@@ -1,5 +1,11 @@
 # Learning log
 
+## Add repeatable browser turn-taking checks - 2026-10-05
+
+- Added manual cases to the browser voice run sheet for stopping playback, beginning speech capture during playback, interrupting a pending request, and following up after an answer. The sheet now captures repeated outcomes and observable stale audio or response symptoms.
+- Verification: reviewed the new steps against the current Stop, Speak, follow-up, and client-abort behavior; `git diff --check` passes. No browser/device session was available, so no interaction results were recorded.
+- Limitation: browser behavior and provider-side generation cancellation remain unverified; the client can abort its request and ignore stale events, but that does not prove provider cancellation.
+
 ## Cover religious-affairs rights in Article 26 - 2026-10-05
 
 - Added English, Hindi, and Hinglish notes and retrieval keywords for Article 26, summarizing the rights of religious denominations subject to public order, morality, and health. The text was checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), Article 26, checked on 2026-10-05.
