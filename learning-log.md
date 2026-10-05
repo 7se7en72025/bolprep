@@ -1,5 +1,10 @@
 # Learning log
 
+## Reject stale streamed audio chunks - 2026-10-06
+
+- Streamed TTS now checks the active speech-turn ID and abort signal before scheduling each PCM chunk. A chunk arriving after Stop, a new turn, or another playback replacement is ignored instead of being queued.
+- Verification: `node --check web/app.js` and `git diff --check` passed. The browser audio race was not manually reproduced; provider-side generation cancellation remains unverified.
+
 ## Add Article 31C coverage - 2026-10-06
 
 - Added a bounded English, Hindi, and Hinglish note. It covers the Article 39(b)/(c) scope, the Article 14/19 protection, the assent condition for State laws, and the Constitution source footnotes about Minerva Mills and Kesavananda Bharati without generalizing either holding. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-06.

@@ -468,6 +468,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
     let pending = new Uint8Array(0);
     let audioChunks = 0;
     const queuePcm = (bytes) => {
+      if (requestSpeechTurn !== speechTurn || controller.signal.aborted) return;
       const sampleCount = Math.floor(bytes.byteLength / 2);
       if (!sampleCount) return;
       const view = new DataView(bytes.buffer, bytes.byteOffset, sampleCount * 2);
