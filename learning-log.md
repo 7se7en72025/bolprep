@@ -1,5 +1,12 @@
 # Learning log
 
+## Cover religion-specific taxation in Article 27 - 2026-10-05
+
+- Added English, Hindi, and Hinglish notes and retrieval keywords for Article 27's rule against compelling a person to pay a tax specifically appropriated to promote or maintain a particular religion or religious denomination. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), Article 27, checked on 2026-10-05.
+- Added three constructed English, Hindi, and Hinglish retrieval examples. The labeled set now contains 46 examples.
+- Verification: JSON parsing, focused retrieval checks, node --check web/app.js, and git diff --check pass. The Python retrieval evaluator and browser interactions were not run.
+- Limitation: the short note does not explain related legal interpretation; examples are constructed, not real learner queries, and retrieval quality remains unmeasured.
+
 ## Add repeatable browser turn-taking checks - 2026-10-05
 
 - Added manual cases to the browser voice run sheet for stopping playback, beginning speech capture during playback, interrupting a pending request, and following up after an answer. The sheet now captures repeated outcomes and observable stale audio or response symptoms.

@@ -41,5 +41,8 @@
   {"id": "hinglish-art25-conscience", "language": "Hinglish", "question": "Article 25 conscience aur religion practice karne ki freedom par kya conditions rakhta hai?", "expected_doc_ids": ["article-25"]},
   {"id": "en-art26-religious-affairs", "language": "English", "question": "What rights does Article 26 give religious denominations to manage their affairs?", "expected_doc_ids": ["article-26"]},
   {"id": "hi-art26-property", "language": "Hindi", "question": "अनुच्छेद 26 धार्मिक संप्रदायों को संपत्ति के बारे में क्या अधिकार देता है?", "expected_doc_ids": ["article-26"]},
-  {"id": "hinglish-art26-institutions", "language": "Hinglish", "question": "Article 26 religious denomination ko institutions aur property ke baare mein kya rights deta hai?", "expected_doc_ids": ["article-26"]}
+  {"id": "hinglish-art26-institutions", "language": "Hinglish", "question": "Article 26 religious denomination ko institutions aur property ke baare mein kya rights deta hai?", "expected_doc_ids": ["article-26"]},
+  {"id": "en-art27-religious-tax", "language": "English", "question": "Can a person be forced to pay a tax specifically used to promote one religion under Article 27?", "expected_doc_ids": ["article-27"]},
+  {"id": "hi-art27-tax", "language": "Hindi", "question": "अनुच्छेद 27 के तहत किसी विशेष धर्म के प्रचार के लिए कर देने के लिए बाध्य किया जा सकता है?", "expected_doc_ids": ["article-27"]},
+  {"id": "hinglish-art27-tax", "language": "Hinglish", "question": "Article 27 ke hisaab se kisi particular religion ko promote karne ke liye tax dena compulsory kar sakte hain?", "expected_doc_ids": ["article-27"]}
 ]

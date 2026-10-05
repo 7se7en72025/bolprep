@@ -227,5 +227,39 @@
       "section": "Part III, Article 26",
       "checked_on": "2026-10-05"
     }
+  },
+  {
+    "id": "article-27",
+    "title": "Article 27 — Freedom from taxes for promoting a particular religion",
+    "title_hi": "अनुच्छेद 27 — किसी विशेष धर्म के प्रचार के लिए कर देने से स्वतंत्रता",
+    "title_hinglish": "Article 27 — kisi particular religion ko promote karne wale tax se freedom",
+    "summary": "Article 27 says no person can be compelled to pay a tax whose proceeds are specifically appropriated to meet expenses for promoting or maintaining a particular religion or religious denomination. This short note does not explain related legal interpretation.",
+    "summary_hi": "अनुच्छेद 27 के अनुसार किसी व्यक्ति को ऐसा कर देने के लिए बाध्य नहीं किया जा सकता जिसकी आय किसी विशेष धर्म या धार्मिक संप्रदाय के प्रचार या रखरखाव के खर्चों के लिए विशेष रूप से निर्धारित की गई हो। यह छोटा नोट संबंधित कानूनी विवेचन नहीं बताता।",
+    "summary_hinglish": "Article 27 kehta hai ki kisi person ko aisa tax dene ke liye majboor nahi kiya ja sakta jiska paisa kisi particular religion ya religious denomination ko promote ya maintain karne ke kharch ke liye specifically rakha gaya ho. Yeh short note related legal interpretation cover nahi karta.",
+    "keywords": [
+      "fundamental rights",
+      "freedom of religion",
+      "religious tax",
+      "tax for promotion of religion",
+      "taxes for maintenance of religion",
+      "religious denomination",
+      "compelled to pay tax",
+      "article 27",
+      "art 27",
+      "dharm ke liye kar",
+      "dharmik kar",
+      "kisi khaas dharm ko badhava",
+      "अनुच्छेद 27",
+      "धार्मिक कर",
+      "धर्म के प्रचार के लिए कर",
+      "विशेष धर्म",
+      "धार्मिक संप्रदाय"
+    ],
+    "source": {
+      "title": "The Constitution of India — Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 27",
+      "checked_on": "2026-10-05"
+    }
   }
 ]
