@@ -1,4 +1,11 @@
 # Learning log
+
+## Add an end-to-end voice trial record - 2026-10-05
+
+- Added a compact manual record for fixed self-authored Hindi, English, and Hinglish practice questions, separating transcript usability, displayed-source relevance, answer support, and spoken completion by trial.
+- Clarified that an unavailable stage is not evidence that a later stage succeeded, and that these small manual observations are not population-level accuracy results.
+- Verification: reviewed the section in context and ran git diff --check. No browser/device interaction was available, so no voice behavior or quality result was measured.
+
 ## Add Article 32 remedies and retrieval cases - 2026-10-05
 
 - Added a bounded Article 32 note for the Supreme Court remedy and the writs in clauses (1)–(2), in English, Hindi, and Hinglish, with the checked Constitution source and explicit scope limits. Added one constructed retrieval case per language. The corpus now contains 21 notes and the labeled set contains 73 examples.

@@ -46,6 +46,17 @@ From the copied JSON `stt` entries, transfer `time_to_first_final.p50_s` / `time
 | --- | ---: | ---: | ---: | --- |
 | | | | | |
 
+## End-to-end voice trial record
+
+Use a fixed, self-authored practice question for each language. For every attempt, compare the recognized transcript with what you said, then check the answer against the displayed study source. Mark a stage unavailable when the browser does not provide that feature; do not infer success from a later stage.
+
+| Language | Trial | Intended question | Transcript usable? | Source shown and relevant? | Answer supported by source? | Spoken answer completed? | Failure stage / notes |
+| --- | ---: | --- | --- | --- | --- | --- | --- |
+| | 1 | | | | | | |
+| | 2 | | | | | | |
+| | 3 | | | | | | |
+
+For transcript usability, record whether the meaning and any named article number survived recognition; exact wording is not required. For source relevance and answer support, cite the article shown and note any claim that the source does not support. Keep these observations separate from speech latency and listener ratings above. This small manual record does not measure population-level accuracy.
 ## Report carefully
 
 - Include browser, device, selected voice/locale, sample phrase, run count, and failures with any results.
