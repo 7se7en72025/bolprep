@@ -472,5 +472,26 @@
       "section": "Part III, Article 33",
       "checked_on": "2026-10-06"
     }
+  },
+  {
+    "id": "article-34",
+    "title": "Article 34 - Parliament may provide indemnity for acts under martial law",
+    "title_hi": "अनुच्छेद 34 - मार्शल लॉ के दौरान किए गए कार्यों के लिए संसद क्षतिपूर्ति दे सकती है",
+    "title_hinglish": "Article 34 - martial law ke dauran hue acts ke liye Parliament indemnity de sakti hai",
+    "summary": "Article 34 allows Parliament by law to indemnify a person in Union or State service, or any other person, for acts connected with maintaining or restoring order in an area where martial law was in force. Parliament may also validate sentences, punishments, forfeitures, or other acts done under martial law in that area. This note does not state the scope of any such law or how it applies in a particular case.",
+    "summary_hi": "अनुच्छेद 34 में, किसी ऐसे क्षेत्र में जहाँ मार्शल लॉ लागू था, व्यवस्था बनाए रखने या बहाल करने से जुड़े कार्यों के लिए संसद कानून बनाकर संघ या राज्य की सेवा में लगे व्यक्ति या किसी अन्य व्यक्ति को क्षतिपूर्ति दे सकती है। संसद ऐसे क्षेत्र में मार्शल लॉ के तहत दिए गए दंडादेश, सजा, संपत्ति जब्ती या अन्य कार्य को कानून द्वारा मान्य भी कर सकती है। यह नोट ऐसे कानून की सीमा या किसी मामले में उसके लागू होने का दावा नहीं करता।",
+    "summary_hinglish": "Article 34 ke mutabik, jis area mein martial law lagu tha wahan order maintain ya restore karne se jude acts ke liye Parliament law bana kar Union ya State service mein kisi person, ya kisi aur person ko indemnity de sakti hai. Parliament us area mein martial law ke under diye gaye sentences, punishments, forfeitures ya doosre acts ko law se validate bhi kar sakti hai. Yeh note kisi aise law ka scope ya particular case mein uska application nahi batata.",
+    "keywords": [
+      "fundamental rights", "martial law", "indemnity", "indemnify", "maintain order", "restore order",
+      "sentence", "punishment", "forfeiture", "validate acts", "parliament", "article 34", "art 34",
+      "martial law", "order restore", "saza", "nuksan bharpai", "sainya shasan",
+      "मार्शल लॉ", "सैन्य शासन", "व्यवस्था बहाल", "क्षतिपूर्ति", "दंडादेश", "सजा", "संपत्ति जब्ती", "अनुच्छेद 34"
+    ],
+    "source": {
+      "title": "The Constitution of India - Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 34",
+      "checked_on": "2026-10-06"
+    }
   }
 ]

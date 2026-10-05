@@ -1,5 +1,11 @@
 # Learning log
 
+## Add Article 34 coverage - 2026-10-06
+
+- Added a bounded English, Hindi, and Hinglish summary of Article 34: Parliament may by law indemnify people for specified acts connected with maintaining or restoring order in an area where martial law was in force, and may validate listed acts done under martial law there. Checked against the Constitution of India published by the Legislative Department, Government of India (https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-06.
+- Added one retrieval example per language. The corpus now contains 23 notes and 82 constructed examples.
+- Verification: corpus loader accepted all notes; focused retrieval returned only Article 34 for the English, Hindi, and Hinglish examples; git diff --check passed. The full retrieval evaluation was not run; no browser or live-model behavior was exercised.
+
 ## Add Article 33 coverage - 2026-10-06
 
 - Added a bounded multilingual note for Article 33: Parliament may determine by law how far rights can be modified for specified forces and services to support duty and discipline. The note avoids claiming which particular restrictions apply. Checked against Article 33 in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-06.
