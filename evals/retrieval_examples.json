@@ -74,5 +74,8 @@
   {"id": "hinglish-art32-petition", "language": "Hinglish", "question": "Article 32 mein rights enforce karne ke liye Supreme Court kaun se writs de sakta hai?", "expected_doc_ids": ["article-32"]},
   {"id": "hinglish-cricket-outside-domain", "language": "Hinglish", "question": "Cricket World Cup kisne jeeta?", "expected_doc_ids": []},
   {"id": "hi-uncovered-article-detail", "language": "Hindi", "question": "क्या अनुच्छेद 21 निजता की गारंटी देता है?", "expected_doc_ids": []},
-  {"id": "hinglish-privacy-detail", "language": "Hinglish", "question": "Article 21 privacy guarantee karta hai?", "expected_doc_ids": []}
+  {"id": "hinglish-privacy-detail", "language": "Hinglish", "question": "Article 21 privacy guarantee karta hai?", "expected_doc_ids": []},
+  {"id":"en-art33-armed-forces","language":"English","question":"What can Parliament do to Fundamental Rights of armed forces members under Article 33?","expected_doc_ids":["article-33"]},
+  {"id":"hi-art33-discipline","language":"Hindi","question":"अनुच्छेद 33 के तहत सशस्त्र बलों में अनुशासन बनाए रखने के लिए मौलिक अधिकारों में कौन बदलाव कर सकता है?","expected_doc_ids":["article-33"]},
+  {"id":"hinglish-art33-police","language":"Hinglish","question":"Article 33 mein public order forces aur police ke members ke rights restrict karne ka decision kaun leta hai?","expected_doc_ids":["article-33"]}
 ]

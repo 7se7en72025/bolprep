@@ -428,5 +428,49 @@
       "section": "Part III, Article 30(1), (1A), and (2)",
       "checked_on": "2026-10-05"
     }
+  },
+  {
+    "id": "article-33",
+    "title": "Article 33 - Parliament may modify rights for specified forces and services",
+    "title_hi": "अनुच्छेद 33 - कुछ बलों और सेवाओं के लिए अधिकारों में संसद द्वारा बदलाव",
+    "title_hinglish": "Article 33 - specified forces aur services ke liye Parliament rights modify kar sakti hai",
+    "summary": "Article 33 empowers Parliament to determine by law how far Part III rights may be restricted or taken away as they apply to members of the armed forces or public-order forces, people employed in State intelligence or counter-intelligence organisations, and people employed in or connected with telecommunications systems set up for those forces or organisations. The purpose is proper discharge of duties and maintenance of discipline. This note does not identify specific laws or decide how they apply.",
+    "summary_hi": "अनुच्छेद 33 संसद को कानून द्वारा यह तय करने की शक्ति देता है कि भाग III के अधिकारों को सशस्त्र बलों के सदस्यों, सार्वजनिक व्यवस्था वाले बलों के सदस्यों, राज्य द्वारा स्थापित खुफिया या प्रति-खुफिया संगठनों में कार्यरत लोगों, और उन बलों या संगठनों के लिए स्थापित दूरसंचार प्रणालियों में या उनसे जुड़े कार्य करने वाले लोगों पर किस सीमा तक रोक या हटाया जा सकता है। उद्देश्य कर्तव्यों का उचित निर्वहन और अनुशासन बनाए रखना है। यह नोट विशिष्ट कानूनों या उनके अनुप्रयोग की व्याख्या नहीं करता।",
+    "summary_hinglish": "Article 33 Parliament ko law se decide karne deta hai ki Part III ke rights ko armed forces ya public order forces ke members, State ke intelligence ya counter-intelligence organisations mein employed logon, aur un forces ya organisations ke liye banaye telecom systems mein ya unse jude kaam karne wale logon par kis had tak restrict ya take away kiya ja sakta hai. Maqsad duties ka proper discharge aur discipline maintain karna hai. Yeh note specific laws ya unke application ko explain nahi karta.",
+    "keywords": [
+      "fundamental rights",
+      "armed forces",
+      "army",
+      "military",
+      "forces",
+      "public order",
+      "police",
+      "intelligence organisation",
+      "telecommunications system",
+      "discipline",
+      "duties",
+      "restriction of rights",
+      "modify rights",
+      "parliament",
+      "article 33",
+      "art 33",
+      "sashastra bal",
+      "suraksha bal",
+      "anushasan",
+      "adhikar seemit",
+      "सशस्त्र बल",
+      "सार्वजनिक व्यवस्था",
+      "खुफिया संगठन",
+      "दूरसंचार तंत्र",
+      "अनुशासन",
+      "अधिकारों पर प्रतिबंध",
+      "अनुच्छेद 33"
+    ],
+    "source": {
+      "title": "The Constitution of India - Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part III, Article 33",
+      "checked_on": "2026-10-06"
+    }
   }
 ]

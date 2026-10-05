@@ -1,5 +1,11 @@
 # Learning log
 
+## Add Article 33 coverage - 2026-10-06
+
+- Added a bounded multilingual note for Article 33: Parliament may determine by law how far rights can be modified for specified forces and services to support duty and discipline. The note avoids claiming which particular restrictions apply. Checked against Article 33 in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), checked on 2026-10-06.
+- Added English, Hindi, and Hinglish retrieval examples. The corpus now contains 22 notes and the labeled set contains 79 examples.
+- Verification: Node parsed both JSON files and confirmed 22 unique notes, 79 unique examples, valid Article 33 source metadata, intact multilingual text, and indexed-term overlap for all three Article 33 examples; `git diff --check` passed. The Python retrieval evaluator could not run because Python is unavailable in this environment. No browser or live-model behavior was exercised. Examples are constructed, not learner queries, and retrieval quality remains unmeasured.
+
 ## Scope retrieval to named articles and abstain on unsupported details - 2026-10-05
 
 - Explicit English, Hinglish, and Hindi article references now search only the named note; if its keywords and summary do not cover the topic, retrieval abstains instead of returning unrelated notes. Broad topic queries retain the full-corpus behavior. This closes false positives where an Article 21 privacy question returned other article notes.
