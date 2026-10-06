@@ -779,3 +779,9 @@
 
 - Corrected the voice run sheet to describe the actual selected streamed voice in diagnostics, with Coral shown only as an example. This keeps measurements for alternate provider voices correctly attributed.
 - Verification: confirmed the run-sheet text matches the selectable voice labels in the client; `git diff --check` passes. No browser or provider playback was used.
+
+
+## Document recorded-clip language consistency check - 2026-10-06
+
+- Added a manual STT run-sheet case for changing the language selector during a recorded clip. It checks that the language captured at recording start remains the status and transcription language, in both Hindi-to-English and English-to-Hindi directions.
+- Verification: confirmed the run-sheet describes the client behavior that captures `speechLanguage.value` before recording begins; `git diff --check` passed. No recording or provider request was made, so device/provider behavior remains unverified.
