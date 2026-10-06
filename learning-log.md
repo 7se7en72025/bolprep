@@ -2,9 +2,9 @@
 
 ## Handle simple Hindi and Hinglish article questions - 2026-10-06
 
-- A retrieval probe showed `Article 42 kya kehta hai?` and `अनुच्छेद 42 क्या कहता है?` were rejected, even though the numbered article was present. The article-reference filter treated generic question words and the common "says" verb as unsupported topic words.
-- Added Hindi and Hinglish generic question tokens for article-number queries and two constructed retrieval examples. Topic words in the rest of a cited-article question still have to match that note.
-- Verification: both phrasings now retrieve `article-42`; the evaluator passes all 121 constructed examples with 100% exact match, 100% supported recall@3, 0% unsupported false positives, and 100% exact match in each language; `git diff --check` passed. No browser, live-model, or speech quality was measured.
+- Retrieval probes also showed that "What is written/said in Article 42?" and "Article 42 mein kya likha hai?" were rejected, although they refer to the cited article without adding a topic claim. The article-reference filter treated these generic wording tokens as unsupported topics.
+- Added common Hindi/Hinglish "says" and "what is written" tokens to the article-reference filter, plus four constructed Hindi/Hinglish examples across the two phrasings. Topic words in the rest of a cited-article question still have to match that note.
+- Verification: all four simple Hindi/Hinglish phrasings now retrieve `article-42`; the evaluator passes all 123 constructed examples with 100% exact match, 100% supported recall@3, 0% unsupported false positives, and 100% exact match in each language; `git diff --check` passed. No browser, live-model, or speech quality was measured.
 
 ## Add Article 43 living-wage and cottage-industry coverage - 2026-10-06
 
