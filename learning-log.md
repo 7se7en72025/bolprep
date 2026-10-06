@@ -773,3 +773,9 @@
 
 - Typed quiz submission now invalidates and stops any current browser or streamed audio before rubric scoring begins, matching ordinary question turn handling. Added a manual run-sheet case for submitting during prompt or feedback playback.
 - Verification: `node --check web/app.js` and `git diff --check` passed. No browser or audio playback was available for the interaction check; no API request or real recording was used.
+
+
+## Record the selected streamed voice in evaluation results - 2026-10-06
+
+- Corrected the voice run sheet to describe the actual selected streamed voice in diagnostics, with Coral shown only as an example. This keeps measurements for alternate provider voices correctly attributed.
+- Verification: confirmed the run-sheet text matches the selectable voice labels in the client; `git diff --check` passes. No browser or provider playback was used.
