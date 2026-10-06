@@ -658,5 +658,27 @@
       "section": "Part IV, Article 39(b) and (c)",
       "checked_on": "2026-10-06"
     }
+  },
+  {
+    "id": "article-37",
+    "title": "Article 37 - application of the Directive Principles",
+    "title_hi": "अनुच्छेद 37 - नीति-निदेशक सिद्धांतों का लागू होना",
+    "title_hinglish": "Article 37 - Directive Principles ka application",
+    "summary": "Article 37 says the Directive Principles in Part IV are not enforceable by any court. It also calls them fundamental to the country's governance and makes it the State's duty to apply them when making laws. This note summarizes the constitutional text and does not explain court decisions or how a particular law applies.",
+    "summary_hi": "अनुच्छेद 37 कहता है कि भाग IV के नीति-निदेशक सिद्धांत किसी अदालत द्वारा लागू नहीं कराए जा सकते। साथ ही, ये देश के शासन में मूलभूत हैं और कानून बनाते समय इन्हें लागू करना राज्य का कर्तव्य है। यह नोट संवैधानिक पाठ का सार है; यह अदालतों के फैसलों या किसी खास कानून पर इनके प्रयोग की व्याख्या नहीं करता।",
+    "summary_hinglish": "Article 37 kehta hai ki Part IV ke Directive Principles ko kisi court se enforce nahi karaya ja sakta. Saath hi, ye desh ke governance ke liye fundamental hain aur laws banate waqt inhe apply karna State ka duty hai. Yeh note constitutional text ka summary hai; court decisions ya kisi specific law par application explain nahi karta.",
+    "keywords": [
+      "article 37", "article 37 application", "directive principles", "part iv",
+      "not enforceable", "enforceable by court", "court enforcement", "fundamental in governance",
+      "state duty", "making laws", "policy principles", "dpsp",
+      "anuchhed 37", "nyayalay", "adalat", "enforce", "shasan", "vidhan",
+      "directive principles enforce nahi", "court se enforce", "governance", "state ka duty"
+    ],
+    "source": {
+      "title": "The Constitution of India - Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part IV, Article 37",
+      "checked_on": "2026-10-06"
+    }
   }
 ]

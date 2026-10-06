@@ -745,3 +745,10 @@
 
 - The local launcher now checks `.venv\Scripts\python.exe` before requiring a system `python` command or the Windows `py` launcher. This lets an existing Python 3.11+ project environment start BolPrep even when Python is not on `PATH`.
 - Verification: ran `tools/run-local.ps1` with no system `python` command available; dependency requirements were already satisfied, the server started in offline mode, and `/health`, `/`, and `/app.js` each returned HTTP 200. The server was stopped after verification. No provider API or speech input was used.
+
+## Add Article 37 coverage for Directive Principles - 2026-10-06
+
+- Added an English, Hindi, and Hinglish Article 37 note describing the text's two points: Part IV principles are not enforceable by courts, and they remain fundamental to governance and a State duty when making laws. The note does not interpret court decisions or apply the principles to specific laws. Checked against Article 37 in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-06.
+- Added three constructed retrieval examples, one per language, and updated broad-query labels. The corpus now has 30 notes and the labeled set has 103 examples.
+- Verification: Node.js parsed both JSON files and confirmed unique IDs, expected counts, and presence of all three Article 37 examples; `git diff --check` passed. The documented Python retrieval evaluation could not run: the existing `.venv` points to a missing Python 3.11 installation, and `py -3.11` reports no installed Python.
+- Limitation: retrieval ranking metrics and browser behavior were not verified in this environment; examples are constructed, not learner queries.
