@@ -103,7 +103,17 @@ Quiz scores are stored in a local SQLite database at `.codex/bolprep.sqlite3`, s
 8. **Evaluation:** compare configurations on documented examples; report language-specific errors, TTS listener feedback, p50/p95 latency, and failures.
 9. **Portfolio demo:** document setup, architecture, limitations, measured results, and a short walkthrough.
 
-Each phase should be small enough to run, inspect, and explain before moving on. Next, exercise the tutor's Hindi and English speech in a supported browser, continue expanding the checked corpus, and verify model-selected tool calls with a configured key.
+Each phase should be small enough to run, inspect, and explain before moving on.
+
+### Constructed retrieval evaluation
+
+The current 103-example text evaluation reports 100% exact match, 100% supported recall@3, and 0% unsupported false positives. English, Hindi, and Hinglish each report 100% exact match. Reproduce it from the project root with:
+
+```powershell
+.\.venv\Scripts\python.exe evals\run_retrieval_eval.py
+```
+
+These are results on constructed text prompts, not real learner questions, speech recognition, or answer-quality measurements. Next, exercise the tutor's Hindi and English speech in a supported browser, continue expanding the checked corpus, and verify model-selected tool calls with a configured key.
 
 ## Portfolio context
 
