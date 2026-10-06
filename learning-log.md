@@ -763,3 +763,8 @@
 - Added English, Hindi, and Hinglish summaries of Article 38(1) and (2): welfare and a social order informed by social, economic, and political justice, minimizing income inequalities, and addressing inequalities in status, facilities, and opportunities. The note is limited to the constitutional text and does not assess particular policies or court decisions. Checked against Article 38 in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-06.
 - Added three constructed English, Hindi, and Hinglish retrieval examples and updated broad-query expectations. The corpus now has 31 notes and the labeled set has 106 examples.
 - Verification: the Python retrieval evaluator reports 100% exact match, 100% supported recall@3, 0% unsupported false positives, and 100% exact match in each language. `git diff --check` passed. Browser and live-model behavior were not exercised; these constructed examples do not measure learner or speech performance.
+
+## Invalidate canceled transcription before the request settles - 2026-10-06
+
+- Stopping a tutor turn now clears the active recorded-audio transcription controller before aborting its fetch. A late completion can no longer replace the question text after a new turn is submitted, and an older handler cannot reset the newer recording button state.
+- Verification: `node --check web/app.js` and `git diff --check` passed. Browser/provider cancellation timing was not exercised; no audio or API request was used.

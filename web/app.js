@@ -276,8 +276,10 @@ async function transcribeRecordedAudio(audio, language) {
       statusLine.textContent = `${error.message} You can record again or type your question.`;
     }
   } finally {
-    if (activeTranscriptionController === controller) activeTranscriptionController = null;
-    updateServerTranscribeButton();
+    if (activeTranscriptionController === controller) {
+      activeTranscriptionController = null;
+      updateServerTranscribeButton();
+    }
   }
 }
 
@@ -337,7 +339,9 @@ function stopTutor() {
   serverRecordingStarting = false;
   updateServerTranscribeButton();
   if (activeMediaRecorder) stopServerRecording(true);
-  activeTranscriptionController?.abort();
+  const transcriptionController = activeTranscriptionController;
+  activeTranscriptionController = null;
+  transcriptionController?.abort();
   turn += 1;
   sendButton.disabled = false;
   micButton.disabled = !recognitionAvailable;
