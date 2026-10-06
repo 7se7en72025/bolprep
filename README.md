@@ -41,7 +41,7 @@ Put your API key in `.env` to enable model answers. Keep that file private; it i
 
 Open <http://127.0.0.1:8000>. The server binds to localhost and keeps the model key on the server. Its `/health` check reports setup mode and corpus size without creating a browser progress session; static JS and CSS requests also avoid session storage. Browser microphone permission is requested only after you click **Speak**. While listening, the same button changes to **Stop** so you can end capture without sending the transcript; you can review the text before submitting it. Press Ctrl+C to stop the web server.
 
-Without an API key, the tutor returns matching local study-note summaries and source links; it labels these as notes rather than generated explanations. Questions outside the twenty-nine-note corpus receive an insufficient-evidence response. The smaller Step 0 example can still be run with:
+Without an API key, the tutor returns matching local study-note summaries and source links; it labels these as notes rather than generated explanations. Questions outside the thirty-note corpus receive an insufficient-evidence response. The smaller Step 0 example can still be run with:
 
 ```powershell
 python step0.py

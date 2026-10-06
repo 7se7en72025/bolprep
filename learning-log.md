@@ -1,5 +1,10 @@
 # Learning log
 
+## Correct the offline corpus count in README - 2026-10-06
+
+- Corrected the setup guidance to match the checked corpus: offline questions outside thirty notes receive an insufficient-evidence response.
+- Verification: parsed `data/fundamental_rights.json` with Node and confirmed 30 note records; `git diff --check` passed. No runtime or browser behavior changed.
+
 ## Prevent recorded transcripts overwriting a submitted question - 2026-10-06
 
 - Starting a tutor turn now cancels any unfinished server recording and aborts pending recorded-file transcription. Late transcription results can no longer replace the question composer after the learner submits a typed question.
