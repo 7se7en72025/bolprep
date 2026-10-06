@@ -1,5 +1,11 @@
 # Learning log
 
+## Add Article 40 village panchayat coverage - 2026-10-06
+
+- Added a bounded English, Hindi, and Hinglish summary of Article 40: the State should organize village panchayats and provide the powers and authority needed for them to function as self-government units. The note does not describe a particular law or panchayat. Checked against Article 40 in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-06.
+- Added three constructed retrieval examples, one per language, and included the note in broad-query labels. The corpus now has 32 notes and the labeled set has 109 examples.
+- Verification: Node parsed the corpus and examples, confirmed 32 unique notes and 109 unique labels, validated Article 40 source metadata and Hindi text, and checked keyword overlap for all three Article 40 examples; `node --check web/app.js` and `git diff --check` passed. The focused Python retrieval evaluator could not run: the project virtual-environment interpreter target is missing and `py -3.11` reports no installed Python. Full retrieval ranking, browser, and live-model behavior remain unverified. Examples are constructed and do not measure learner or speech performance.
+
 ## Correct the offline corpus count in README - 2026-10-06
 
 - Corrected the setup guidance to match the checked corpus: offline questions outside thirty notes receive an insufficient-evidence response.

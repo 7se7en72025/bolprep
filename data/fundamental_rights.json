@@ -703,5 +703,43 @@
       "section": "Part IV, Article 38(1) and (2)",
       "checked_on": "2026-10-06"
     }
+  },
+  {
+    "id": "article-40",
+    "title": "Article 40 - village panchayats",
+    "title_hi": "अनुच्छेद 40 - ग्राम पंचायतें",
+    "title_hinglish": "Article 40 - village panchayats ko organize karna",
+    "summary": "Article 40 directs the State to take steps to organize village panchayats and give them the powers and authority needed to function as units of self-government. This note summarizes the constitutional direction and does not describe any particular law or panchayat.",
+    "summary_hi": "अनुच्छेद 40 में राज्य से ग्राम पंचायतों को संगठित करने और उन्हें स्वशासन की इकाइयों के रूप में काम करने के लिए आवश्यक शक्तियाँ और अधिकार देने के कदम उठाने को कहा गया है। यह नोट संवैधानिक निर्देश का सार है; यह किसी विशेष कानून या पंचायत का वर्णन नहीं करता।",
+    "summary_hinglish": "Article 40 State ko village panchayats organize karne aur unhe self-government ki units ke roop mein kaam karne ke liye zaroori powers aur authority dene ke steps lene ko kehta hai. Yeh note constitutional direction ka summary hai; kisi particular law ya panchayat ko describe nahi karta.",
+    "keywords": [
+      "article 40",
+      "article 40 panchayats",
+      "village panchayats",
+      "panchayat",
+      "self-government",
+      "local self-government",
+      "powers and authority",
+      "directive principles",
+      "part iv",
+      "anuchhed 40",
+      "gram panchayat",
+      "gaon ki panchayat",
+      "swashasan",
+      "sthaniya swashasan",
+      "अनुच्छेद 40",
+      "ग्राम पंचायत",
+      "पंचायत",
+      "स्वशासन",
+      "स्थानीय स्वशासन",
+      "शक्तियाँ",
+      "अधिकार"
+    ],
+    "source": {
+      "title": "The Constitution of India - Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part IV, Article 40",
+      "checked_on": "2026-10-06"
+    }
   }
 ]
