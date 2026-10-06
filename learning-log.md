@@ -1,5 +1,11 @@
 # Learning log
 
+## Add Article 43 living-wage and cottage-industry coverage - 2026-10-06
+
+- Added an English, Hindi, and Hinglish summary of Article 43 covering living wages, decent work conditions, leisure, social and cultural opportunities, and rural cottage industries. The note does not specify a particular law, wage amount, or entitlement. Checked against Article 43 in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-06.
+- Added one constructed retrieval example per language and updated the three broad-query labels. The corpus now contains 35 notes and the evaluation set has 119 examples.
+- Verification: Node.js parsed both JSON files, confirmed unique IDs, source metadata, all three language labels and 35-note broad-query expectations, and checked language-matched keyword overlap for the new examples. git diff --check passed. The full Python retrieval evaluation could not run: the project virtual environment points to a missing Python 3.11 installation and py -0p reports no installed Python versions. No browser, live-model, or speech behavior was exercised. The examples are constructed and do not measure learner or speech performance.
+
 ## Accept article-number questions phrased with "provide" - 2026-10-06
 
 - A local offline API smoke check showed that "What does Article 42 provide?" returned insufficient evidence despite Article 42 being covered. The article-reference filter treated `provide` as a topic word, so it incorrectly rejected the matched article.
