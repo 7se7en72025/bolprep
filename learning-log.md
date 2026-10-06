@@ -768,3 +768,8 @@
 
 - Stopping a tutor turn now clears the active recorded-audio transcription controller before aborting its fetch. A late completion can no longer replace the question text after a new turn is submitted, and an older handler cannot reset the newer recording button state.
 - Verification: `node --check web/app.js` and `git diff --check` passed. Browser/provider cancellation timing was not exercised; no audio or API request was used.
+
+## Stop speech when submitting typed quiz answers - 2026-10-06
+
+- Typed quiz submission now invalidates and stops any current browser or streamed audio before rubric scoring begins, matching ordinary question turn handling. Added a manual run-sheet case for submitting during prompt or feedback playback.
+- Verification: `node --check web/app.js` and `git diff --check` passed. No browser or audio playback was available for the interaction check; no API request or real recording was used.

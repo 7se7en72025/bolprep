@@ -903,6 +903,7 @@ function showQuizQuestion(speakPrompt = true) {
 async function submitQuizAnswer(answer) {
   prepareStreamingAudio();
   if (!quizSession || !quizSession.awaitingAnswer) return;
+  stopSpeechOutput();
   const current = quizSession.questions[quizSession.index];
   current.idempotencyKey ||= window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
   quizSession.awaitingAnswer = false;

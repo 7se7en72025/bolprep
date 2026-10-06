@@ -141,4 +141,5 @@ The intended story is to pair multilingual speech infrastructure work with a sep
 - Speech transcripts over the active question or quiz-answer limit stay visible for editing; submission now explains the limit instead of sending a request the server will reject.
 - Keyboard navigation has a visible focus outline on interactive controls and links.
 - If a learner stops a pending model turn or a request fails, the client keeps the question and a clear interruption/failure note in the bounded history so follow-ups retain the topic without treating an error as an answer; stopping does not cancel model generation at the provider.
+- Submitting a typed quiz answer stops any current tutor audio before scoring starts, so prompt or feedback playback does not continue over the scoring turn.
 - Add features incrementally and record experiments in [learning-log.md](learning-log.md).

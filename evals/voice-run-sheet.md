@@ -97,6 +97,7 @@ Run these checks in a browser with speech playback available. Use the same brows
 | Stop while thinking, then follow up | | | | |
 | Follow up after completed answer | | | | |
 | Submit typed follow-up during playback | | | | |
+| Submit typed quiz answer during prompt or feedback playback | | | | |
 | Stop and restart microphone capture | | | | |
 | Interrupt streamed speech, then start a new turn | | | | |
 
@@ -109,5 +110,7 @@ For each attempt, add one row below before summarizing the totals above. Keep th
 | | 3 | | |
 | | 4 | | |
 | | 5 | | |
+
+When submitting a typed quiz answer during prompt or feedback playback, check whether the old audio stops as scoring begins and stays stopped while the score is pending.
 
 This is a manual interaction check, not provider cancellation proof. The local client can abort its request and ignore stale client events, but the model provider may continue generating after the browser stops waiting.
