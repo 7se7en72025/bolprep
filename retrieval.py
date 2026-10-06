@@ -22,7 +22,10 @@ STOPWORDS = {
     "right", "rights", "fundamental", "freedom", "freedoms", "adhikar", "adhikaar",
     *HINDI_STOPWORDS,
 }
-GENERIC_ARTICLE_QUERY_TOKENS = {"cover", "protect", "guarantee", "list", "mean", "say", "karta", "karti"}
+GENERIC_ARTICLE_QUERY_TOKENS = {
+    "cover", "protect", "guarantee", "list", "mean", "say", "provide", "provides",
+    "karta", "karti",
+}
 
 
 def _tokens(text: str) -> set[str]:

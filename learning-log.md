@@ -1,5 +1,11 @@
 # Learning log
 
+## Accept article-number questions phrased with "provide" - 2026-10-06
+
+- A local offline API smoke check showed that "What does Article 42 provide?" returned insufficient evidence despite Article 42 being covered. The article-reference filter treated `provide` as a topic word, so it incorrectly rejected the matched article.
+- Added `provide` and `provides` to generic article-query verbs and added the phrase as a constructed English retrieval example. Article-specific topic words still need to match the cited note.
+- Verification: direct retrieval now returns `article-42`; the full evaluator passes all 116 constructed examples with 100% exact match, 100% supported recall@3, 0% unsupported false positives, and 100% exact match in each language; `git diff --check` passed. No post-fix HTTP request or browser/audio check was made. These results do not estimate real learner or speech performance.
+
 ## Add Article 42 coverage for humane work and maternity relief - 2026-10-06
 
 - Added a bounded English, Hindi, and Hinglish summary of Article 42, limited to the constitutional direction on just and humane work conditions and maternity relief. The note does not describe a specific law, benefit, or individual entitlement. Checked against Article 42 in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-06.
