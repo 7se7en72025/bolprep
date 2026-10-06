@@ -1,10 +1,10 @@
+# Learning log
+
 ## Add Article 41 coverage for work, education, and assistance - 2026-10-06
 
 - Added a source-backed English, Hindi, and Hinglish summary of Article 41, limited to the constitutional direction for provisions within the State's economic capacity and development. The note does not describe a specific scheme or claim an individual entitlement. Checked against Article 41 in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-06.
 - Added three constructed retrieval examples and updated broad-query labels. The corpus now contains 33 notes and the labeled set contains 112 examples.
-- Verification: Node.js parsed both JSON files and confirmed 33 unique note IDs, 112 unique evaluation IDs, Article 41 source metadata, and all six expected Article 41 labels; `git diff --check` passed. The Python retrieval evaluator could not run: the project virtual-environment executable points to a missing Python 3.11 installation, and `py -3.11` reports no installed Python. Constructed retrieval metrics therefore remain unverified. These examples are not learner or speech performance measurements.
-
-# Learning log
+- Verification at commit time: Node.js parsed both JSON files and confirmed 33 unique note IDs, 112 unique evaluation IDs, Article 41 source metadata, and all six expected Article 41 labels; `git diff --check` passed. The retrieval evaluator was unavailable in that run. Follow-up verification with the project Python 3.11 environment evaluated all 112 examples: exact match 100%, supported recall@3 100%, unsupported false positives 0%, and exact match 100% in English, Hindi, and Hinglish. All three Article 41 examples retrieved `article-41`. Browser and live-model behavior remain unverified. These examples are constructed and are not learner or speech performance measurements.
 
 ## Add Article 40 village panchayat coverage - 2026-10-06
 
