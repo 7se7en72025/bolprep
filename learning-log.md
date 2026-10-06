@@ -1,5 +1,11 @@
 # Learning log
 
+## Add Article 42 coverage for humane work and maternity relief - 2026-10-06
+
+- Added a bounded English, Hindi, and Hinglish summary of Article 42, limited to the constitutional direction on just and humane work conditions and maternity relief. The note does not describe a specific law, benefit, or individual entitlement. Checked against Article 42 in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-06.
+- Added three constructed retrieval examples, one per language, and included the note in broad-query labels. The corpus now contains 34 notes and the labeled set contains 115 examples.
+- Verification: Node.js parsed both JSON files and confirmed 34 unique corpus notes, 115 unique evaluation labels, Article 42 source metadata, and one Article 42 expected label in each language plus all three broad-query labels. A focused keyword-overlap check confirmed the three Article 42 examples match the new note; `node --check web/app.js` and `git diff --check` passed. The full Python evaluator could not run because the project virtual-environment launcher points to a missing Python 3.11 installation and neither `python` nor `py` is available. Browser, live-model, and speech behavior were not exercised. Examples are constructed and do not measure learner or speech performance.
+
 ## Add Article 41 coverage for work, education, and assistance - 2026-10-06
 
 - Added a source-backed English, Hindi, and Hinglish summary of Article 41, limited to the constitutional direction for provisions within the State's economic capacity and development. The note does not describe a specific scheme or claim an individual entitlement. Checked against Article 41 in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-06.
