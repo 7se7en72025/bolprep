@@ -681,5 +681,27 @@
       "section": "Part IV, Article 37",
       "checked_on": "2026-10-06"
     }
+  },
+  {
+    "id": "article-38",
+    "title": "Article 38 - social order for people's welfare",
+    "title_hi": "अनुच्छेद 38 - लोगों के कल्याण के लिए सामाजिक व्यवस्था",
+    "title_hinglish": "Article 38 - logon ke welfare ke liye social order",
+    "summary": "Article 38(1) says the State should strive to promote people's welfare through a social order where social, economic, and political justice inform national institutions. Clause (2) calls on the State to minimize income inequalities and work to eliminate inequalities in status, facilities, and opportunities among individuals and groups in different areas or vocations. This note summarizes these clauses and does not assess a particular policy or court decision.",
+    "summary_hi": "अनुच्छेद 38(1) में राज्य से लोगों के कल्याण के लिए ऐसी सामाजिक व्यवस्था बनाने का प्रयास करने को कहा गया है जिसमें सामाजिक, आर्थिक और राजनीतिक न्याय राष्ट्रीय जीवन की संस्थाओं को दिशा दे। खंड (2) में राज्य से आय की असमानता कम करने और व्यक्तियों तथा अलग-अलग क्षेत्रों या पेशों के समूहों के बीच स्थिति, सुविधाओं और अवसरों की असमानता मिटाने का प्रयास करने को कहा गया है। यह नोट इन खंडों का सार है; यह किसी खास नीति या अदालत के फैसले का आकलन नहीं करता।",
+    "summary_hinglish": "Article 38(1) mein State se logon ke welfare ke liye aisa social order banane ka prayas karne ko kaha gaya hai jahan social, economic aur political justice national institutions ko guide kare. Clause (2) mein State se income inequality kam karne aur individuals aur alag areas ya vocations ke groups ke beech status, facilities aur opportunities ki inequality hatane ka prayas karne ko kaha gaya hai. Yeh note in clauses ka summary hai; kisi specific policy ya court decision ka assessment nahi karta.",
+    "keywords": [
+      "article 38", "article 38 social order", "social justice", "economic justice", "political justice",
+      "people's welfare", "income inequality", "inequality in status", "facilities and opportunities", "directive principles",
+      "anuchhed 38", "samajik nyay", "aay ki asamanta", "barabari", "varg aur kshetra",
+      "अनुच्छेद 38", "सामाजिक न्याय", "आर्थिक न्याय", "राजनीतिक न्याय", "लोगों का कल्याण",
+      "आय की असमानता", "स्थिति", "सुविधाएं", "अवसर", "सामाजिक व्यवस्था"
+    ],
+    "source": {
+      "title": "The Constitution of India - Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part IV, Article 38(1) and (2)",
+      "checked_on": "2026-10-06"
+    }
   }
 ]
