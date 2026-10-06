@@ -1,5 +1,11 @@
 # Learning log
 
+## Handle simple Hindi and Hinglish article questions - 2026-10-06
+
+- A retrieval probe showed `Article 42 kya kehta hai?` and `अनुच्छेद 42 क्या कहता है?` were rejected, even though the numbered article was present. The article-reference filter treated generic question words and the common "says" verb as unsupported topic words.
+- Added Hindi and Hinglish generic question tokens for article-number queries and two constructed retrieval examples. Topic words in the rest of a cited-article question still have to match that note.
+- Verification: both phrasings now retrieve `article-42`; the evaluator passes all 121 constructed examples with 100% exact match, 100% supported recall@3, 0% unsupported false positives, and 100% exact match in each language; `git diff --check` passed. No browser, live-model, or speech quality was measured.
+
 ## Add Article 43 living-wage and cottage-industry coverage - 2026-10-06
 
 - Added an English, Hindi, and Hinglish summary of Article 43 covering living wages, decent work conditions, leisure, social and cultural opportunities, and rural cottage industries. The note does not specify a particular law, wage amount, or entitlement. Checked against Article 43 in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-06.

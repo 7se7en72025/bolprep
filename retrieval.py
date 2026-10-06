@@ -24,7 +24,8 @@ STOPWORDS = {
 }
 GENERIC_ARTICLE_QUERY_TOKENS = {
     "cover", "protect", "guarantee", "list", "mean", "say", "provide", "provides",
-    "karta", "karti",
+    "karta", "karti", "kehta", "kehti", "kehte", "क्या", "है", "हैं",
+    "कहता", "कहती", "कहते",
 }
 
 
