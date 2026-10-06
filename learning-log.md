@@ -1,5 +1,11 @@
 # Learning log
 
+## Add source-backed Article 44 coverage - 2026-10-06
+
+- Added an English, Hindi, and Hinglish summary of Article 44: the State shall endeavour to secure a uniform civil code for citizens throughout India. The note summarizes the constitutional text and does not describe personal laws, a proposed code, or legal interpretation. Checked against Part IV, Article 44, in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-06.
+- Added three constructed retrieval examples and updated broad-query labels. The corpus now contains 36 notes and the evaluation set has 126 examples.
+- Verification: Node.js parsed both JSON files, confirmed unique IDs, valid Article 44 source metadata, one keyword-matching example per language, and broad labels covering all 36 notes. `node --check web/app.js` and `git diff --check` passed. The Python evaluator could not start because the repository `.venv` points to a missing Python 3.11 executable; no Python changes were made. Browser, live-model, and speech quality were not exercised. Constructed examples do not measure learner or speech performance.
+
 ## Handle simple Hindi and Hinglish article questions - 2026-10-06
 
 - Retrieval probes also showed that "What is written/said in Article 42?" and "Article 42 mein kya likha hai?" were rejected, although they refer to the cited article without adding a topic claim. The article-reference filter treated these generic wording tokens as unsupported topics.

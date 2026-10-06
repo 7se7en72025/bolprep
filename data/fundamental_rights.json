@@ -796,6 +796,27 @@
     }
   },
   {
+    "id": "article-44",
+    "title": "Article 44 - uniform civil code",
+    "title_hi": "Anuchhed 44 - uniform civil code",
+    "title_hinglish": "Article 44 - uniform civil code",
+    "summary": "Article 44 says the State shall endeavour to secure a uniform civil code for citizens throughout India. This note summarizes the constitutional text only; it does not describe personal laws, a proposed code, or legal interpretation.",
+    "summary_hi": "Anuchhed 44 kehta hai ki Rajya Bharat ke poore kshetra mein nagrikon ke liye ek saman civil code sunishchit karne ka prayas karega. Yeh note sirf samvidhanik paath ka saar hai; yeh personal laws, kisi prastavit code ya kanooni vyakhya ka vivaran nahi deta.",
+    "summary_hinglish": "Article 44 kehta hai ki State poore India mein citizens ke liye uniform civil code secure karne ka endeavour karega. Yeh sirf constitutional text ka summary hai; personal laws, kisi proposed code ya legal interpretation ka detail nahi deta.",
+    "keywords": [
+      "article 44", "uniform civil code", "citizens", "throughout india", "directive principles", "part iv",
+      "anuchhed 44", "ek saman civil code", "saman nagrik sanhita", "nagrikon", "poore bharat", "rajya prayas karega",
+      "समान नागरिक संहिता", "पूरे भारत", "नागरिकों", "राज्य प्रयास करेगा",
+      "uniform civil code india", "citizens ke liye", "state endeavour"
+    ],
+    "source": {
+      "title": "The Constitution of India - Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part IV, Article 44",
+      "checked_on": "2026-10-06"
+    }
+  },
+  {
     "id": "article-43",
     "title": "Article 43 - living wage and cottage industries",
     "title_hi": "Anuchhed 43 - jeevan-yapan yogya vetan aur kuteer udyog",
