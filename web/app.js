@@ -1307,7 +1307,9 @@ async function submitQuizAnswer(answer) {
       quizSession.pendingAnswer = "";
       if (!input.value.trim()) input.value = answer;
       addMessage("assistant", error.message);
-      statusLine.textContent = "Scoring failed. You can try submitting the answer again.";
+      statusLine.textContent = error.message.toLowerCase().includes("already saved")
+        ? "This quiz question already has a saved score. Start a new quiz to try a revised answer."
+        : "Scoring failed. You can try submitting the answer again.";
       input.focus();
     }
   } finally {

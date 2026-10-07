@@ -1138,3 +1138,8 @@
 
 - Speech diagnostics now capture opted-in browser voice turns from the recognition `onend` event to the first tutor playback event, grouped by input/output language and the playback start event. The `automatic_voice_turns` JSON section reports sample counts and p50/p95. Samples are page-local and capped at 500.
 - This is a software event interval, not acoustic latency or a measurement from the end of the learner's speech. `node --check web/app.js` and `git diff --check` passed; the metric still needs a supported-browser/device run with speech input and playback.
+
+## Explain saved-answer retry conflicts - 2026-10-08
+
+- When the server reports that a different answer was already saved for the quiz question, the status now tells the learner to start a new quiz instead of suggesting the conflicting answer can be retried. Other scoring errors keep the normal retry guidance.
+- `node --check web/app.js` and `git diff --check` passed. The saved-versus-revised answer race still needs the browser run-sheet check.
