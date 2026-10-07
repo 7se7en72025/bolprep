@@ -1096,3 +1096,8 @@
 
 - Pressing **Stop** on the Speak control now restores the question text from before listening if recognition has only interim words. A confirmed final transcript stays in the box for review. This keeps canceled partial recognition from looking like a ready question.
 - Added manual run-sheet checks for both cancellation stages. JavaScript syntax and whitespace checks passed; the browser event ordering and microphone behavior still need a device check.
+
+## Prevent an off-topic retrieval false positive - 2026-10-08
+
+- A local request for “How do black holes form?” retrieved Article 20 because the common English word `do` was missing from the tokenizer stop words. Added it so request phrasing alone does not count as polity evidence.
+- A focused retrieval check now returns no note for that off-topic prompt while “What does Article 14 say?” still returns Article 14. The offline `/api/agent/turn` response now has no sources and says the checked notes do not cover it. This single example is not a broad false-positive benchmark.

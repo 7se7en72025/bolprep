@@ -23,7 +23,7 @@ HINDI_STOPWORDS = {
 STOPWORDS = {
     "a", "about", "an", "and", "are", "can", "explain", "for", "hai", "hain",
     "ho", "how", "in", "is", "ka", "ke", "ki", "kya", "me", "mein", "of",
-    "article", "art", "does", "please", "tell", "the", "to", "what", "who", "which", "why", "ya", "ye", "your",
+    "article", "art", "do", "does", "please", "tell", "the", "to", "what", "who", "which", "why", "ya", "ye", "your",
     "right", "rights", "fundamental", "freedom", "freedoms", "adhikar", "adhikaar",
     *HINDI_STOPWORDS,
 }
