@@ -874,3 +874,9 @@
 
 - A synchronous browser speech-recognition start failure now counts as a failed attempt for its selected language. Permission or security errors get a permission message; other start errors get a general retry message instead of an inaccurate “already starting” claim.
 - Verification: `node --check web/app.js` and `git diff --check` passed. Browser microphone permission and device behavior were not exercised; no recording or provider request was used.
+
+## Preserve the quiz between questions - 2026-10-07
+
+- Stopping the tutor while waiting for **Next question** no longer makes the previous quiz question answerable again. A pending answer is restored only when its scoring request was interrupted.
+- Canceling or failing to start a replacement quiz restores **Next question** for the earlier quiz when it was between questions.
+- Verification: `node --check web/app.js` and `git diff --check` passed. The click and request timing still needs a browser check; no microphone, provider, or test suite was used.

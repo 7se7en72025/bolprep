@@ -344,11 +344,12 @@ function stopTutor() {
   preserveInterruptedTurn();
   activeRequest?.abort();
   activeRequest = null;
-  if (quizSession && !quizSession.awaitingAnswer) {
+  if (quizSession?.pendingAnswer && !quizSession.awaitingAnswer) {
     quizSession.awaitingAnswer = true;
-    input.value = quizSession.pendingAnswer || "";
+    input.value = quizSession.pendingAnswer;
     quizSession.pendingAnswer = "";
   }
+  if (quizSession && !quizSession.awaitingAnswer) nextQuestionButton.hidden = false;
   stopRecognition();
   serverRecordingStartCancelled = true;
   serverRecordingRun += 1;
@@ -930,7 +931,10 @@ async function startQuiz() {
       statusLine.textContent = "Quiz could not start. Your conversation is still open.";
     }
   } finally {
-    if (requestTurn === turn) quizButton.disabled = false;
+    if (requestTurn === turn) {
+      quizButton.disabled = false;
+      if (quizSession && !quizSession.awaitingAnswer) nextQuestionButton.hidden = false;
+    }
     if (activeRequest === controller) activeRequest = null;
   }
 }
