@@ -1261,11 +1261,17 @@ micButton.addEventListener("click", () => {
   updateMicrophoneButton(false, true);
   try {
     capture.start();
-  } catch {
+  } catch (error) {
     recognitionListening = false;
     recognitionRun += 1;
     updateMicrophoneButton(false);
-    statusLine.textContent = "Microphone is already starting. Please wait a moment.";
+    const reason = error?.name || "start-failed";
+    recognitionFailures.push({ language: capture.lang, reason });
+    if (recognitionFailures.length > 500) recognitionFailures.shift();
+    const message = reason === "NotAllowedError" || reason === "SecurityError"
+      ? "Microphone access was blocked. Check browser permission, or type instead."
+      : "Voice input could not start. Try again, or type instead.";
+    statusLine.textContent = `${message} ${recognitionTimingSummary(capture.lang)}`;
   }
 });
 

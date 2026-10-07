@@ -864,3 +864,8 @@
 
 - Streamed speech now checks its own queued audio sources when deciding whether playback has finished. Audio scheduled by another turn cannot hold up completion of an earlier request.
 - Verification: JavaScript syntax and whitespace checks passed. The overlap timing was not exercised in a browser; no provider call or recording was used.
+
+## Report browser recognition start failures - 2026-10-07
+
+- A synchronous browser speech-recognition start failure now counts as a failed attempt for its selected language. Permission or security errors get a permission message; other start errors get a general retry message instead of an inaccurate “already starting” claim.
+- Verification: `node --check web/app.js` and `git diff --check` passed. Browser microphone permission and device behavior were not exercised; no recording or provider request was used.
