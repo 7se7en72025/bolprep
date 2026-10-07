@@ -13,6 +13,7 @@ Use this sheet to compare browser-provided speech features on the same device an
 - Installed TTS voice selected (name and locale):
 - Browser-provided STT available:
 - Server recorded-file transcription available:
+- Configured model name for model-mode timing comparisons:
 
 Do not record or upload learner audio for this run. The app keeps timing summaries in page memory and does not retain transcript text in those metrics. Expand **Speech diagnostics** and use **Copy JSON** or **Download JSON** to export grouped timing and failure counts; the export contains no transcript text or audio and clears on reload.
 

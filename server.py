@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import uuid
 from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -35,15 +36,17 @@ class BolPrepHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         if self.path == "/health":
-            mode = "model" if api_is_configured() else "offline"
+            model_configured = api_is_configured()
+            mode = "model" if model_configured else "offline"
             self._send_json(
                 200,
                 {
                     "ok": True,
                     "mode": mode,
+                    "model_name": os.getenv("OPENAI_MODEL", "gpt-6-astra") if model_configured else None,
                     "study_notes": len(load_corpus()),
-                    "streaming_tts": api_is_configured(),
-                    "server_transcription": api_is_configured(),
+                    "streaming_tts": model_configured,
+                    "server_transcription": model_configured,
                 },
                 include_session_cookie=False,
             )

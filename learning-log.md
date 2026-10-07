@@ -951,3 +951,9 @@
 - Speech diagnostics now group model-mode turns by selected language and export browser request-to-first-text and total request-to-completion p50/p95, completed counts, failures, and cancellations. Offline turns are excluded; partial/complete answer text is never stored in the metrics. Each page retains at most 500 timing samples and 500 failure/cancellation records until reload.
 - Updated the manual voice run sheet and diagnostic privacy copy. These fields are measurement instrumentation only; no real model runs have been collected.
 - Verification: `node --check web/app.js`, Python syntax checks from the streaming-text change, an offline HTTP smoke check, and `git diff --check` passed.
+
+## Tag model-stream timings with the configured model - 2026-10-07
+
+- The local health response now includes the configured model name only when model mode is active; it never exposes an API key. Model stream diagnostics group by both model name and selected language so later exports can compare configurations on the same manual examples.
+- Added the model name to the voice run sheet. No model calls or live speech were used.
+- Verification: Python syntax and JavaScript syntax checks, an offline health/response smoke check, and `git diff --check` passed; live model-mode health output still requires a configured API key.

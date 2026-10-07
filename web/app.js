@@ -66,6 +66,7 @@ let pendingQuestion = null;
 let matchingSpeechVoices = [];
 let streamingTtsAvailable = false;
 let modelModeAvailable = false;
+let modelName = "unknown";
 let activeSpeechController = null;
 let speechAudioContext = null;
 const scheduledSpeechSources = new Set();
@@ -595,22 +596,24 @@ function buildSpeechDiagnostics() {
       upload_to_result: percentiles(group.completed.map((sample) => sample.elapsedMs)),
     }));
   const modelStreamGroups = new Map();
-  const getModelStreamGroup = (language) => {
-    if (!modelStreamGroups.has(language)) {
-      modelStreamGroups.set(language, { language, completed: [], failures: 0, cancellations: 0 });
+  const getModelStreamGroup = (language, configuredModel) => {
+    const key = JSON.stringify([language, configuredModel]);
+    if (!modelStreamGroups.has(key)) {
+      modelStreamGroups.set(key, { language, model: configuredModel, completed: [], failures: 0, cancellations: 0 });
     }
-    return modelStreamGroups.get(language);
+    return modelStreamGroups.get(key);
   };
-  modelStreamSamples.forEach((sample) => getModelStreamGroup(sample.language).completed.push(sample));
+  modelStreamSamples.forEach((sample) => getModelStreamGroup(sample.language, sample.model).completed.push(sample));
   modelStreamFailures.forEach((sample) => {
-    const group = getModelStreamGroup(sample.language);
+    const group = getModelStreamGroup(sample.language, sample.model);
     if (sample.reason === "cancelled") group.cancellations += 1;
     else group.failures += 1;
   });
   const modelStreams = [...modelStreamGroups.values()]
-    .sort((left, right) => left.language.localeCompare(right.language))
+    .sort((left, right) => `${left.language}|${left.model}`.localeCompare(`${right.language}|${right.model}`))
     .map((group) => ({
       language: group.language,
+      model: group.model,
       completed_count: group.completed.length,
       failure_count: group.failures,
       cancellation_count: group.cancellations,
@@ -620,7 +623,7 @@ function buildSpeechDiagnostics() {
       total_response_duration: percentiles(group.completed.map((sample) => sample.totalMs)),
     }));
   return {
-    schema_version: 3,
+    schema_version: 4,
     generated_at_utc: new Date().toISOString(),
     scope: "Current page only",
     privacy: "Timing and failure categories only; no transcript text or audio.",
@@ -939,6 +942,7 @@ async function sendQuestion(question) {
     if (payload.mode === "model") {
       modelStreamSamples.push({
         language: requestLanguage,
+        model: modelName,
         firstTextMs,
         totalMs: performance.now() - requestStartedAt,
       });
@@ -975,6 +979,7 @@ async function sendQuestion(question) {
     if (modelModeAvailable) {
       modelStreamFailures.push({
         language: requestLanguage,
+        model: modelName,
         reason: error.name === "AbortError" ? "cancelled" : "failed",
       });
       if (modelStreamFailures.length > 500) modelStreamFailures.shift();
@@ -1393,6 +1398,7 @@ serverTranscribeButton.addEventListener("click", () => {
 fetch("/health").then((response) => response.json()).then((health) => {
   const mode = health.mode === "model" ? "Model answers enabled" : "Offline practice mode";
   modelModeAvailable = health.mode === "model";
+  modelName = typeof health.model_name === "string" && health.model_name ? health.model_name : "unknown";
   streamingTtsAvailable = Boolean(health.streaming_tts);
   streamedTtsOption.disabled = !streamingTtsAvailable;
   streamedTtsVoice.disabled = !streamingTtsAvailable || !streamedTtsOption.checked;
