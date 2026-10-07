@@ -17,13 +17,13 @@ For the original input/function/output exercise, see [step0.py](step0.py). For t
 
 ## Run the text tutor
 
-On Windows, start the complete local setup with one command from the project folder. The launcher uses an existing Python 3.11+ virtual environment or finds Python through `python` or the Windows `py` launcher:
+On Windows, start the complete local setup with one command from the project folder. The launcher reuses a working Python 3.11+ virtual environment or finds Python through `python` or the Windows `py` launcher:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\run-local.ps1
 ```
 
-The launcher reuses an existing Python 3.11+ `.venv` when available; otherwise it checks `python` and the Windows `py` launcher before creating `.venv`. It installs `requirements.txt`, copies `.env.example` to `.env` only when `.env` does not already exist, and starts the server. Open <http://127.0.0.1:8000>; press Ctrl+C in PowerShell to stop. Add an API key to `.env` before starting if you want model answers. Offline mode works without a key.
+The launcher reuses `.venv` when its Python interpreter runs and is version 3.11 or later. If `.venv` is missing, broken, or too old, it creates a fresh environment using the selected system Python; rebuilding clears only the project `.venv` directory. A linked `.venv` is left for manual repair rather than cleared. It installs `requirements.txt`, copies `.env.example` to `.env` only when `.env` does not already exist, and starts the server. Open <http://127.0.0.1:8000>; press Ctrl+C in PowerShell to stop. Add an API key to `.env` before starting if you want model answers. Offline mode works without a key.
 
 For manual setup, create and activate the environment, then install dependencies:
 

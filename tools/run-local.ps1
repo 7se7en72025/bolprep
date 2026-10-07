@@ -4,7 +4,8 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 Set-Location -LiteralPath $repoRoot
 
-$venvPython = Join-Path $repoRoot '.venv\Scripts\python.exe'
+$venvDirectory = Join-Path $repoRoot '.venv'
+$venvPython = Join-Path $venvDirectory 'Scripts\python.exe'
 $pythonCandidates = @()
 if (Test-Path -LiteralPath $venvPython) {
     $pythonCandidates += [pscustomobject]@{ Path = $venvPython; Arguments = @() }
@@ -46,10 +47,53 @@ if (-not $pythonPath) {
     throw "Python 3.11 or later is required. Checked the existing .venv, python, and the py launcher. $foundVersion"
 }
 
-if (-not (Test-Path -LiteralPath $venvPython)) {
-    Write-Output 'Creating the project virtual environment...'
-    & $pythonPath @pythonArguments -m venv (Join-Path $repoRoot '.venv')
+$venvUsable = $false
+if (Test-Path -LiteralPath $venvPython) {
+    $existingVenvVersionText = & $venvPython -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>$null
+    if ($LASTEXITCODE -eq 0) {
+        try {
+            $venvUsable = [version]$existingVenvVersionText -ge [version]'3.11'
+        }
+        catch {
+            $venvUsable = $false
+        }
+    }
+}
+
+if (-not $venvUsable) {
+    $resolvedVenvDirectory = [IO.Path]::GetFullPath($venvDirectory)
+    if (Test-Path -LiteralPath $venvDirectory) {
+        $venvAttributes = (Get-Item -LiteralPath $venvDirectory -Force).Attributes
+        if (($venvAttributes -band [IO.FileAttributes]::ReparsePoint) -ne 0) {
+            throw 'The project .venv is a linked directory; move or repair it manually before restarting.'
+        }
+        $resolvedVenvDirectory = (Resolve-Path -LiteralPath $venvDirectory).Path
+    }
+    $repoPrefix = [IO.Path]::GetFullPath($repoRoot).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+    if (-not $resolvedVenvDirectory.StartsWith($repoPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'The project virtual environment path is outside the repository.'
+    }
+    if (Test-Path -LiteralPath $venvDirectory) {
+        Write-Output 'Rebuilding the unusable or unsupported project virtual environment...'
+    } else {
+        Write-Output 'Creating the project virtual environment...'
+    }
+    & $pythonPath @pythonArguments -m venv --clear $venvDirectory
     if ($LASTEXITCODE -ne 0) { throw 'Could not create the virtual environment.' }
+}
+
+$venvVersionText = & $venvPython -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')" 2>$null
+if ($LASTEXITCODE -ne 0) {
+    throw 'The project virtual environment could not start Python.'
+}
+try {
+    $createdVenvVersion = [version]$venvVersionText
+}
+catch {
+    throw 'The project virtual environment did not report a usable Python version.'
+}
+if ($createdVenvVersion -lt [version]'3.11') {
+    throw 'The project virtual environment could not start Python 3.11 or later.'
 }
 
 Write-Output 'Installing project dependencies...'

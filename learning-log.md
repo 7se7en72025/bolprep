@@ -1048,3 +1048,9 @@
 
 - When browser speech fails during a streaming model answer, later text deltas and answer completion now leave the speech error visible. The answer continues to render as text, and the existing TTS diagnostic records the failure.
 - Verification: JavaScript syntax and whitespace checks passed. Browser speech error timing and live model playback remain unverified on a device.
+
+
+## Recover an unusable local Python environment - 2026-10-08
+
+- The Windows launcher now checks that `.venv` can start Python 3.11 or later. If it is missing, broken, or older, the launcher rebuilds the repository-local environment with the selected supported Python before installing dependencies. It refuses to clear a linked `.venv` directory.
+- Verification: the PowerShell script parser accepted the launcher; the existing Python 3.11.9 environment reused successfully, dependencies were already satisfied, `/health` returned offline mode with 47 notes, and the home page and `app.js` returned HTTP 200. The broken-environment reset branch was not exercised in this run.
