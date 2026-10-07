@@ -801,6 +801,47 @@
     }
   },
   {
+    "id": "article-39a",
+    "title": "Article 39A - equal justice and free legal aid",
+    "title_hi": "अनुच्छेद 39A - समान न्याय और मुफ्त कानूनी सहायता",
+    "title_hinglish": "Article 39A - equal justice aur free legal aid",
+    "summary": "Article 39A directs the State to ensure that the legal system promotes justice on a basis of equal opportunity and, in particular, to provide free legal aid through suitable legislation, schemes, or other means so no citizen is denied opportunities to secure justice because of economic or other disabilities. This note summarizes the constitutional text; it does not describe a particular legal-aid scheme or provide legal advice.",
+    "summary_hi": "अनुच्छेद 39A कहता है कि राज्य कानूनी व्यवस्था को समान अवसर के आधार पर न्याय बढ़ाने वाला बनाए और उचित कानून, योजनाओं या अन्य तरीके से मुफ्त कानूनी सहायता दे, ताकि आर्थिक या अन्य अक्षमता के कारण किसी नागरिक को न्याय पाने के अवसर से वंचित न किया जाए। यह नोट किसी खास कानूनी सहायता योजना का वर्णन नहीं करता और कानूनी सलाह नहीं है।",
+    "summary_hinglish": "Article 39A kehta hai ki State legal system ko equal opportunity par justice promote karne de aur suitable laws, schemes ya kisi aur tareeke se free legal aid de, taaki economic ya other disability ki wajah se kisi citizen ko justice paane ke mauke se vanchit na kiya jaye. Yeh note kisi specific legal-aid scheme ko describe nahi karta aur legal advice nahi hai.",
+    "keywords": [
+      "article 39a",
+      "article 39(a)",
+      "equal justice",
+      "equal opportunity to justice",
+      "free legal aid",
+      "legal aid",
+      "access to justice",
+      "legal system justice",
+      "economic disability justice",
+      "other disabilities justice",
+      "anuchhed 39a",
+      "muft kanooni sahayata",
+      "free legal aid",
+      "nyay tak pahunch",
+      "samaan avsar nyay",
+      "aarthik akshamata",
+      "अनुच्छेद 39A",
+      "समान न्याय",
+      "समान अवसर",
+      "कानूनी सहायता",
+      "मुफ्त कानूनी सहायता",
+      "अवसर न्याय",
+      "आर्थिक अक्षमता",
+      "न्याय वंचित"
+    ],
+    "source": {
+      "title": "The Constitution of India - Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part IV, Article 39A",
+      "checked_on": "2026-10-07"
+    }
+  },
+  {
     "id": "article-40",
     "title": "Article 40 - village panchayats",
     "title_hi": "अनुच्छेद 40 - ग्राम पंचायतें",

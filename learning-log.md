@@ -913,3 +913,9 @@
 - Expanded the English, Hindi, and Hinglish Article 39 note to clauses (a)-(f), covering livelihood, common-good distribution, wealth concentration, equal pay, worker and child protections, and children's development. Checked against Article 39 in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-07.
 - Added twelve constructed examples across English, Hindi, and Hinglish for clauses (a), (d), (e), and (f).
 - Verification: the 144-example retrieval evaluation reports 100% exact match, 100% supported recall@3, 0% unsupported false positives, and 100% exact match in English, Hindi, and Hinglish. The constructed examples do not measure real learner or speech performance. `git diff --check` passed.
+
+## Add source-backed Article 39A legal-aid coverage - 2026-10-07
+
+- Added English, Hindi, and Hinglish summaries of Article 39A's equal-opportunity justice and free legal-aid direction, without describing a particular scheme or giving legal advice. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-07.
+- Added three constructed language-specific retrieval examples and updated broad-query expectations.
+- Verification: the 147-example retrieval evaluation reports 100% exact match, 100% supported recall@3, 0% unsupported false positives, and 100% exact match in English, Hindi, and Hinglish. The constructed examples do not measure real learner or speech performance. `git diff --check` passed.
