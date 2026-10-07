@@ -1060,3 +1060,8 @@
 - Browser recognition now restores the text present before listening when an attempt errors or ends without a final transcript. Interim words remain visible while listening, but cannot be mistaken for a confirmed transcript after that attempt fails. A final transcript remains available for review.
 - Added a browser run-sheet case for interim words followed by an error or normal end without a final result.
 - Verification: JavaScript syntax and whitespace checks passed. Browser event ordering and microphone behavior still need a device check; no speech quality result is claimed.
+
+## Verify the local offline tutor response stream - 2026-10-08
+
+- Started the app with `tools/run-local.ps1` on Windows and exercised `/health`, the home page, `app.js`, and `/api/agent/turn` over localhost. Health reported offline mode and 47 notes; the page and script returned HTTP 200; the NDJSON turn ended with a 272-character offline answer and one source citation.
+- This confirms the local text tutor path only. No model API, microphone, browser speech recognition, or audible playback was used.
