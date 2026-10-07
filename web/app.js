@@ -1126,9 +1126,21 @@ if (SpeechRecognition) {
 
 updateMicrophoneButton(false);
 input.addEventListener("input", () => {
-  if (!recognitionListening) return;
-  stopRecognition();
-  statusLine.textContent = "Voice input stopped so your edit stays in the question box. Review it, then ask.";
+  if (recognitionListening) {
+    stopRecognition();
+    statusLine.textContent = "Voice input stopped so your edit stays in the question box. Review it, then ask.";
+  }
+  if (serverRecordingStarting || activeMediaRecorder || activeTranscriptionController) {
+    serverRecordingStartCancelled = true;
+    serverRecordingRun += 1;
+    serverRecordingStarting = false;
+    if (activeMediaRecorder) stopServerRecording(true);
+    const controller = activeTranscriptionController;
+    activeTranscriptionController = null;
+    controller?.abort();
+    updateServerTranscribeButton(activeMediaRecorder ? "busy" : "idle");
+    statusLine.textContent = "Recording or transcription stopped so your edit stays in the question box. Review it, then ask.";
+  }
 });
 micButton.addEventListener("click", () => {
   if (!recognitionAvailable) return;

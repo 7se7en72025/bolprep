@@ -1,5 +1,10 @@
 # Learning log
 
+## Preserve typed edits during server recording - 2026-10-07
+
+- Editing the question box now discards an active server recording, cancels pending microphone access, or invalidates a pending transcription before aborting its request. A late transcript cannot replace what the user typed.
+- Verification: JavaScript syntax and whitespace checks passed. Added manual checks for recording, permission, and transcription timing; those browser/provider interactions remain unverified. No microphone or provider request was used.
+
 ## Keep a completed browser transcript ready after a late error - 2026-10-07
 
 - Browser speech recognition now ignores an error event after it has received a nonempty final transcript. A completed transcript stays editable, and its successful timing/status is not replaced by a later failure message. Errors before a final transcript still report the failure.
