@@ -1065,3 +1065,8 @@
 
 - Started the app with `tools/run-local.ps1` on Windows and exercised `/health`, the home page, `app.js`, and `/api/agent/turn` over localhost. Health reported offline mode and 47 notes; the page and script returned HTTP 200; the NDJSON turn ended with a 272-character offline answer and one source citation.
 - This confirms the local text tutor path only. No model API, microphone, browser speech recognition, or audible playback was used.
+
+## Verify local quiz scoring and progress lifecycle - 2026-10-08
+
+- Through the localhost API, started a one-question quiz, submitted a rubric-matching answer, and confirmed a complete 100% result appeared in browser-session progress. Retrying the same answer with its idempotency key left the attempt count at one.
+- Cleared the isolated synthetic session and confirmed its progress returned to zero. This exercised the deterministic backend flow, not the browser interface, spoken answers, or model tools.
