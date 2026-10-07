@@ -42,9 +42,15 @@ Read each prompt once at a natural pace. Compare the recognized text with the re
 | Hinglish | Article 14 mein equality ke do ideas kya hain? | | | |
 | English | What two ideas does Article 14 protect? | | | |
 
-From the copied JSON `stt` entries, transfer `time_to_first_final.p50_s` / `time_to_first_final.p95_s` by language. `final_transcript_count` is Runs; `failed_or_empty_count` is Failed / empty results. A `null` timing means no successful final transcript was recorded for that language.
+From the copied JSON `stt` entries, transfer `time_to_first_final.p50_s` / `time_to_first_final.p95_s` by language. `final_transcript_count` is Runs; `failed_or_empty_count` is Failed / empty results. A `null` timing means no successful final transcript was recorded for that language. Browser STT and recorded-file STT use separate export fields and timing boundaries.
 
 | Language / STT locale | Runs | First-final p50 / p95 (s) | Failed / empty results | Notes |
+| --- | ---: | ---: | ---: | --- |
+| | | | | |
+
+For the optional recorded-file path, use `recorded_stt` entries. `upload_to_result` starts after the clip is captured and ends when the transcript arrives in the browser; it includes upload and provider processing, but excludes recording time. `completed_count` counts nonempty transcripts; `failure_count` includes capture, recording, empty-clip, and transcription failures. Canceled attempts are excluded. Keep its timings separate from browser recognition and the end-to-end stopwatch.
+
+| Language / recorded STT locale | Runs | Upload-to-result p50 / p95 (s) | Failures | Notes |
 | --- | ---: | ---: | ---: | --- |
 | | | | | |
 

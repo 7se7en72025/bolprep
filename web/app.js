@@ -71,6 +71,8 @@ const speechSamples = [];
 const speechFailures = [];
 const recognitionSamples = [];
 const recognitionFailures = [];
+const recordedTranscriptionSamples = [];
+const recordedTranscriptionFailures = [];
 let recognitionLastError = null;
 let turn = 0;
 let speechTurn = 0;
@@ -205,8 +207,13 @@ async function startServerRecording() {
       if (event.data?.size) serverRecordingChunks.push(event.data);
     };
     recorder.onerror = () => {
-      stopServerRecording(true);
-      statusLine.textContent = "Recording failed. Try again or type your question.";
+      const unexpected = recordingRun === serverRecordingRun && !discardServerRecording;
+      if (unexpected) {
+        recordedTranscriptionFailures.push({ language: recordingLanguage, reason: "recording-failed" });
+        if (recordedTranscriptionFailures.length > 500) recordedTranscriptionFailures.shift();
+      }
+      if (activeMediaRecorder === recorder) stopServerRecording(true);
+      if (unexpected) statusLine.textContent = "Recording failed. Try again or type your question.";
     };
     recorder.onstop = () => {
       if (serverRecordingTimer !== null) {
@@ -223,6 +230,8 @@ async function startServerRecording() {
       updateServerTranscribeButton();
       if (discard) return;
       if (!audio.size) {
+        recordedTranscriptionFailures.push({ language: recordingLanguage, reason: "empty-recording" });
+        if (recordedTranscriptionFailures.length > 500) recordedTranscriptionFailures.shift();
         statusLine.textContent = "No audio was recorded. Try again or type your question.";
         return;
       }
@@ -238,6 +247,8 @@ async function startServerRecording() {
   } catch (error) {
     stream?.getTracks().forEach((track) => track.stop());
     if (recordingRun !== serverRecordingRun || serverRecordingStartCancelled) return;
+    recordedTranscriptionFailures.push({ language: recordingLanguage, reason: "capture-failed" });
+    if (recordedTranscriptionFailures.length > 500) recordedTranscriptionFailures.shift();
     activeMediaRecorder = null;
     activeMediaStream = null;
     updateServerTranscribeButton();
@@ -248,6 +259,7 @@ async function startServerRecording() {
 }
 
 async function transcribeRecordedAudio(audio, language) {
+  const startedAt = performance.now();
   const controller = new AbortController();
   activeTranscriptionController = controller;
   updateServerTranscribeButton("busy");
@@ -270,10 +282,14 @@ async function transcribeRecordedAudio(audio, language) {
     }
     input.value = payload.transcript.trim();
     input.focus();
-    statusLine.textContent = "Transcript ready. Review it, then ask.";
+    recordedTranscriptionSamples.push({ language, elapsedMs: performance.now() - startedAt });
+    if (recordedTranscriptionSamples.length > 500) recordedTranscriptionSamples.shift();
+    statusLine.textContent = `Transcript ready. Review it, then ask. ${recordedTranscriptionTimingSummary(language)}`;
   } catch (error) {
     if (error.name !== "AbortError" && activeTranscriptionController === controller) {
-      statusLine.textContent = `${error.message} You can record again or type your question.`;
+      recordedTranscriptionFailures.push({ language, reason: "transcription-failed" });
+      if (recordedTranscriptionFailures.length > 500) recordedTranscriptionFailures.shift();
+      statusLine.textContent = `${error.message} You can record again or type your question. ${recordedTranscriptionTimingSummary(language)}`;
     }
   } finally {
     if (activeTranscriptionController === controller) {
@@ -428,6 +444,16 @@ function recognitionTimingSummary(language) {
   return `STT ${language}: ${summary}, failures=${matchingFailures.length}.`;
 }
 
+function recordedTranscriptionTimingSummary(language) {
+  const samples = recordedTranscriptionSamples.filter((item) => item.language === language);
+  const failures = recordedTranscriptionFailures.filter((item) => item.language === language);
+  if (!samples.length) return `Recorded STT ${language}: no completed transcripts, failures=${failures.length}.`;
+  const times = samples.map((item) => item.elapsedMs);
+  const seconds = (milliseconds) => (milliseconds / 1000).toFixed(2);
+  return `Recorded STT ${language}: n=${samples.length}, upload-to-result p50/p95 `
+    + `${seconds(percentile(times, 0.5))}/${seconds(percentile(times, 0.95))}s, failures=${failures.length}.`;
+}
+
 function speechErrorMessage(error) {
   const messages = {
     "audio-busy": "Audio output is busy. Close another app using audio, then try again.",
@@ -506,13 +532,36 @@ function buildSpeechDiagnostics() {
       failure_reasons: group.failure_reasons,
       time_to_first_final: percentiles(group.completed.map((sample) => sample.firstFinalMs)),
     }));
+  const recordedSttGroups = new Map();
+  const getRecordedSttGroup = (language) => {
+    if (!recordedSttGroups.has(language)) {
+      recordedSttGroups.set(language, { language, completed: [], failures: 0, failure_reasons: {} });
+    }
+    return recordedSttGroups.get(language);
+  };
+  recordedTranscriptionSamples.forEach((sample) => getRecordedSttGroup(sample.language).completed.push(sample));
+  recordedTranscriptionFailures.forEach((sample) => {
+    const group = getRecordedSttGroup(sample.language);
+    group.failures += 1;
+    group.failure_reasons[sample.reason] = (group.failure_reasons[sample.reason] || 0) + 1;
+  });
+  const recordedStt = [...recordedSttGroups.values()]
+    .sort((left, right) => left.language.localeCompare(right.language))
+    .map((group) => ({
+      language: group.language,
+      completed_count: group.completed.length,
+      failure_count: group.failures,
+      failure_reasons: group.failure_reasons,
+      upload_to_result: percentiles(group.completed.map((sample) => sample.elapsedMs)),
+    }));
   return {
-    schema_version: 1,
+    schema_version: 2,
     generated_at_utc: new Date().toISOString(),
     scope: "Current page only",
-    privacy: "Timing, failure counts, and browser error categories only; no transcript text or audio.",
+    privacy: "Timing and failure categories only; no transcript text or audio.",
     tts,
     stt,
+    recorded_stt: recordedStt,
   };
 }
 
