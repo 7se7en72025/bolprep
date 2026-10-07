@@ -1014,3 +1014,9 @@
 
 - Added source-linked English, Hindi, and Hinglish summaries of Article 43A on workers' participation in industry management and Article 43B on voluntary formation, autonomous functioning, democratic control, and professional management of cooperative societies. Both notes stay within the constitutional text and avoid describing specific schemes or individual entitlements. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-07.
 - Added one constructed retrieval example per language for each article and updated all three broad-corpus labels.
+
+
+## Report STT comparison input parity - 2026-10-07
+
+- Extended the local STT scorer to report whether configurations for each language use the same prompt IDs and the same number of attempts per prompt. It reports the common prompt count and leaves comparison flags null when only one configuration is present; this makes mismatched comparison inputs visible without claiming a quality result.
+- Updated the run sheet and README with the new fields and interpretation.

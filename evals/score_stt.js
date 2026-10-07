@@ -48,11 +48,13 @@ function score(trials) {
     if (!groups.has(key)) groups.set(key, {
       config: config.trim(), language, attempts: 0, failures: 0, scored: 0,
       errors: 0, reference_words: 0, all_attempts_errors: 0, all_attempts_reference_words: 0,
-      prompts: new Set(),
+      prompts: new Set(), attempts_by_prompt: new Map(),
     });
     const group = groups.get(key);
     const referenceWords = words(reference);
-    group.prompts.add(promptId.trim());
+    const normalizedPromptId = promptId.trim();
+    group.prompts.add(normalizedPromptId);
+    group.attempts_by_prompt.set(normalizedPromptId, (group.attempts_by_prompt.get(normalizedPromptId) || 0) + 1);
     group.attempts += 1;
     group.all_attempts_reference_words += referenceWords.length;
     if (!transcript || !words(transcript).length) {
@@ -66,13 +68,37 @@ function score(trials) {
     group.errors += wordErrors;
     group.all_attempts_errors += wordErrors;
   }
+  const groupsByLanguage = new Map();
+  for (const group of groups.values()) {
+    if (!groupsByLanguage.has(group.language)) groupsByLanguage.set(group.language, []);
+    groupsByLanguage.get(group.language).push(group);
+  }
   return [...groups.values()].sort((a, b) => a.config.localeCompare(b.config) || a.language.localeCompare(b.language))
-    .map((group) => ({
-      ...group,
-      prompt_count: group.prompts.size,
-      wer: group.reference_words ? Number((group.errors / group.reference_words).toFixed(4)) : null,
-      all_attempts_wer: Number((group.all_attempts_errors / group.all_attempts_reference_words).toFixed(4)),
-    }));
+    .map((group) => {
+      const comparisonGroups = groupsByLanguage.get(group.language);
+      const promptSets = comparisonGroups.map((item) => item.prompts);
+      const firstPromptSet = promptSets[0];
+      const promptSetMatch = promptSets.length < 2 ? null : promptSets.every((set) =>
+        set.size === firstPromptSet.size && [...firstPromptSet].every((promptId) => set.has(promptId))
+      );
+      const commonPromptCount = [...firstPromptSet].filter((promptId) =>
+        promptSets.every((set) => set.has(promptId))
+      ).length;
+      const repeatCountsMatch = comparisonGroups.length < 2 ? null : promptSetMatch && comparisonGroups.every((item) =>
+        [...firstPromptSet].every((promptId) => item.attempts_by_prompt.get(promptId) === group.attempts_by_prompt.get(promptId))
+      );
+      const { prompts, attempts_by_prompt: attemptsByPrompt, ...summary } = group;
+      return {
+        ...summary,
+        prompt_count: prompts.size,
+        compared_config_count: comparisonGroups.length,
+        common_prompt_count: commonPromptCount,
+        prompt_set_match: promptSetMatch,
+        repeat_counts_match: repeatCountsMatch,
+        wer: group.reference_words ? Number((group.errors / group.reference_words).toFixed(4)) : null,
+        all_attempts_wer: Number((group.all_attempts_errors / group.all_attempts_reference_words).toFixed(4)),
+      };
+    });
 }
 
 if (process.argv.length !== 3) {
