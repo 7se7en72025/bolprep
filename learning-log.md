@@ -1134,3 +1134,7 @@
 
 - Quiz scoring now keeps the retry key only when the submitted answer text is unchanged. A revised answer after Stop or a scoring error gets a new key. If the earlier request already saved a score, the server reports a conflict instead of silently showing that score for the revision; if it did not save, the revision can be scored.
 - Verification: `node --check web/app.js` and `git diff --check` passed. The browser run sheet now covers this race; browser timing and the saved-versus-canceled ordering still need a device check.
+## Measure automatic voice-turn start timing - 2026-10-08
+
+- Speech diagnostics now capture opted-in browser voice turns from the recognition `onend` event to the first tutor playback event, grouped by input/output language and the playback start event. The `automatic_voice_turns` JSON section reports sample counts and p50/p95. Samples are page-local and capped at 500.
+- This is a software event interval, not acoustic latency or a measurement from the end of the learner's speech. `node --check web/app.js` and `git diff --check` passed; the metric still needs a supported-browser/device run with speech input and playback.

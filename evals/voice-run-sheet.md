@@ -121,6 +121,7 @@ Run these checks in a browser with speech playback available. Use the same brows
 16. With model mode and browser speech selected, press **Escape** after text starts arriving but before the first complete sentence is spoken. Check that the partial turn stops, no queued sentence plays later, and a follow-up still works. Mark unavailable if generation finishes too quickly to reach this interval.
 17. Start **Speak** with existing text and wait for interim words. Try **Ask tutor** before a final transcript; it should wait and send nothing. Then use the separate tutor **Stop** button, **Escape**, or change the speech language during separate attempts; each should restore the original text. Repeat after a final transcript and check that it stays available for review. Mark unavailable if the needed interim or final event does not occur.
 18. With the automatic-submit option unchecked, confirm a final browser transcript stays in the box for review. Then enable it and speak a question: only a final transcript should submit once after recognition ends naturally. Press **Stop** after a final transcript during a separate attempt and confirm it remains available without being sent automatically. Check that interim-only results and recognition errors never submit. Mark browser events that do not occur as unavailable.
+19. With automatic submission enabled, complete a voice question and copy the page's speech diagnostics after playback starts. Check `automatic_voice_turns` for input/output language, the playback start event, sample count, and recognition-end-to-start p50/p95. Repeat with the same languages and speech path. This interval uses browser recognition and playback events; it is not acoustic latency or a measurement from the end of the learner's speech.
 
 | Case | Attempts | Passes | Failures / unavailable | Browser event or visible symptom |
 | --- | ---: | ---: | ---: | --- |
@@ -139,6 +140,7 @@ Run these checks in a browser with speech playback available. Use the same brows
 | Interim words without a final transcript | | | | |
 | Submit interim words or cancel with tutor Stop, Escape, or language change | | | | |
 | Automatic submission of final browser transcript; Stop retains review | | | | |
+| Automatic voice-turn recognition-end-to-playback-start diagnostics | | | | |
 | Edit the question during recording or transcription | | | | |
 | Interrupt streamed speech, then start a new turn | | | | |
 | Stop and restart quiz preparation | | | | |

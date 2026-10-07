@@ -78,6 +78,7 @@ let speechAudioContext = null;
 const scheduledSpeechSources = new Set();
 const speechSamples = [];
 const speechFailures = [];
+const automaticVoiceTurnSamples = [];
 const modelStreamSamples = [];
 const modelStreamFailures = [];
 const recognitionSamples = [];
@@ -85,6 +86,8 @@ const recognitionFailures = [];
 const recordedTranscriptionSamples = [];
 const recordedTranscriptionFailures = [];
 let turn = 0;
+let pendingAutomaticVoiceInput = null;
+let activeAutomaticVoiceTurn = null;
 let speechTurn = 0;
 let activeProgressiveSpeech = null;
 let progressRequestId = 0;
@@ -393,6 +396,7 @@ function prepareStreamingAudio() {
 
 function stopTutor() {
   stopSpeechOutput();
+  activeAutomaticVoiceTurn = null;
   preserveInterruptedTurn();
   activeRequest?.abort();
   activeRequest = null;
@@ -500,6 +504,26 @@ function recognitionTimingSummary(language) {
       + `${seconds(percentile(times, 0.5))}/${seconds(percentile(times, 0.95))}s`;
   }
   return `STT ${language}: ${summary}, failures=${matchingFailures.length}.`;
+}
+
+function recordAutomaticVoiceTurnStart(sample, startedAt) {
+  if (!activeAutomaticVoiceTurn) return;
+  if (sample.kind !== "tutor") {
+    activeAutomaticVoiceTurn = null;
+    return;
+  }
+  if (activeAutomaticVoiceTurn.requestTurn !== turn) {
+    activeAutomaticVoiceTurn = null;
+    return;
+  }
+  automaticVoiceTurnSamples.push({
+    inputLanguage: activeAutomaticVoiceTurn.language,
+    outputLanguage: sample.language,
+    startEvent: sample.startEvent,
+    startMs: Math.max(0, startedAt - activeAutomaticVoiceTurn.recognitionEndedAt),
+  });
+  if (automaticVoiceTurnSamples.length > 500) automaticVoiceTurnSamples.shift();
+  activeAutomaticVoiceTurn = null;
 }
 
 function recordedTranscriptionTimingSummary(language) {
@@ -642,8 +666,31 @@ function buildSpeechDiagnostics() {
         .map((sample) => sample.firstTextMs)),
       total_response_duration: percentiles(group.completed.map((sample) => sample.totalMs)),
     }));
+  const automaticVoiceGroups = new Map();
+  automaticVoiceTurnSamples.forEach((sample) => {
+    const key = JSON.stringify([sample.inputLanguage, sample.outputLanguage, sample.startEvent]);
+    if (!automaticVoiceGroups.has(key)) {
+      automaticVoiceGroups.set(key, {
+        input_language: sample.inputLanguage,
+        output_language: sample.outputLanguage,
+        start_event: sample.startEvent,
+        samples: [],
+      });
+    }
+    automaticVoiceGroups.get(key).samples.push(sample.startMs);
+  });
+  const automaticVoiceTurns = [...automaticVoiceGroups.values()]
+    .sort((left, right) => `${left.input_language}|${left.output_language}|${left.start_event}`
+      .localeCompare(`${right.input_language}|${right.output_language}|${right.start_event}`))
+    .map((group) => ({
+      input_language: group.input_language,
+      output_language: group.output_language,
+      start_event: group.start_event,
+      sample_count: group.samples.length,
+      recognition_end_to_start: percentiles(group.samples),
+    }));
   return {
-    schema_version: 4,
+    schema_version: 5,
     generated_at_utc: new Date().toISOString(),
     scope: "Current page only",
     privacy: "Timing and failure categories only; no transcript text or audio.",
@@ -651,6 +698,7 @@ function buildSpeechDiagnostics() {
     stt,
     recorded_stt: recordedStt,
     model_streams: modelStreams,
+    automatic_voice_turns: automaticVoiceTurns,
   };
 }
 
@@ -794,6 +842,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
       const startAt = Math.max(nextStartAt, context.currentTime + 0.025);
       if (firstAudioAt === null) {
         firstAudioAt = performance.now() + Math.max(0, startAt - context.currentTime) * 1000;
+        recordAutomaticVoiceTurnStart(sample, firstAudioAt);
         statusLine.textContent = "Tutor is speaking with streamed audio. Tap Stop audio or Speak to interrupt.";
       }
       nextStartAt = startAt + buffer.duration;
@@ -884,6 +933,7 @@ function speakWithBrowser(text, completionText = "Ready when you are.", kind = "
     utterance.onstart = () => {
       if (requestSpeechTurn !== speechTurn || failed || startedAt !== null) return;
       startedAt = performance.now();
+      recordAutomaticVoiceTurnStart(sample, startedAt);
       const startDelay = ((startedAt - queuedAt) / 1000).toFixed(2);
       statusLine.textContent = `Tutor is speaking (started in ${startDelay}s). Tap Stop audio or Speak to interrupt.`;
     };
@@ -968,6 +1018,7 @@ function createProgressiveBrowserSpeech(completionText = "Answer ready.") {
       utterance.onstart = () => {
         if (requestSpeechTurn !== speechTurn || failed || startedAt !== null) return;
         startedAt = performance.now();
+        recordAutomaticVoiceTurnStart(sample, startedAt);
         const startDelay = ((startedAt - queuedAt) / 1000).toFixed(2);
         statusLine.textContent = `Tutor is speaking as the answer arrives (started in ${startDelay}s). Tap Stop audio or Speak to interrupt.`;
       };
@@ -1270,6 +1321,8 @@ async function submitQuizAnswer(answer) {
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
+  const automaticVoiceInput = pendingAutomaticVoiceInput;
+  pendingAutomaticVoiceInput = null;
   if (recognitionListening && !recognitionHadFinalResult) {
     statusLine.textContent = "Wait for a final transcript, or stop listening and type your question before sending.";
     return;
@@ -1288,10 +1341,16 @@ form.addEventListener("submit", (event) => {
     }
     input.value = "";
     stopTutor();
+    activeAutomaticVoiceTurn = automaticVoiceInput
+      ? { ...automaticVoiceInput, requestTurn: turn + 1 }
+      : null;
     submitQuizAnswer(question);
     return;
   }
   stopTutor();
+  activeAutomaticVoiceTurn = automaticVoiceInput
+    ? { ...automaticVoiceInput, requestTurn: turn + 1 }
+    : null;
   input.value = "";
   sendQuestion(question);
 });
@@ -1538,7 +1597,10 @@ micButton.addEventListener("click", () => {
       statusLine.textContent = `No final transcript was received; partial words were discarded. Try again or type. ${recognitionTimingSummary(language)}`;
     } else if (wasListening && recognitionHadFinalResult && autoSubmitSpeech.checked && input.value.trim()) {
       statusLine.textContent = "Final transcript received. Sending it to the tutor.";
+      const automaticVoiceInput = { language: capture.lang, recognitionEndedAt: performance.now() };
+      pendingAutomaticVoiceInput = automaticVoiceInput;
       form.requestSubmit();
+      if (pendingAutomaticVoiceInput === automaticVoiceInput) pendingAutomaticVoiceInput = null;
     }
   };
   recognitionListening = true;
