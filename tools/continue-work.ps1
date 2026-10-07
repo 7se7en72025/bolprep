@@ -140,12 +140,13 @@ try {
         $remainingSeconds = [int]($deadline - [DateTimeOffset]::UtcNow).TotalSeconds
         if ($remainingSeconds -gt 0 -and -not (Test-Path $stopPath)) {
             $waitSeconds = if ($retryNeeded) { $retryDelaySeconds } else { $taskIntervalSeconds }
-            Write-Status "Waiting $waitSeconds second(s) before the next task."
-            $waitRemaining = [Math]::Min($waitSeconds, $remainingSeconds)
-            while ($waitRemaining -gt 0 -and -not (Test-Path $stopPath)) {
-                $sleepSlice = [Math]::Min(30, $waitRemaining)
+            $waitUntil = [DateTimeOffset]::UtcNow.AddSeconds([Math]::Min($waitSeconds, $remainingSeconds))
+            Write-Status "Waiting $waitSeconds second(s) before the next task; scheduled for $($waitUntil.ToString('u'))."
+            while ([DateTimeOffset]::UtcNow -lt $waitUntil -and -not (Test-Path $stopPath)) {
+                $waitRemaining = [Math]::Ceiling(($waitUntil - [DateTimeOffset]::UtcNow).TotalSeconds)
+                if ($waitRemaining -le 0) { break }
+                $sleepSlice = [Math]::Min(30, [int]$waitRemaining)
                 Start-Sleep -Seconds $sleepSlice
-                $waitRemaining -= $sleepSlice
             }
         }
     }

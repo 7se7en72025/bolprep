@@ -924,3 +924,8 @@
 - Added English, Hindi, and Hinglish summaries of Article 39A's equal-opportunity justice and free legal-aid direction, without describing a particular scheme or giving legal advice. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-07.
 - Added three constructed language-specific retrieval examples and updated broad-query expectations.
 - Verification: the 147-example retrieval evaluation reports 100% exact match, 100% supported recall@3, 0% unsupported false positives, and 100% exact match in English, Hindi, and Hinglish. The constructed examples do not measure real learner or speech performance. `git diff --check` passed.
+
+## Resume work-loop intervals after pauses - 2026-10-07
+
+- The scheduler now compares each wait against an absolute UTC due time instead of subtracting fixed sleep slices. If the process is paused and resumes before its deadline, an overdue task can start immediately instead of waiting through the full interval again. Stop requests are still checked at most 30 seconds apart, and the original deadline remains in force.
+- Verification: the PowerShell parser reported no syntax errors, and `git diff --check` passed. The bounded loop will be restarted on this version and its first scheduled UTC due time checked.
