@@ -907,3 +907,9 @@
 - Added a Node.js scorer for manually paired, self-authored references and transcripts. It reports word error rate by configuration and language, with empty attempts counted separately as failures. The input JSON stays local and ignored by Git; the output contains counts and rates, not transcript text.
 - Updated the voice run sheet with the input format and normalization limits. This supports repeatable browser versus recorded-file comparisons on the same phrases, but Roman Hinglish is not transliterated and numeric words are not normalized.
 - Verification: `node --check evals/score_stt.js` and `git diff --check` passed. A synthetic local input with one omitted word and one failed attempt reported WER 0.25 and one failure. No real speech, browser/device, or provider evaluation was run, so no speech quality result is claimed.
+
+## Cover the remaining Article 39 policy clauses - 2026-10-07
+
+- Expanded the English, Hindi, and Hinglish Article 39 note to clauses (a)-(f), covering livelihood, common-good distribution, wealth concentration, equal pay, worker and child protections, and children's development. Checked against Article 39 in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-07.
+- Added twelve constructed examples across English, Hindi, and Hinglish for clauses (a), (d), (e), and (f).
+- Verification: the 144-example retrieval evaluation reports 100% exact match, 100% supported recall@3, 0% unsupported false positives, and 100% exact match in English, Hindi, and Hinglish. The constructed examples do not measure real learner or speech performance. `git diff --check` passed.
