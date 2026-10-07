@@ -1170,7 +1170,7 @@ micButton.addEventListener("click", () => {
     input.value = transcript.trim();
   };
   capture.onerror = (event) => {
-    if (run === recognitionRun && recognitionListening) {
+    if (run === recognitionRun && recognitionListening && !recognitionHadFinalResult) {
       recognitionLastError = event.error;
       statusLine.textContent = recognitionErrorMessage(event.error);
     }

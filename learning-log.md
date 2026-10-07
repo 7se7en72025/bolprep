@@ -1,5 +1,10 @@
 # Learning log
 
+## Keep a completed browser transcript ready after a late error - 2026-10-07
+
+- Browser speech recognition now ignores an error event after it has received a nonempty final transcript. A completed transcript stays editable, and its successful timing/status is not replaced by a later failure message. Errors before a final transcript still report the failure.
+- Verification: JavaScript syntax and whitespace checks passed. Browser speech event ordering and device behavior still need a manual check; no microphone or provider request was used.
+
 ## Add source-backed Article 44 coverage - 2026-10-06
 
 - Added an English, Hindi, and Hinglish summary of Article 44: the State shall endeavour to secure a uniform civil code for citizens throughout India. The note summarizes the constitutional text and does not describe personal laws, a proposed code, or legal interpretation. Checked against Part IV, Article 44, in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-06.
