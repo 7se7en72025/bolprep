@@ -27,6 +27,12 @@ MAX_AUDIO_BYTES = 5 * 1024 * 1024
 class BolPrepHandler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
 
+    def handle(self) -> None:
+        try:
+            super().handle()
+        except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
+            self.close_connection = True
+
     def do_GET(self) -> None:
         if self.path == "/health":
             mode = "model" if api_is_configured() else "offline"

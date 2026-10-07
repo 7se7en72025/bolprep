@@ -1,5 +1,10 @@
 # Learning log
 
+## Ignore client resets while reading the next request - 2026-10-07
+
+- A local offline API smoke check passed, but the server printed a socket traceback when the HTTP client reset its keep-alive connection as the server waited for another request. The request handler now treats connection resets as a normal disconnect at the request loop as well as during response writes.
+- Verification: Python 3.11 syntax compilation passed, and a raw local HTTP connection reproduced the reset without a server traceback. `/health` reported offline mode with 36 notes, and a Hindi Article 44 question returned its source. This does not test browser microphone, live model, or speech playback behavior.
+
 ## Preserve typed edits during server recording - 2026-10-07
 
 - Editing the question box now discards an active server recording, cancels pending microphone access, or invalidates a pending transcription before aborting its request. A late transcript cannot replace what the user typed.
