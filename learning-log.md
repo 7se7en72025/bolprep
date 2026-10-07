@@ -1106,5 +1106,10 @@
 ## Add source-backed Article 51A coverage - 2026-10-08
 
 - Added English, Hindi, and Hinglish notes for Article 51A, covering its listed fundamental duties and the parent or guardian education duty for ages six to fourteen. The note links to the official Legislative Department Constitution text and avoids claims about legal enforceability.
-- Added one constructed retrieval example per language. All three targeted questions retrieved only `article-51a` using the local retrieval function. JSON loaded as 48 notes and 177 examples; this focused check does not rerun or update benchmark metrics.
+- Added one constructed retrieval example per language. All three targeted questions retrieved only `article-51a` using the local retrieval function. JSON loaded as 48 notes and 177 examples. The subsequent constructed evaluation completed with 100% exact match, 100% supported recall@3, and 0% unsupported false positives; see the README for counts and per-language results.
 - Source: [The Constitution of India, Legislative Department](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), Part IVA, Article 51A (checked 2026-10-08).
+
+## Recheck retrieval evaluation after corpus expansion - 2026-10-08
+
+- The expanded evaluation initially found three stale broad-corpus labels. Added Article 51A to those expected sets because broad starter-note questions intentionally retrieve the full corpus.
+- Reran `evals/run_retrieval_eval.py`: 177 examples (169 supported, 8 unsupported), 100% exact match, 100% supported recall@3, and 0% unsupported false positives; each language also had 100% exact match. This is a constructed lexical retrieval set, not real learner or speech performance.
