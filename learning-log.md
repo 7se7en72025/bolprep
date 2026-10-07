@@ -957,3 +957,8 @@
 - The local health response now includes the configured model name only when model mode is active; it never exposes an API key. Model stream diagnostics group by both model name and selected language so later exports can compare configurations on the same manual examples.
 - Added the model name to the voice run sheet. No model calls or live speech were used.
 - Verification: Python syntax and JavaScript syntax checks, an offline health/response smoke check, and `git diff --check` passed; live model-mode health output still requires a configured API key.
+
+## Classify late model-stream results as cancellations - 2026-10-07
+
+- A stopped model turn that finishes just as the browser changes turns no longer contributes a successful response timing. If its completed payload arrives late, diagnostics count it as canceled. A stale stream error is also counted as canceled rather than a provider failure.
+- Verification: JavaScript syntax and whitespace checks passed. The browser race and live model stream remain unverified without a configured provider session.

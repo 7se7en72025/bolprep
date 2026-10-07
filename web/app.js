@@ -939,6 +939,13 @@ async function sendQuestion(question) {
       activePartialMessage.querySelector("p").textContent += delta;
       statusLine.textContent = "Tutor is answering…";
     });
+    if (requestTurn !== turn) {
+      if (payload.mode === "model") {
+        modelStreamFailures.push({ language: requestLanguage, model: modelName, reason: "cancelled" });
+        if (modelStreamFailures.length > 500) modelStreamFailures.shift();
+      }
+      return;
+    }
     if (payload.mode === "model") {
       modelStreamSamples.push({
         language: requestLanguage,
@@ -948,7 +955,6 @@ async function sendQuestion(question) {
       });
       if (modelStreamSamples.length > 500) modelStreamSamples.shift();
     }
-    if (requestTurn !== turn) return;
     activePartialMessage?.remove();
     activePartialMessage = null;
     addMessage("assistant", payload.answer, payload.sources || []);
@@ -980,7 +986,7 @@ async function sendQuestion(question) {
       modelStreamFailures.push({
         language: requestLanguage,
         model: modelName,
-        reason: error.name === "AbortError" ? "cancelled" : "failed",
+        reason: error.name === "AbortError" || requestTurn !== turn ? "cancelled" : "failed",
       });
       if (modelStreamFailures.length > 500) modelStreamFailures.shift();
     }
