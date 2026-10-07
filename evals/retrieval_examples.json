@@ -173,5 +173,8 @@
   {"id":"hinglish-cooperative-societies","language":"Hinglish","question":"Article 43B cooperative societies ke kin principles ko promote karne ki baat karta hai?","expected_doc_ids":["article-43b"]},
   {"id": "context-en-current-article-overrides-history", "language": "English", "question": "What does Article 21 say about personal liberty?", "history_questions": ["What does Article 14 say about equality?"], "expected_doc_ids": ["article-21"]},
   {"id": "context-hi-current-article-overrides-history", "language": "Hindi", "question": "अनुच्छेद 21 जीवन और व्यक्तिगत स्वतंत्रता की रक्षा कैसे करता है?", "history_questions": ["अनुच्छेद 14 में समानता का क्या अर्थ है?"], "expected_doc_ids": ["article-21"]},
-  {"id": "context-en-follow-up-keeps-article-history", "language": "Hinglish", "question": "What about personal liberty?", "history_questions": ["Article 21 protects life and personal liberty."], "expected_doc_ids": ["article-21"]}
+  {"id": "context-en-follow-up-keeps-article-history", "language": "Hinglish", "question": "What about personal liberty?", "history_questions": ["Article 21 protects life and personal liberty."], "expected_doc_ids": ["article-21"]},
+  {"id": "en-art51a-fundamental-duties", "language": "English", "question": "What fundamental duties does Article 51A list for citizens?", "expected_doc_ids": ["article-51a"]},
+  {"id": "hi-art51a-nagrik-kartavya", "language": "Hindi", "question": "अनुच्छेद 51A नागरिकों के कौन से मौलिक कर्तव्य बताता है?", "expected_doc_ids": ["article-51a"]},
+  {"id": "hinglish-art51a-environment", "language": "Hinglish", "question": "Article 51A environment aur public property ke baare mein citizens ki kya duties batata hai?", "expected_doc_ids": ["article-51a"]}
 ]

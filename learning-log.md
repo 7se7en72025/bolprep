@@ -1102,3 +1102,9 @@
 - A local request for “How do black holes form?” retrieved Article 20 because the common English word `do` was missing from the tokenizer stop words. Added it so request phrasing alone does not count as polity evidence.
 - A focused retrieval check now returns no note for that off-topic prompt while “What does Article 14 say?” still returns Article 14. The offline `/api/agent/turn` response now has no sources and says the checked notes do not cover it. This single example is not a broad false-positive benchmark.
 - Eight additional hand-written English questions about passports, bank accounts, photosynthesis, cricket results, address changes, restaurant licenses, France's capital, and diabetes symptoms also returned no notes. This narrow probe is not part of the labeled retrieval set or a representative false-positive rate.
+
+## Add source-backed Article 51A coverage - 2026-10-08
+
+- Added English, Hindi, and Hinglish notes for Article 51A, covering its listed fundamental duties and the parent or guardian education duty for ages six to fourteen. The note links to the official Legislative Department Constitution text and avoids claims about legal enforceability.
+- Added one constructed retrieval example per language. All three targeted questions retrieved only `article-51a` using the local retrieval function. JSON loaded as 48 notes and 177 examples; this focused check does not rerun or update benchmark metrics.
+- Source: [The Constitution of India, Legislative Department](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), Part IVA, Article 51A (checked 2026-10-08).
