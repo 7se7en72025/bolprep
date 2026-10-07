@@ -1113,5 +1113,25 @@
       "section": "Part IV, Article 50",
       "checked_on": "2026-10-07"
     }
+  },
+  {
+    "id": "article-51",
+    "title": "Article 51 - international peace and security",
+    "title_hi": "अनुच्छेद 51 - अंतरराष्ट्रीय शांति और सुरक्षा",
+    "title_hinglish": "Article 51 - international peace aur security",
+    "summary": "Article 51 says the State shall endeavour to promote international peace and security, maintain just and honourable relations between nations, foster respect for international law and treaty obligations, and encourage settlement of international disputes by arbitration. This note summarizes the constitutional text without assessing particular foreign-policy decisions or disputes.",
+    "summary_hi": "अनुच्छेद 51 कहता है कि राज्य अंतरराष्ट्रीय शांति और सुरक्षा को बढ़ावा देने, राष्ट्रों के बीच न्यायपूर्ण और सम्मानजनक संबंध बनाए रखने, अंतरराष्ट्रीय कानून और संधि दायित्वों के सम्मान को प्रोत्साहित करने तथा अंतरराष्ट्रीय विवादों के पंचनिर्णय से निपटारे को बढ़ावा देने का प्रयास करेगा। यह नोट संवैधानिक पाठ का सार है; किसी विशेष विदेश नीति निर्णय या विवाद का आकलन नहीं करता।",
+    "summary_hinglish": "Article 51 kehta hai ki State international peace aur security promote karne, nations ke beech just aur honourable relations maintain karne, international law aur treaty obligations ka respect badhane, aur international disputes ko arbitration se settle karne ko encourage karne ka endeavour karega. Yeh constitutional text ka summary hai; kisi particular foreign-policy decision ya dispute ka assessment nahi karta.",
+    "keywords": [
+      "article 51", "international peace", "international security", "relations between nations", "international law", "treaty obligations", "arbitration", "international disputes", "directive principles", "part iv",
+      "anuchhed 51", "antarashtriya shanti", "suraksha", "nations ke sambandh", "antarashtriya kanoon", "sandhi dāyitva", "madhyasthata", "vivaad",
+      "अंतरराष्ट्रीय शांति", "अंतरराष्ट्रीय सुरक्षा", "राष्ट्रों के बीच संबंध", "अंतरराष्ट्रीय कानून", "संधि दायित्व", "पंचनिर्णय", "विवाद"
+    ],
+    "source": {
+      "title": "The Constitution of India - Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part IV, Article 51",
+      "checked_on": "2026-10-07"
+    }
   }
 ]
