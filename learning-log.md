@@ -986,3 +986,9 @@
 - Added English, Hindi, and Hinglish summaries of Article 48 on agriculture, animal husbandry, cattle-breed preservation and improvement, and the text's specified slaughter prohibition. The note does not interpret a particular law or policy. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-07.
 - Added one constructed retrieval example per language and included the note in all three broad corpus queries.
 - Verification: corpus loads with 42 unique notes; the 159-example retrieval evaluation reports 100% exact match, 100% supported recall@3, zero unsupported false positives, and 100% exact match in English, Hindi, and Hinglish. These constructed prompts do not measure real learner or speech performance. `git diff --check` passed.
+
+## Add Article 49 protection-of-monuments coverage - 2026-10-07
+
+- Added English, Hindi, and Hinglish summaries of Article 49, retaining the qualification that the covered monuments, places, and objects must be declared nationally important by or under parliamentary law. The note summarizes the listed protections without identifying particular sites or laws. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-07.
+- Added one constructed retrieval example per language and included the note in all three broad corpus queries.
+- Verification: corpus loads with 43 unique notes; the 162-example retrieval evaluation reports 100% exact match, 100% supported recall@3, zero unsupported false positives, and 100% exact match in English, Hindi, and Hinglish. These constructed prompts do not measure real learner or speech performance. `git diff --check` passed.

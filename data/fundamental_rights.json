@@ -1073,5 +1073,25 @@
       "section": "Part IV, Article 48",
       "checked_on": "2026-10-07"
     }
+  },
+  {
+    "id": "article-49",
+    "title": "Article 49 - protection of nationally important monuments",
+    "title_hi": "अनुच्छेद 49 - राष्ट्रीय महत्व के स्मारकों का संरक्षण",
+    "title_hinglish": "Article 49 - nationally important monuments ka protection",
+    "summary": "Article 49 makes it the State's obligation to protect monuments, places, and objects of artistic or historic interest that Parliament has declared, or that have been declared under a law made by Parliament, to be of national importance. The text lists protection from spoliation, disfigurement, destruction, removal, disposal, or export. This note summarizes the constitutional text and does not identify particular sites or laws.",
+    "summary_hi": "अनुच्छेद 49 राज्य का दायित्व बताता है कि वह कलात्मक या ऐतिहासिक महत्व के उन स्मारकों, स्थानों और वस्तुओं की रक्षा करे जिन्हें संसद ने या संसद द्वारा बनाए गए कानून के तहत राष्ट्रीय महत्व का घोषित किया हो। पाठ में क्षति, विरूपण, विनाश, हटाने, निपटान या निर्यात से संरक्षण का उल्लेख है। यह नोट संवैधानिक पाठ का सार है; किसी विशेष स्थल या कानून की पहचान नहीं करता।",
+    "summary_hinglish": "Article 49 State ki obligation batata hai ki woh artistic ya historic interest wale un monuments, places aur objects ko protect kare jo Parliament ne, ya Parliament ke law ke tahat, national importance ke declared hon. Text damage, disfigurement, destruction, removal, disposal ya export se protection list karta hai. Yeh constitutional text ka summary hai; specific sites ya laws identify nahi karta.",
+    "keywords": [
+      "article 49", "monuments", "national importance", "artistic interest", "historic interest", "spoliation", "disfigurement", "destruction", "removal", "disposal", "export", "parliament declared", "directive principles", "part iv",
+      "anuchhed 49", "smarak", "rashtriya mahatva", "kalaatmak mahatva", "aitihasik mahatva", "vinash", "hatana", "niryat",
+      "स्मारक", "राष्ट्रीय महत्व", "कलात्मक महत्व", "ऐतिहासिक महत्व", "विनाश", "हटाना", "निर्यात", "संसद द्वारा घोषित"
+    ],
+    "source": {
+      "title": "The Constitution of India - Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part IV, Article 49",
+      "checked_on": "2026-10-07"
+    }
   }
 ]
