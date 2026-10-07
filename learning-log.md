@@ -1113,3 +1113,8 @@
 
 - The expanded evaluation initially found three stale broad-corpus labels. Added Article 51A to those expected sets because broad starter-note questions intentionally retrieve the full corpus.
 - Reran `evals/run_retrieval_eval.py`: 177 examples (169 supported, 8 unsupported), 100% exact match, 100% supported recall@3, and 0% unsupported false positives; each language also had 100% exact match. This is a constructed lexical retrieval set, not real learner or speech performance.
+
+## Complete the Article 51A duty summary - 2026-10-08
+
+- Reviewed the note against the official text and filled in details that the first summary had compressed too far: abiding by the Constitution, rendering national service, brotherhood across diversity, renouncing practices derogatory to women, named environmental protections, and excellence across individual and collective activity. Updated the English, Hindi, and Hinglish summaries while keeping the no-legal-interpretation limit.
+- Retrieved Article 51A by direct article-reference questions in the previous focused check. This content edit does not change retrieval terms or the reported evaluation results.
