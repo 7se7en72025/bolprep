@@ -1009,3 +1009,8 @@
 
 - The local STT scorer now requires a `prompt_id` for each attempt, rejects a changed normalized reference under the same language and prompt ID, and reports distinct prompt counts for each configuration and language. The run sheet shows how to reuse an ID for repeated attempts. Counts alone do not establish that two configurations used the same full prompt set.
 - Verification: `node --check evals/score_stt.js`, a synthetic local scorer invocation with one successful and one failed transcript, a mismatched-reference rejection, and `git diff --check` passed. No real speech or browser behavior was measured. Python is unavailable in this task environment, so no retrieval change or Python check was made.
+
+## Add Articles 43A and 43B coverage - 2026-10-07
+
+- Added source-linked English, Hindi, and Hinglish summaries of Article 43A on workers' participation in industry management and Article 43B on voluntary formation, autonomous functioning, democratic control, and professional management of cooperative societies. Both notes stay within the constitutional text and avoid describing specific schemes or individual entitlements. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-07.
+- Added one constructed retrieval example per language for each article and updated all three broad-corpus labels.
