@@ -77,7 +77,7 @@ Backend -> session and progress storage, trace events
 Evaluation runner -> fixed examples, comparisons, and reports
 ```
 
-The current prototype uses a Python standard-library HTTP server and plain HTML, CSS, and JavaScript. OpenAI Responses API is the optional text model; speech recognition and speech synthesis use browser-provided features. This keeps setup small while making browser and device support a known limitation. SQLite stores local quiz progress; streaming speech providers remain future choices. Compare language support, streaming behavior, quality, and cost before selecting them.
+The current prototype uses a Python standard-library HTTP server and plain HTML, CSS, and JavaScript. OpenAI Responses API is the optional text model; speech recognition and speech synthesis use browser-provided features. This keeps setup small while making browser and device support a known limitation. SQLite stores local quiz progress. Optional streamed OpenAI TTS and recorded-file STT are implemented as experimental provider paths; compare language support, streaming behavior, quality, and cost before relying on them.
 
 ## Starter study corpus
 
@@ -97,7 +97,7 @@ Quiz scores are stored in a local SQLite database at `.codex/bolprep.sqlite3`, s
 2. **TTS output:** browser speech synthesis and optional streamed OpenAI speech are wired to answers; compare Hindi, English, and Hinglish pronunciation across available voices and record listener feedback.
 3. **STT input:** browser speech recognition and optional server-side recorded-file transcription are available; compare Hindi, English, and Hinglish transcripts. Live streaming STT remains unimplemented.
 4. **Browser prototype:** improve interaction states and check behavior across supported browsers and devices.
-5. **Grounded answers:** lexical retrieval, source links, and an insufficient-evidence response are implemented for thirty-five article notes; continue expanding coverage and evaluate retrieval quality.
+5. **Grounded answers:** lexical retrieval, source links, and an insufficient-evidence response are implemented for thirty-eight article notes; continue expanding coverage and evaluate retrieval quality.
 6. **Quiz tools and progress:** deterministic quiz/scoring tools, local session-scoped idempotent progress storage, and a Responses API tool loop are implemented; run a live model tool-call session when an API key is available.
 7. **Live turn-taking:** stream speech, support interruptions and cancellation, and reject stale turn events.
 8. **Evaluation:** compare configurations on documented examples; report language-specific errors, TTS listener feedback, p50/p95 latency, and failures.
@@ -107,7 +107,7 @@ Each phase should be small enough to run, inspect, and explain before moving on.
 
 ### Constructed retrieval evaluation
 
-The 129-example evaluation reports 100% exact match, 100% supported recall@3, and 0% unsupported false positives, with 100% exact match in English, Hindi, and Hinglish. Three constructed multi-turn context examples check current-turn article priority and unreferenced follow-ups; these figures do not estimate learner or speech performance. Reproduce the expanded evaluation from the project root with:
+The 147-example evaluation reports 100% exact match, 100% supported recall@3, and 0% unsupported false positives, with 100% exact match in English, Hindi, and Hinglish. Three constructed multi-turn context examples check current-turn article priority and unreferenced follow-ups; these figures do not estimate learner or speech performance. Reproduce the expanded evaluation from the project root with:
 
 ```powershell
 .\.venv\Scripts\python.exe evals\run_retrieval_eval.py

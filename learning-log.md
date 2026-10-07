@@ -934,3 +934,8 @@
 
 - The scheduler now compares each wait against an absolute UTC due time instead of subtracting fixed sleep slices. If the process is paused and resumes before its deadline, an overdue task can start immediately instead of waiting through the full interval again. Stop requests are still checked at most 30 seconds apart, and the original deadline remains in force.
 - Verification: the PowerShell parser reported no syntax errors, and `git diff --check` passed. The bounded loop will be restarted on this version and its first scheduled UTC due time checked.
+
+## Synchronize README with the current corpus and voice paths - 2026-10-07
+
+- Updated the roadmap count from 35 to 38 checked corpus notes and the retrieval evaluation count from 129 to 147 constructed examples. Clarified that streamed provider TTS and recorded-file STT exist experimentally, while keeping their evaluation limitations in place.
+- Verification: the retrieval evaluator reports 147 examples, 100% exact match, 100% supported recall@3, zero unsupported false positives, and 100% exact match for English, Hindi, and Hinglish. `git diff --check` passed.
