@@ -962,3 +962,9 @@
 
 - A stopped model turn that finishes just as the browser changes turns no longer contributes a successful response timing. If its completed payload arrives late, diagnostics count it as canceled. A stale stream error is also counted as canceled rather than a provider failure.
 - Verification: JavaScript syntax and whitespace checks passed. The browser race and live model stream remain unverified without a configured provider session.
+
+## Add Article 45 early-childhood education coverage - 2026-10-07
+
+- Added an English, Hindi, and Hinglish summary of Article 45: the State shall endeavour to provide early childhood care and education for all children until age six. Kept the note at constitutional-text scope and avoided claims about specific programs or entitlements. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-07.
+- Added one constructed retrieval example per language and included the new note in all three broad corpus queries.
+- Verification: corpus loads with 39 unique notes; the 150-example retrieval evaluation reports 100% exact match, 100% supported recall@3, zero unsupported false positives, and 100% exact match in English, Hindi, and Hinglish. These constructed prompts do not measure real learner or speech performance. `git diff --check` passed.

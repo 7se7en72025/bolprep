@@ -993,5 +993,25 @@
       "section": "Part IV, Article 43",
       "checked_on": "2026-10-06"
     }
+  },
+  {
+    "id": "article-45",
+    "title": "Article 45 - early childhood care and education",
+    "title_hi": "अनुच्छेद 45 - प्रारंभिक बाल्य देखभाल और शिक्षा",
+    "title_hinglish": "Article 45 - early childhood care aur education",
+    "summary": "Article 45 says the State shall endeavour to provide early childhood care and education for all children until they complete the age of six years. This note summarizes the constitutional text only; it does not describe a particular program, service, or individual entitlement.",
+    "summary_hi": "अनुच्छेद 45 कहता है कि राज्य छह वर्ष की आयु पूरी होने तक सभी बच्चों के लिए प्रारंभिक बाल्य देखभाल और शिक्षा उपलब्ध कराने का प्रयास करेगा। यह नोट केवल संवैधानिक पाठ का सार है; यह किसी विशेष कार्यक्रम, सेवा या व्यक्तिगत अधिकार का विवरण नहीं देता।",
+    "summary_hinglish": "Article 45 kehta hai ki State sabhi bachchon ke liye chhe saal ki umar poori hone tak early childhood care aur education dene ka endeavour karega. Yeh sirf constitutional text ka summary hai; kisi specific program, service ya individual entitlement ka detail nahi deta.",
+    "keywords": [
+      "article 45", "early childhood care", "early childhood education", "children under six", "children below six", "age of six", "preschool", "pre-school", "directive principles", "part iv",
+      "anuchhed 45", "chhe saal", "chhe varsh", "bachchon ki shiksha", "bal dekhbhal", "prarambhik shiksha",
+      "प्रारंभिक बाल्य देखभाल", "प्रारंभिक शिक्षा", "छह वर्ष", "छह साल", "बच्चों की शिक्षा", "बाल देखभाल"
+    ],
+    "source": {
+      "title": "The Constitution of India - Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part IV, Article 45",
+      "checked_on": "2026-10-07"
+    }
   }
 ]
