@@ -1124,3 +1124,8 @@
 - The tutor Stop control, Escape, and a speech-language change now restore the question text from before listening when browser recognition has only interim words. A final transcript remains available for review. Editing the box still keeps the student's edit.
 - Submitting a question or quiz answer while only interim words are visible now waits for a final transcript, so an unconfirmed recognition result is not sent as the student's answer.
 - Added manual run-sheet checks for interim submission and each cancellation route. Browser recognition event ordering still needs device verification; no speech accuracy result is claimed.
+
+## Add opt-in automatic submission for browser speech - 2026-10-08
+
+- Added a session-only checkbox to send a final browser-recognized transcript when listening ends naturally. It is off by default; Stop keeps a final transcript in the question box for review, and interim-only recognition still cannot be submitted.
+- This connects browser STT to the existing tutor answer and speech flow when a learner opts in. `node --check web/app.js` and `git diff --check` passed. Natural recognition completion and audible response still need a supported-browser/device check; no microphone was used here.

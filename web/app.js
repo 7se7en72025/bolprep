@@ -9,6 +9,7 @@ const serverSttNote = document.querySelector("#server-stt-note");
 const stopButton = document.querySelector("#stop-button");
 const modeLabel = document.querySelector("#mode-label");
 const speechLanguage = document.querySelector("#speech-language");
+const autoSubmitSpeech = document.querySelector("#auto-submit-speech");
 const speechVoice = document.querySelector("#speech-voice");
 const speechRateControl = document.querySelector("#speech-rate");
 const streamedTtsOption = document.querySelector("#streamed-tts");
@@ -1428,6 +1429,7 @@ refreshSpeechVoices();
 
 if (SpeechRecognition) {
   recognitionAvailable = true;
+  autoSubmitSpeech.disabled = false;
   recognition = null;
   speechLanguage.addEventListener("change", () => {
     if (recognitionListening) {
@@ -1531,6 +1533,9 @@ micButton.addEventListener("click", () => {
       recognitionFailures.push({ language, reason: "no-final-transcript" });
       if (recognitionFailures.length > 500) recognitionFailures.shift();
       statusLine.textContent = `No final transcript was received; partial words were discarded. Try again or type. ${recognitionTimingSummary(language)}`;
+    } else if (wasListening && recognitionHadFinalResult && autoSubmitSpeech.checked && input.value.trim()) {
+      statusLine.textContent = "Final transcript received. Sending it to the tutor.";
+      form.requestSubmit();
     }
   };
   recognitionListening = true;
