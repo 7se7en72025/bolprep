@@ -1205,7 +1205,10 @@ async function submitQuizAnswer(answer) {
   if (!quizSession || !quizSession.awaitingAnswer) return;
   stopSpeechOutput();
   const current = quizSession.questions[quizSession.index];
-  current.idempotencyKey ||= window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  if (current.submittedAnswer !== answer) {
+    current.idempotencyKey = window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    current.submittedAnswer = answer;
+  }
   quizSession.awaitingAnswer = false;
   quizSession.pendingAnswer = answer;
   const requestTurn = ++turn;

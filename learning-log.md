@@ -1129,3 +1129,8 @@
 
 - Added a session-only checkbox to send a final browser-recognized transcript when listening ends naturally. It is off by default; Stop keeps a final transcript in the question box for review, and interim-only recognition still cannot be submitted.
 - This connects browser STT to the existing tutor answer and speech flow when a learner opts in. `node --check web/app.js` and `git diff --check` passed. Natural recognition completion and audible response still need a supported-browser/device check; no microphone was used here.
+
+## Keep revised quiz answers separate from retries - 2026-10-08
+
+- Quiz scoring now keeps the retry key only when the submitted answer text is unchanged. A revised answer after Stop or a scoring error gets a new key. If the earlier request already saved a score, the server reports a conflict instead of silently showing that score for the revision; if it did not save, the revision can be scored.
+- Verification: `node --check web/app.js` and `git diff --check` passed. The browser run sheet now covers this race; browser timing and the saved-versus-canceled ordering still need a device check.
