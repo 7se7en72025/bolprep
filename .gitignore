@@ -5,6 +5,7 @@ __pycache__/
 .env.*
 !.env.example
 recordings/
+evals/local-stt-*.json
 *.wav
 *.mp3
 *.m4a

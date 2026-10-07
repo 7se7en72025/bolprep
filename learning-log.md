@@ -901,3 +901,9 @@
 - Added Article 36 summaries in English, Hindi, and Hinglish. The note records that Part IV uses the Part III meaning of State unless context otherwise requires, without expanding or interpreting that separate definition. Checked against Article 36 in the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-07.
 - Added three constructed retrieval examples and updated broad-query expectations.
 - Verification: corpus loads with 37 unique notes; the 132-example retrieval evaluation reports 100% exact match, 100% supported recall@3, 0% unsupported false positives, and 100% exact match in English, Hindi, and Hinglish. These constructed prompts do not measure learner or speech performance. `git diff --check` passed.
+
+## Add local STT word error scoring - 2026-10-07
+
+- Added a Node.js scorer for manually paired, self-authored references and transcripts. It reports word error rate by configuration and language, with empty attempts counted separately as failures. The input JSON stays local and ignored by Git; the output contains counts and rates, not transcript text.
+- Updated the voice run sheet with the input format and normalization limits. This supports repeatable browser versus recorded-file comparisons on the same phrases, but Roman Hinglish is not transliterated and numeric words are not normalized.
+- Verification: `node --check evals/score_stt.js` and `git diff --check` passed. A synthetic local input with one omitted word and one failed attempt reported WER 0.25 and one failure. No real speech, browser/device, or provider evaluation was run, so no speech quality result is claimed.
