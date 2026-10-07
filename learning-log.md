@@ -1091,3 +1091,8 @@
 - Added slower, standard, and faster controls for browser TTS and progressive browser TTS. The selected rate persists with speech preferences; changing it stops current browser playback and applies the new rate to the next utterance. The setting is disabled while provider-streamed speech is selected.
 - TTS timing diagnostics now group browser speech by rate and include the rate in JSON; the run sheet records it for comparisons. Provider-streamed timing groups report no browser rate.
 - Verification: `node --check web/app.js` and `git diff --check` passed. Rate changes, preference restore, and audible speed differences still need a browser/device check.
+
+## Discard unconfirmed words when stopping browser recognition - 2026-10-08
+
+- Pressing **Stop** on the Speak control now restores the question text from before listening if recognition has only interim words. A confirmed final transcript stays in the box for review. This keeps canceled partial recognition from looking like a ready question.
+- Added manual run-sheet checks for both cancellation stages. JavaScript syntax and whitespace checks passed; the browser event ordering and microphone behavior still need a device check.

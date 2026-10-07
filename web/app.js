@@ -66,6 +66,7 @@ let serverRecordingStartCancelled = false;
 let serverRecordingRun = 0;
 let recognitionStartedAt = null;
 let recognitionHadFinalResult = false;
+let recognitionOriginalInput = "";
 let pendingQuestion = null;
 let matchingSpeechVoices = [];
 let streamingTtsAvailable = false;
@@ -1450,8 +1451,12 @@ input.addEventListener("input", () => {
 micButton.addEventListener("click", () => {
   if (!recognitionAvailable) return;
   if (recognitionListening) {
+    const hadFinalResult = recognitionHadFinalResult;
     stopRecognition();
-    statusLine.textContent = "Listening stopped. You can type or tap Speak again.";
+    if (!hadFinalResult) input.value = recognitionOriginalInput;
+    statusLine.textContent = hadFinalResult
+      ? "Listening stopped. Review the final transcript, then ask."
+      : "Listening stopped. Partial words were discarded; your previous text is restored.";
     return;
   }
   stopTutor();
@@ -1459,6 +1464,8 @@ micButton.addEventListener("click", () => {
   const run = ++recognitionRun;
   const capture = new SpeechRecognition();
   const inputBeforeListening = input.value;
+  recognitionOriginalInput = inputBeforeListening;
+  recognitionHadFinalResult = false;
   let finalTranscript = "";
   recognition = capture;
   capture.lang = speechLanguage.value;

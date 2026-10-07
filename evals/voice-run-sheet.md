@@ -117,7 +117,7 @@ Run these checks in a browser with speech playback available. Use the same brows
 12. Trigger a browser recognition error, such as denying microphone permission, before a final transcript. Check that **Speak** becomes available again without waiting for an end event, the status explains the error, and diagnostics count exactly one failed attempt. Mark unavailable if the browser does not expose this event order.
 13. With server transcription configured, start **Record** and press **Cancel** while microphone permission is pending. If the browser permission prompt remains open, resolve it and check that capture does not start. Repeat after stopping a short self-authored recording while transcription is pending; press **Cancel** and check that a late transcript does not change the question box. Mark unavailable if either pending stage ends before Cancel can be pressed.
 14. Submit a quiz answer, type a revised draft while scoring is pending, then press **Stop**. Check that the revised draft stays in the input box and can be submitted. If scoring finishes before the edit, mark unavailable. If a scoring error occurs during a separate attempt, check that it also keeps a draft already typed into the box.
-15. Start **Speak** with existing text in the question box. If the browser shows interim words but ends recognition without a final transcript, check that the original text returns and the status reports no final transcript. Repeat if an error arrives after interim words. Mark unavailable if the browser never produces either event order.
+15. Start **Speak** with existing text in the question box. After interim words appear, press **Stop** and check that the original text returns. Repeat with a final transcript before pressing **Stop** and check that the final words remain for review. Also check normal end or error after interim words; both should restore the original text without a final transcript. Mark event orders the browser never produces as unavailable.
 16. With model mode and browser speech selected, press **Escape** after text starts arriving but before the first complete sentence is spoken. Check that the partial turn stops, no queued sentence plays later, and a follow-up still works. Mark unavailable if generation finishes too quickly to reach this interval.
 
 | Case | Attempts | Passes | Failures / unavailable | Browser event or visible symptom |
@@ -132,6 +132,8 @@ Run these checks in a browser with speech playback available. Use the same brows
 | Edit the question during microphone capture | | | | |
 | Final transcript followed by interim recognition | | | | |
 | Recognition error before an end event | | | | |
+| Interim words stopped before a final transcript | | | | |
+| Stop after a final transcript | | | | |
 | Interim words without a final transcript | | | | |
 | Edit the question during recording or transcription | | | | |
 | Interrupt streamed speech, then start a new turn | | | | |
