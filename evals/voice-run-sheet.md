@@ -1,6 +1,6 @@
 # Browser voice evaluation run sheet
 
-Use this sheet to compare browser-provided speech features on the same device and phrases. It is a small manual check, not a representative benchmark.
+Use this sheet to compare browser-provided speech features on the same device and phrases. It is a small manual check, not a representative benchmark. To review model text streaming, enable model mode and submit a self-authored study question; note whether answer text appears before generation completes. Press Stop during generation and record whether partial text disappears and no later text appears. Repeat in Hindi/Hinglish and English. Mark unavailable without a configured API key; do not infer provider cancellation from the client display.
 
 ## Record the setup
 

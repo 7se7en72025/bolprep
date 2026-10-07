@@ -182,13 +182,43 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 self._send_json(400, {"error": "Conversation history is invalid."})
                 return
             cleaned_history.append({"role": item["role"], "content": item["content"]})
+        self.send_response(200)
+        self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
+        self.send_header("Transfer-Encoding", "chunked")
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        self._send_session_cookie_if_needed()
+        self.end_headers()
         try:
-            result = run_agent_turn(question.strip(), cleaned_history, self.session_id, language)
+            result = run_agent_turn(
+                question.strip(),
+                cleaned_history,
+                self.session_id,
+                language,
+                on_text_delta=lambda delta: self._write_ndjson({"type": "delta", "text": delta}),
+            )
+            self._write_ndjson({"type": "complete", "payload": result})
+            self._finish_chunked_response()
+        except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
+            self.close_connection = True
         except Exception as exc:
             print(f"Tutor agent request failed: {exc}")
-            self._send_json(502, {"error": "Tutor request failed. Check the server terminal and try again."})
-            return
-        self._send_json(200, result)
+            try:
+                self._write_ndjson({"type": "error", "error": "Tutor request failed. Check the server terminal and try again."})
+                self._finish_chunked_response()
+            except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
+                self.close_connection = True
+
+    def _write_ndjson(self, event: dict[str, Any]) -> None:
+        encoded = (json.dumps(event, ensure_ascii=False) + "\n").encode("utf-8")
+        self.wfile.write(f"{len(encoded):X}\r\n".encode("ascii"))
+        self.wfile.write(encoded)
+        self.wfile.write(b"\r\n")
+        self.wfile.flush()
+
+    def _finish_chunked_response(self) -> None:
+        self.wfile.write(b"0\r\n\r\n")
+        self.wfile.flush()
 
     def _handle_speech(self, body: dict[str, Any]) -> None:
         text = body.get("text")

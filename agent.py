@@ -6,7 +6,7 @@ import json
 import os
 import re
 import uuid
-from typing import Any
+from typing import Any, Callable
 
 from bolprep import INSTRUCTIONS, api_is_configured, offline_answer
 from progress import (
@@ -77,6 +77,7 @@ def run_agent_turn(
     session_id: str,
     language: str = "hi-IN",
     responses_client: Any | None = None,
+    on_text_delta: Callable[[str], None] | None = None,
 ) -> dict[str, Any]:
     """Answer a turn, using validated quiz/progress functions in model mode."""
     documents = retrieve(_retrieval_query(question, history))
@@ -105,13 +106,19 @@ def run_agent_turn(
         *history,
         {"role": "user", "content": f"{question.strip()}\n\nChecked study notes:\n{evidence}"},
     ]
-    response = responses_client.create(
-        model=os.getenv("OPENAI_MODEL", "gpt-6-astra"),
-        instructions=instructions,
-        input=input_items,
-        tools=TOOLS,
-        parallel_tool_calls=False,
-    )
+    def create_response() -> Any:
+        request = {
+            "model": os.getenv("OPENAI_MODEL", "gpt-6-astra"),
+            "instructions": instructions,
+            "input": input_items,
+            "tools": TOOLS,
+            "parallel_tool_calls": False,
+        }
+        if on_text_delta is None:
+            return responses_client.create(**request)
+        return _stream_response(responses_client, request, on_text_delta)
+
+    response = create_response()
     tool_events: list[dict[str, Any]] = []
     total_calls = 0
 
@@ -140,13 +147,7 @@ def run_agent_turn(
             )
             tool_events.append(event)
 
-        response = responses_client.create(
-            model=os.getenv("OPENAI_MODEL", "gpt-6-astra"),
-            instructions=instructions,
-            input=input_items,
-            tools=TOOLS,
-            parallel_tool_calls=False,
-        )
+        response = create_response()
     else:
         if any(_field(item, "type") == "function_call" for item in _field(response, "output", [])):
             raise RuntimeError("The tutor did not finish its tool workflow. Please try again.")
@@ -157,6 +158,31 @@ def run_agent_turn(
         raise RuntimeError("The model returned an empty response. Please try again.")
     sources = [_source(document) for document in documents]
     return {"answer": answer, "sources": sources, "tool_events": tool_events, "mode": "model"}
+
+
+def _stream_response(client: Any, request: dict[str, Any], on_text_delta: Callable[[str], None]) -> Any:
+    """Yield text deltas while retaining the completed response for tool handling."""
+    stream = client.create(**request, stream=True)
+    completed = None
+    try:
+        for event in stream:
+            event_type = _field(event, "type", "")
+            if event_type == "response.output_text.delta":
+                delta = _field(event, "delta", "")
+                if isinstance(delta, str) and delta:
+                    on_text_delta(delta)
+            elif event_type == "response.completed":
+                completed = _field(event, "response")
+            elif event_type in {"error", "response.failed"}:
+                message = _field(event, "message", "The model response failed.")
+                raise RuntimeError(str(message))
+    finally:
+        close = getattr(stream, "close", None)
+        if callable(close):
+            close()
+    if completed is None:
+        raise RuntimeError("The model stream ended before the response completed.")
+    return completed
 
 
 def _execute_tool(name: str, arguments: str, call_id: str, session_id: str) -> tuple[dict[str, Any], dict[str, Any]]:

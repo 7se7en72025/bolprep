@@ -45,6 +45,7 @@ const clearProgressButton = document.querySelector("#clear-progress");
 
 const history = [];
 let activeRequest = null;
+let activePartialMessage = null;
 let recognition = null;
 let recognitionAvailable = false;
 let recognitionListening = false;
@@ -124,6 +125,37 @@ function addMessage(role, text, sources = []) {
   }
   conversation.append(article);
   conversation.scrollTop = conversation.scrollHeight;
+  return article;
+}
+
+async function readAgentStream(response, onTextDelta) {
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error || "Tutor request failed.");
+  }
+  if (!response.body) throw new Error("This browser cannot receive the tutor response stream.");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let pending = "";
+  let payload = null;
+  function consumeLine(line) {
+    if (!line.trim()) return;
+    const event = JSON.parse(line);
+    if (event.type === "delta" && typeof event.text === "string") onTextDelta(event.text);
+    else if (event.type === "complete") payload = event.payload;
+    else if (event.type === "error") throw new Error(event.error || "Tutor request failed.");
+  }
+  while (true) {
+    const { value, done } = await reader.read();
+    pending += decoder.decode(value || new Uint8Array(), { stream: !done });
+    const lines = pending.split("\n");
+    pending = lines.pop();
+    lines.forEach(consumeLine);
+    if (done) break;
+  }
+  if (pending.trim()) consumeLine(pending);
+  if (!payload || typeof payload.answer !== "string") throw new Error("The tutor response stream ended early. Try again.");
+  return payload;
 }
 
 function rememberTurn(userMessage, assistantMessage) {
@@ -314,6 +346,8 @@ function recognitionErrorMessage(error) {
 
 function preserveInterruptedTurn() {
   if (!activeRequest || !pendingQuestion) return;
+  activePartialMessage?.remove();
+  activePartialMessage = null;
   const interruptionNote = "I stopped before finishing that answer. You can ask a follow-up or try again.";
   addMessage("assistant", interruptionNote);
   rememberTurn(pendingQuestion, interruptionNote);
@@ -863,9 +897,15 @@ async function sendQuestion(question) {
       body: JSON.stringify({ question, history: history.slice(-20), language: speechLanguage.value }),
       signal: controller.signal,
     });
-    const payload = await response.json();
-    if (!response.ok) throw new Error(payload.error || "Tutor request failed.");
+    const payload = await readAgentStream(response, (delta) => {
+      if (requestTurn !== turn) return;
+      if (!activePartialMessage) activePartialMessage = addMessage("assistant", "");
+      activePartialMessage.querySelector("p").textContent += delta;
+      statusLine.textContent = "Tutor is answering…";
+    });
     if (requestTurn !== turn) return;
+    activePartialMessage?.remove();
+    activePartialMessage = null;
     addMessage("assistant", payload.answer, payload.sources || []);
     rememberTurn(question, payload.answer);
     pendingQuestion = null;
@@ -892,6 +932,8 @@ async function sendQuestion(question) {
     }
   } catch (error) {
     if (error.name !== "AbortError" && requestTurn === turn) {
+      activePartialMessage?.remove();
+      activePartialMessage = null;
       pendingQuestion = null;
       addMessage("assistant", error.message);
       rememberTurn(question, "The tutor request failed before an answer was produced.");

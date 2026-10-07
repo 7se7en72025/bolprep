@@ -939,3 +939,9 @@
 
 - Updated the roadmap count from 35 to 38 checked corpus notes and the retrieval evaluation count from 129 to 147 constructed examples. Clarified that streamed provider TTS and recorded-file STT exist experimentally, while keeping their evaluation limitations in place.
 - Verification: the retrieval evaluator reports 147 examples, 100% exact match, 100% supported recall@3, zero unsupported false positives, and 100% exact match for English, Hindi, and Hinglish. `git diff --check` passed.
+
+## Stream model text into the tutor conversation - 2026-10-07
+
+- Model-mode tutor turns now stream Responses API text deltas over a chunked NDJSON response, and the browser renders partial text while generation continues. The final event supplies the completed answer, sources, and tool results; offline mode still sends a single completed result. Stopping removes partial text and closes the local consumer stream, but provider-side cancellation is not claimed.
+- Added a manual model-stream check to the voice run sheet. The live provider/browser behavior remains unverified because no API request or browser microphone session was used.
+- Verification: `py_compile` for the changed Python modules, `node --check web/app.js`, and an offline HTTP smoke check are recorded with this change; `git diff --check` passed.
