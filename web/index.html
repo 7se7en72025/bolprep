@@ -59,6 +59,13 @@
             <button class="send-button" id="send-button" type="submit"><span id="send-label">Ask tutor</span><span aria-hidden="true">↗</span></button>
           </div>
         </form>
+        <label class="speech-setting" for="speech-rate">Browser speech rate
+          <select id="speech-rate" class="language-select">
+            <option value="0.75">Slow (0.75×)</option>
+            <option value="0.96" selected>Standard (0.96×)</option>
+            <option value="1.2">Fast (1.2×)</option>
+          </select>
+        </label>
         <label class="streamed-tts-toggle"><input id="streamed-tts" type="checkbox" disabled> Use experimental streamed OpenAI speech (API usage may be billed)</label>
         <label class="streamed-tts-toggle" for="streamed-tts-voice">Streamed voice
           <select id="streamed-tts-voice" class="language-select" disabled>

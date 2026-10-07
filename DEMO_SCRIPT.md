@@ -26,7 +26,7 @@ Only include this segment when a server-side API key is configured and usage is 
 ## Before recording
 
 - Use self-authored questions and your own microphone if you demonstrate speech input. Do not use learner recordings.
-- Check the selected language, installed voice, browser, and microphone permission on the recording device.
+- Check the selected language, installed voice, browser speech rate, and microphone permission on the recording device.
 - Run the relevant interruption, quiz, and speech cases in the [voice run sheet](evals/voice-run-sheet.md); mark unavailable cases honestly.
 - Record measured values only from the visible diagnostics or a timed run-sheet attempt. Keep acoustic first-audible timing separate from browser synthesis `onstart` timing.
 - Capture a short technical explanation of the browser STT/TTS path, optional provider paths, source-grounded offline mode, and one observed failure that led to a fix.

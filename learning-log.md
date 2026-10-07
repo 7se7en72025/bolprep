@@ -1085,3 +1085,9 @@
 
 - Added a recording outline for the reproducible offline tutor, browser speech, local quiz/progress, interruption checks, and diagnostics. It separates optional model-mode demonstrations and calls out provider cancellation, browser support, and measured-quality limitations.
 - Linked the outline from the README. No video was recorded; the steps remain subject to the browser run sheet and actual device availability.
+
+## Add selectable browser speech rates - 2026-10-08
+
+- Added slower, standard, and faster controls for browser TTS and progressive browser TTS. The selected rate persists with speech preferences; changing it stops current browser playback and applies the new rate to the next utterance. The setting is disabled while provider-streamed speech is selected.
+- TTS timing diagnostics now group browser speech by rate and include the rate in JSON; the run sheet records it for comparisons. Provider-streamed timing groups report no browser rate.
+- Verification: `node --check web/app.js` and `git diff --check` passed. Rate changes, preference restore, and audible speed differences still need a browser/device check.

@@ -11,6 +11,7 @@ Use this sheet to compare browser-provided speech features on the same device an
 - Speech language selected in BolPrep:
 - TTS provider and voice selected (browser or streamed OpenAI voice):
 - Installed TTS voice selected (name and locale):
+- Browser speech rate selected (if browser speech is used):
 - Browser-provided STT available:
 - Server recorded-file transcription available:
 - Configured model name for model-mode timing comparisons:
@@ -29,7 +30,9 @@ Use **Preview** for the fixed English phrase. For Hindi and Hinglish, run BolPre
 
 From the copied JSON `tts` entries, transfer `start_delay.p50_s` / `start_delay.p95_s` and `playback_duration.p50_s` / `playback_duration.p95_s` into the matching language, voice, and sample-type row (Preview or tutor answer). Streamed runs are labeled `OpenAI <selected voice>` (for example, `OpenAI coral`). Check `start_event`: browser timings begin at the synthesis `onstart` event, while streamed timings begin when the first PCM buffer is scheduled; neither is an acoustic measurement. Use the end-to-end stopwatch below for first-audible timing. `completed_count` is Runs; `failure_count` is Failures. A `null` timing means no successful playback was recorded for that group.
 
-| Language / voice | Sample type | Runs | Start p50 / p95 (s) | Playback p50 / p95 (s) | Failures |
+Keep the selected browser speech rate fixed during a comparison and record it with the language, voice, browser, and sample type. The diagnostics group browser TTS timings by rate; a rate change starts a separate group. Provider-streamed speech does not use this browser rate setting.
+
+| Language / voice / browser rate | Sample type | Runs | Start p50 / p95 (s) | Playback p50 / p95 (s) | Failures |
 | --- | --- | ---: | ---: | ---: | --- |
 | | | | | | |
 

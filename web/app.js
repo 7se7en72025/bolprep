@@ -10,6 +10,7 @@ const stopButton = document.querySelector("#stop-button");
 const modeLabel = document.querySelector("#mode-label");
 const speechLanguage = document.querySelector("#speech-language");
 const speechVoice = document.querySelector("#speech-voice");
+const speechRateControl = document.querySelector("#speech-rate");
 const streamedTtsOption = document.querySelector("#streamed-tts");
 const streamedTtsVoice = document.querySelector("#streamed-tts-voice");
 const inputLabel = document.querySelector('label[for="question-input"]');
@@ -28,6 +29,9 @@ if (["hi-IN", "en-IN"].includes(speechPreferences.language)) {
 }
 if ([...streamedTtsVoice.options].some((option) => option.value === speechPreferences.streamedTtsVoice)) {
   streamedTtsVoice.value = speechPreferences.streamedTtsVoice;
+}
+if (speechRateControl.options.some((option) => Number(option.value) === speechPreferences.browserSpeechRate)) {
+  speechRateControl.value = String(speechPreferences.browserSpeechRate);
 }
 const savedVoices = speechPreferences.voices && typeof speechPreferences.voices === "object"
   ? speechPreferences.voices
@@ -443,6 +447,7 @@ function saveSpeechPreferences() {
   speechPreferences = {
     language: speechLanguage.value,
     voices: savedVoices,
+    browserSpeechRate: Number(speechRateControl.value),
     streamedTtsVoice: streamedTtsVoice.value,
   };
   try {
@@ -460,9 +465,11 @@ function percentile(values, fraction) {
 function speechTimingSummary(sample) {
   const matchingSamples = speechSamples.filter((item) =>
     item.language === sample.language && item.voice === sample.voice && item.kind === sample.kind
+      && (item.rate ?? null) === (sample.rate ?? null)
   );
   const matchingFailures = speechFailures.filter((item) =>
     item.language === sample.language && item.voice === sample.voice && item.kind === sample.kind
+      && (item.rate ?? null) === (sample.rate ?? null)
   );
   let summary = "no completed utterances";
   if (matchingSamples.length) {
@@ -473,7 +480,8 @@ function speechTimingSummary(sample) {
       + `${seconds(percentile(startTimes, 0.5))}/${seconds(percentile(startTimes, 0.95))}s, `
       + `playback p50/p95 ${seconds(percentile(playbackTimes, 0.5))}/${seconds(percentile(playbackTimes, 0.95))}s`;
   }
-  return `${sample.kind} ${sample.language} / ${sample.voice}: ${summary}, failures=${matchingFailures.length}.`;
+  const rateLabel = typeof sample.rate === "number" ? ` / rate ${sample.rate}x` : "";
+  return `${sample.kind} ${sample.language} / ${sample.voice}${rateLabel}: ${summary}, failures=${matchingFailures.length}.`;
 }
 
 function recognitionTimingSummary(language) {
@@ -515,12 +523,14 @@ function speechErrorMessage(error) {
 function buildSpeechDiagnostics() {
   const ttsGroups = new Map();
   const getTtsGroup = (sample) => {
-    const key = JSON.stringify([sample.language, sample.voice, sample.kind]);
+    const browserRate = sample.rate ?? null;
+    const key = JSON.stringify([sample.language, sample.voice, sample.kind, browserRate]);
     if (!ttsGroups.has(key)) {
       ttsGroups.set(key, {
         language: sample.language,
         voice: sample.voice,
         sample_type: sample.kind,
+        browser_rate: browserRate,
         start_event: sample.startEvent || "speech_synthesis_onstart",
         completed: [],
         failures: 0,
@@ -555,12 +565,13 @@ function buildSpeechDiagnostics() {
     }
     : { p50_s: null, p95_s: null };
   const tts = [...ttsGroups.values()]
-    .sort((left, right) => `${left.language}|${left.sample_type}|${left.voice}`
-      .localeCompare(`${right.language}|${right.sample_type}|${right.voice}`))
+    .sort((left, right) => `${left.language}|${left.sample_type}|${left.voice}|${left.browser_rate}`
+      .localeCompare(`${right.language}|${right.sample_type}|${right.voice}|${right.browser_rate}`))
     .map((group) => ({
       language: group.language,
       voice: group.voice,
       sample_type: group.sample_type,
+      browser_rate: group.browser_rate,
       start_event: group.start_event,
       completed_count: group.completed.length,
       failure_count: group.failures,
@@ -852,16 +863,18 @@ function speakWithBrowser(text, completionText = "Ready when you are.", kind = "
   const selectedVoice = matchingSpeechVoices.find((voice) =>
     `${voice.name}|${voice.lang}|${voice.voiceURI}` === speechVoice.value
   );
+  const speechRate = Number(speechRateControl.value) || 0.96;
   const sample = {
     language: speechLanguage.value,
     voice: selectedVoice ? `${selectedVoice.name} (${selectedVoice.lang})` : "browser default",
+    rate: speechRate,
     kind,
     startEvent: "speech_synthesis_onstart",
   };
   chunks.forEach((chunk, index) => {
     const utterance = new SpeechSynthesisUtterance(chunk);
     utterance.lang = speechLanguage.value;
-    utterance.rate = 0.96;
+    utterance.rate = speechRate;
     if (selectedVoice) utterance.voice = selectedVoice;
     utterance.onstart = () => {
       if (requestSpeechTurn !== speechTurn || failed || startedAt !== null) return;
@@ -907,9 +920,11 @@ function createProgressiveBrowserSpeech(completionText = "Answer ready.") {
   const selectedVoice = matchingSpeechVoices.find((voice) =>
     `${voice.name}|${voice.lang}|${voice.voiceURI}` === speechVoice.value
   );
+  const speechRate = Number(speechRateControl.value) || 0.96;
   const sample = {
     language,
     voice: selectedVoice ? `${selectedVoice.name} (${selectedVoice.lang})` : "browser default",
+    rate: speechRate,
     kind: "tutor",
     startEvent: "speech_synthesis_onstart",
   };
@@ -941,7 +956,7 @@ function createProgressiveBrowserSpeech(completionText = "Answer ready.") {
       if (requestSpeechTurn !== speechTurn || failed || cancelled) return;
       const utterance = new SpeechSynthesisUtterance(chunk);
       utterance.lang = language;
-      utterance.rate = 0.96;
+      utterance.rate = speechRate;
       if (selectedVoice) utterance.voice = selectedVoice;
       queuedCount += 1;
       hadQueuedSpeech = true;
@@ -1380,6 +1395,7 @@ streamedTtsOption.addEventListener("change", () => {
     streamedTtsOption.checked = false;
     statusLine.textContent = "This browser cannot play streamed audio. Use the installed browser voice instead.";
   }
+  speechRateControl.disabled = streamedTtsOption.checked;
   streamedTtsVoice.disabled = !streamingTtsAvailable || !streamedTtsOption.checked;
 });
 streamedTtsVoice.addEventListener("change", () => {
@@ -1391,6 +1407,14 @@ streamedTtsVoice.addEventListener("change", () => {
 });
 speechLanguage.addEventListener("change", saveSpeechPreferences);
 speechVoice.addEventListener("change", saveSpeechPreferences);
+speechRateControl.addEventListener("change", () => {
+  const speechSynthesis = window.speechSynthesis;
+  if (activeProgressiveSpeech || speechSynthesis?.speaking || speechSynthesis?.pending) {
+    stopSpeechOutput();
+    statusLine.textContent = "Browser speech rate changed. Current playback stopped; the new rate applies next time.";
+  }
+  saveSpeechPreferences();
+});
 window.speechSynthesis?.addEventListener?.("voiceschanged", refreshSpeechVoices);
 refreshSpeechVoices();
 
