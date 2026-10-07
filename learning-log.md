@@ -1,5 +1,10 @@
 # Learning log
 
+## Show prompt-level STT errors - 2026-10-07
+
+- The local STT scorer now includes attempts, failures, and success-only and all-attempts WER for each prompt ID within a configuration and language. This helps locate phrases behind an aggregate error rate without printing reference or transcript text.
+- Verification: JavaScript syntax, a synthetic scorer probe, and whitespace checks passed. No real speech or browser/device behavior was measured; prompt IDs in the output should be self-authored and non-sensitive.
+
 ## Cancel pending recorded voice input from Record - 2026-10-07
 
 - The Record control now shows Cancel while microphone permission or server transcription is pending. Cancel invalidates the pending capture or aborts the request, so a late result cannot replace the question box; the separate Stop control still works.
