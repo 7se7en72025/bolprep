@@ -25,24 +25,34 @@ function editDistance(reference, transcript) {
 function score(trials) {
   if (!Array.isArray(trials) || !trials.length) throw new Error("Expected a nonempty JSON array of trials.");
   const groups = new Map();
+  const promptReferences = new Map();
   for (const [index, trial] of trials.entries()) {
     if (!trial || typeof trial !== "object" || Array.isArray(trial)) {
       throw new Error(`Trial ${index + 1} must be an object.`);
     }
-    const { config, language, reference, transcript } = trial;
+    const { config, language, prompt_id: promptId, reference, transcript } = trial;
     if (typeof config !== "string" || !config.trim()
       || !["Hindi", "Hinglish", "English"].includes(language)
+      || typeof promptId !== "string" || !promptId.trim()
       || typeof reference !== "string" || !words(reference).length
       || (transcript !== null && typeof transcript !== "string")) {
-      throw new Error(`Trial ${index + 1} needs config, language, nonempty reference, and transcript (string or null).`);
+      throw new Error(`Trial ${index + 1} needs config, language, prompt_id, nonempty reference, and transcript (string or null).`);
     }
+    const promptKey = JSON.stringify([language, promptId.trim()]);
+    const normalizedReference = words(reference).join(" ");
+    if (promptReferences.has(promptKey) && promptReferences.get(promptKey) !== normalizedReference) {
+      throw new Error(`Trial ${index + 1} has a different reference for prompt_id ${promptId.trim()} in ${language}.`);
+    }
+    promptReferences.set(promptKey, normalizedReference);
     const key = JSON.stringify([config.trim(), language]);
     if (!groups.has(key)) groups.set(key, {
       config: config.trim(), language, attempts: 0, failures: 0, scored: 0,
       errors: 0, reference_words: 0, all_attempts_errors: 0, all_attempts_reference_words: 0,
+      prompts: new Set(),
     });
     const group = groups.get(key);
     const referenceWords = words(reference);
+    group.prompts.add(promptId.trim());
     group.attempts += 1;
     group.all_attempts_reference_words += referenceWords.length;
     if (!transcript || !words(transcript).length) {
@@ -59,6 +69,7 @@ function score(trials) {
   return [...groups.values()].sort((a, b) => a.config.localeCompare(b.config) || a.language.localeCompare(b.language))
     .map((group) => ({
       ...group,
+      prompt_count: group.prompts.size,
       wer: group.reference_words ? Number((group.errors / group.reference_words).toFixed(4)) : null,
       all_attempts_wer: Number((group.all_attempts_errors / group.all_attempts_reference_words).toFixed(4)),
     }));

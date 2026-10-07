@@ -1004,3 +1004,8 @@
 - Added English, Hindi, and Hinglish summaries of Article 51's State endeavours on international peace and security, relations between nations, international law and treaty obligations, and arbitration. The note does not assess particular foreign-policy decisions or disputes. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-07.
 - Added one constructed retrieval example per language and included the note in all three broad corpus queries.
 - Verification: corpus loads with 45 unique notes; the 168-example retrieval evaluation reports 100% exact match, 100% supported recall@3, zero unsupported false positives, and 100% exact match in English, Hindi, and Hinglish. These constructed prompts do not measure real learner or speech performance. `git diff --check` passed.
+
+## Keep STT comparison prompts identifiable - 2026-10-07
+
+- The local STT scorer now requires a `prompt_id` for each attempt, rejects a changed normalized reference under the same language and prompt ID, and reports distinct prompt counts for each configuration and language. The run sheet shows how to reuse an ID for repeated attempts. Counts alone do not establish that two configurations used the same full prompt set.
+- Verification: `node --check evals/score_stt.js`, a synthetic local scorer invocation with one successful and one failed transcript, a mismatched-reference rejection, and `git diff --check` passed. No real speech or browser behavior was measured. Python is unavailable in this task environment, so no retrieval change or Python check was made.
