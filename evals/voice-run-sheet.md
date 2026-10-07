@@ -113,6 +113,7 @@ Run these checks in a browser with speech playback available. Use the same brows
 11. Start a quiz, press **Stop** while it is preparing, then immediately start a quiz again. Record whether the quiz button stays disabled until the second request finishes, even if the canceled first request settles during it. If both requests finish too quickly to overlap, mark this case unavailable.
 12. Trigger a browser recognition error, such as denying microphone permission, before a final transcript. Check that **Speak** becomes available again without waiting for an end event, the status explains the error, and diagnostics count exactly one failed attempt. Mark unavailable if the browser does not expose this event order.
 13. With server transcription configured, start **Record** and press **Cancel** while microphone permission is pending. If the browser permission prompt remains open, resolve it and check that capture does not start. Repeat after stopping a short self-authored recording while transcription is pending; press **Cancel** and check that a late transcript does not change the question box. Mark unavailable if either pending stage ends before Cancel can be pressed.
+14. Submit a quiz answer, type a revised draft while scoring is pending, then press **Stop**. Check that the revised draft stays in the input box and can be submitted. If scoring finishes before the edit, mark unavailable. If a scoring error occurs during a separate attempt, check that it also keeps a draft already typed into the box.
 
 | Case | Attempts | Passes | Failures / unavailable | Browser event or visible symptom |
 | --- | ---: | ---: | ---: | --- |
@@ -129,6 +130,7 @@ Run these checks in a browser with speech playback available. Use the same brows
 | Edit the question during recording or transcription | | | | |
 | Interrupt streamed speech, then start a new turn | | | | |
 | Stop and restart quiz preparation | | | | |
+| Edit quiz answer while scoring, then stop | | | | |
 
 For each attempt, add one row below before summarizing the totals above. Keep the browser, device, language, and answer fixed across repetitions; if any setting changes, start a separate run sheet. Use the visible browser status or event as the observation, and mark unsupported browser behavior as unavailable rather than pass or fail.
 

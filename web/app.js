@@ -385,7 +385,7 @@ function stopTutor() {
   activeRequest = null;
   if (quizSession?.pendingAnswer && !quizSession.awaitingAnswer) {
     quizSession.awaitingAnswer = true;
-    input.value = quizSession.pendingAnswer;
+    if (!input.value.trim()) input.value = quizSession.pendingAnswer;
     quizSession.pendingAnswer = "";
   }
   if (quizSession && !quizSession.awaitingAnswer) nextQuestionButton.hidden = false;
@@ -1108,7 +1108,7 @@ async function submitQuizAnswer(answer) {
     if (requestTurn === turn) {
       quizSession.awaitingAnswer = true;
       quizSession.pendingAnswer = "";
-      input.value = answer;
+      if (!input.value.trim()) input.value = answer;
       addMessage("assistant", error.message);
       statusLine.textContent = "Scoring failed. You can try submitting the answer again.";
       input.focus();

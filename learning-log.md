@@ -1026,3 +1026,9 @@
 
 - The model agent now sends quiz and progress tools only when the current question matches the existing quiz or revision cues. Ordinary explanation turns omit tool schemas and tool-specific instructions; the offline tutor shares the same intent patterns. This reduces accidental tool calls on study questions.
 - Updated the README, including a stale corpus limitation that incorrectly said Articles 43A and 43B were missing.
+
+## Preserve quiz answer edits during scoring - 2026-10-07
+
+- When quiz scoring is stopped or fails, the submitted answer returns to the input box only if it is empty. A new draft typed while scoring is pending now stays in place for review or retry.
+- Added a browser run-sheet case for editing during scoring and stopping before the score arrives.
+- Verification: JavaScript syntax and whitespace checks passed. The timing of real browser edits and server scoring remains unverified on a device.
