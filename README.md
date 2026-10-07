@@ -121,6 +121,8 @@ This project is planned as an end-to-end application counterpart to the author's
 
 The intended story is to pair multilingual speech infrastructure work with a separately built, evaluated conversational tutor. That story is a direction for the portfolio, not a claim that this app or its voice benchmarks are complete.
 
+Use [DEMO_SCRIPT.md](DEMO_SCRIPT.md) as a truthful recording outline; it separates the local offline walkthrough from optional model-mode demonstrations and lists checks to complete before filming.
+
 ## Development notes
 
 - Keep provider credentials on the server and out of Git.

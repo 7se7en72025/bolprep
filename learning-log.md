@@ -1080,3 +1080,8 @@
 
 - In Chrome, submitted a typed Article 14 question to the offline tutor. The cited answer appeared and the status reported browser speech starting after 1.42 seconds.
 - This confirms the browser `speechSynthesis` start event for that attempt, not that sound was audible or intelligible. The browser session was interrupted before completion; no microphone or model API was used.
+
+## Prepare a truthful portfolio demo outline - 2026-10-08
+
+- Added a recording outline for the reproducible offline tutor, browser speech, local quiz/progress, interruption checks, and diagnostics. It separates optional model-mode demonstrations and calls out provider cancellation, browser support, and measured-quality limitations.
+- Linked the outline from the README. No video was recorded; the steps remain subject to the browser run sheet and actual device availability.
