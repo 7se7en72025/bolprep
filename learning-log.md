@@ -859,3 +859,8 @@
 - Stopping a pending quiz start now makes the quiz button available immediately. A canceled quiz request can no longer re-enable that button while a newer quiz start is still pending.
 - Added a manual run-sheet case for stopping and restarting quiz preparation quickly.
 - Verification: `node --check web/app.js` and `git diff --check` passed. The request-order race was not exercised in a browser or on a device; no provider call or test suite was used.
+
+## Keep streamed speech completion scoped to its request - 2026-10-07
+
+- Streamed speech now checks its own queued audio sources when deciding whether playback has finished. Audio scheduled by another turn cannot hold up completion of an earlier request.
+- Verification: JavaScript syntax and whitespace checks passed. The overlap timing was not exercised in a browser; no provider call or recording was used.

@@ -732,7 +732,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
     if (pending.length) throw new Error("The speech stream ended on an incomplete audio sample.");
     if (!audioChunks) throw new Error("The speech provider returned no audio.");
     streamFinished = true;
-    if (scheduledSpeechSources.size === 0) resolvePlayback();
+    if (requestSources.size === 0) resolvePlayback();
     await playbackDone;
     if (requestSpeechTurn !== speechTurn) return;
     const endedAt = performance.now();
