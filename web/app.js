@@ -923,6 +923,7 @@ async function startQuiz() {
     if (!response.ok) throw new Error(payload.error || "Could not start the quiz.");
     if (requestTurn !== turn) return;
     quizSession = { quizId: payload.quiz_id, questions: payload.questions, index: 0, results: [], awaitingAnswer: false };
+    input.value = "";
     showQuizQuestion();
   } catch (error) {
     if (requestTurn === turn) {
@@ -991,6 +992,7 @@ async function submitQuizAnswer(answer) {
       quizSession = null;
       sendLabel.textContent = "Ask tutor";
       inputLabel.textContent = "Your question";
+      input.maxLength = 1200;
       input.placeholder = "Type a question… e.g. Right to Equality kya hai?";
       statusLine.textContent = `Quiz complete: ${completeCount} of ${totalQuestions} answers covered the rubric. Results are saved for this browser.`;
       speak(feedback, statusLine.textContent);

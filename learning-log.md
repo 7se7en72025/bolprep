@@ -890,3 +890,8 @@
 
 - A browser recognition error now ends the listening state immediately and counts the failed attempt once, even if the browser sends no later end event. An error after a final transcript leaves that transcript and ready status intact.
 - Verification: JavaScript syntax and whitespace checks passed. The error/end event order still needs a browser and device check; no microphone or provider request was used.
+
+## Reset the question box at quiz transitions - 2026-10-07
+
+- A replacement quiz clears the previous answer draft only after the new quiz starts successfully. A failed or canceled start keeps the old quiz and draft available. Completing the last quiz answer restores the ordinary 1200-character question limit.
+- Verification: `node --check web/app.js` and `git diff --check` passed. The quiz transition still needs a browser interaction check; no microphone, provider request, or test suite was used.
