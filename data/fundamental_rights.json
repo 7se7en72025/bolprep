@@ -1053,5 +1053,25 @@
       "section": "Part IV, Article 47",
       "checked_on": "2026-10-07"
     }
+  },
+  {
+    "id": "article-48",
+    "title": "Article 48 - agriculture and animal husbandry",
+    "title_hi": "अनुच्छेद 48 - कृषि और पशुपालन",
+    "title_hinglish": "Article 48 - agriculture aur animal husbandry",
+    "summary": "Article 48 says the State shall endeavour to organise agriculture and animal husbandry on modern and scientific lines. It also calls for steps to preserve and improve specified cattle breeds and prohibit the slaughter of cows, calves, and other milch and draught cattle. This note summarizes the constitutional text and does not explain a particular law or policy.",
+    "summary_hi": "अनुच्छेद 48 कहता है कि राज्य कृषि और पशुपालन को आधुनिक और वैज्ञानिक तरीकों से संगठित करने का प्रयास करेगा। यह कुछ प्रकार के मवेशियों की नस्लों के संरक्षण और सुधार तथा गायों, बछड़ों और अन्य दूध देने वाले और भारवाही मवेशियों के वध को रोकने के लिए कदम उठाने की भी बात करता है। यह नोट संवैधानिक पाठ का सार है; किसी विशेष कानून या नीति की व्याख्या नहीं करता।",
+    "summary_hinglish": "Article 48 kehta hai ki State agriculture aur animal husbandry ko modern aur scientific lines par organize karne ka endeavour karega. Yeh specified cattle breeds ko preserve aur improve karne, aur cows, calves, aur dusre milch aur draught cattle ke slaughter ko prohibit karne ke liye steps ki bhi baat karta hai. Yeh constitutional text ka summary hai; kisi specific law ya policy ko explain nahi karta.",
+    "keywords": [
+      "article 48", "agriculture", "animal husbandry", "modern scientific lines", "cattle breeds", "preserving breeds", "improving breeds", "milch cattle", "draught cattle", "cows", "calves", "directive principles", "part iv",
+      "anuchhed 48", "krishi", "pashupalan", "naslon ka sanrakshan", "gaay", "bachhde", "doodh dene wale pashu", "bhar dhone wale pashu",
+      "कृषि", "पशुपालन", "नस्लों का संरक्षण", "गाय", "बछड़े", "दूध देने वाले मवेशी", "भारवाही मवेशी"
+    ],
+    "source": {
+      "title": "The Constitution of India - Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part IV, Article 48",
+      "checked_on": "2026-10-07"
+    }
   }
 ]

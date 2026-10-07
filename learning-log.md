@@ -980,3 +980,9 @@
 - Added English, Hindi, and Hinglish summaries of Article 47's directions on nutrition, living standards, public health, and the stated medicinal-purpose exception. The note stays at constitutional-text scope and does not describe a particular policy or law. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-07.
 - Added one constructed retrieval example per language and included the note in all three broad corpus queries.
 - Verification: corpus loads with 41 unique notes; the 156-example retrieval evaluation reports 100% exact match, 100% supported recall@3, zero unsupported false positives, and 100% exact match in English, Hindi, and Hinglish. These constructed prompts do not measure real learner or speech performance. `git diff --check` passed.
+
+## Add Article 48 agriculture and animal-husbandry coverage - 2026-10-07
+
+- Added English, Hindi, and Hinglish summaries of Article 48 on agriculture, animal husbandry, cattle-breed preservation and improvement, and the text's specified slaughter prohibition. The note does not interpret a particular law or policy. Checked against the [Constitution of India published by the Legislative Department, Government of India](https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf), on 2026-10-07.
+- Added one constructed retrieval example per language and included the note in all three broad corpus queries.
+- Verification: corpus loads with 42 unique notes; the 159-example retrieval evaluation reports 100% exact match, 100% supported recall@3, zero unsupported false positives, and 100% exact match in English, Hindi, and Hinglish. These constructed prompts do not measure real learner or speech performance. `git diff --check` passed.
