@@ -16,7 +16,7 @@ from progress import (
     save_answer,
 )
 from quiz import score_answer, start_quiz
-from retrieval import retrieve
+from retrieval import retrieval_query, retrieve
 
 
 MAX_TOOL_CALLS = 6
@@ -245,7 +245,7 @@ def _offline_turn(
 
 def _retrieval_query(question: str, history: list[dict[str, str]]) -> str:
     prior_questions = [item["content"] for item in history if item["role"] == "user"][-4:]
-    return " ".join([*prior_questions, question.strip()])
+    return retrieval_query(question, prior_questions)
 
 
 def _source(document: dict[str, Any]) -> dict[str, str]:

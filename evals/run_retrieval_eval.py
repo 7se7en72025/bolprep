@@ -12,7 +12,7 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
-from retrieval import load_corpus, retrieve  # noqa: E402
+from retrieval import load_corpus, retrieval_query, retrieve  # noqa: E402
 
 
 DATASET_PATH = Path(__file__).with_name("retrieval_examples.json")
@@ -40,6 +40,13 @@ def evaluate(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
             or not isinstance(example["question"], str)
             or not isinstance(example["expected_doc_ids"], list)
             or not all(isinstance(doc_id, str) for doc_id in example["expected_doc_ids"])
+            or (
+                "history_questions" in example
+                and (
+                    not isinstance(example["history_questions"], list)
+                    or not all(isinstance(item, str) for item in example["history_questions"])
+                )
+            )
         ):
             raise ValueError("Retrieval evaluation example has invalid field types or a duplicate ID.")
         if (
@@ -60,7 +67,8 @@ def evaluate(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
         seen_ids.add(example["id"])
 
         expected = set(example["expected_doc_ids"])
-        actual = [document["id"] for document in retrieve(example["question"])]
+        query = retrieval_query(example["question"], example.get("history_questions", []))
+        actual = [document["id"] for document in retrieve(query)]
         actual_set = set(actual)
         if expected:
             matched = expected & actual_set
@@ -77,6 +85,8 @@ def evaluate(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
             "passed": passed,
             "retrieved_expected": sorted(matched),
         }
+        if example.get("history_questions"):
+            row["history_questions"] = example["history_questions"]
         rows.append(row)
         per_language[example["language"]].append(row)
 

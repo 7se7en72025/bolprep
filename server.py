@@ -13,7 +13,7 @@ from bolprep import api_is_configured, ask_model, offline_answer
 from agent import run_agent_turn
 from progress import ProgressConflict, clear_progress, create_quiz_run, ensure_session, get_progress, save_answer
 from quiz import score_answer, start_quiz
-from retrieval import load_corpus, retrieve
+from retrieval import load_corpus, retrieval_query, retrieve
 
 
 ROOT = Path(__file__).resolve().parent
@@ -137,7 +137,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
 
         try:
             prior_questions = [item["content"] for item in cleaned_history if item["role"] == "user"][-4:]
-            documents = retrieve(" ".join([*prior_questions, question.strip()]))
+            documents = retrieve(retrieval_query(question, prior_questions))
             if not documents:
                 answer = offline_answer([], language, question)
             elif api_is_configured():

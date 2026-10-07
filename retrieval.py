@@ -11,6 +11,11 @@ from typing import Any
 
 
 CORPUS_PATH = Path(__file__).resolve().parent / "data" / "fundamental_rights.json"
+ARTICLE_REFERENCE_PATTERN = re.compile(
+    r"(?:\b(?:article|art|anuchhed)\s*[-.]?\s*(?P<article_id>\d+[a-z]?)\b|"
+    r"\u0905\u0928\u0941\u091a\u094d\u091b\u0947\u0926\s*[-.]?\s*(?P<hindi_id>\d+[a-z]?)\b)",
+    re.IGNORECASE,
+)
 HINDI_STOPWORDS = {
     "\u0905\u0927\u093f\u0915\u093e\u0930",
     "\u0905\u0928\u0941\u091a\u094d\u091b\u0947\u0926",
@@ -43,6 +48,14 @@ def _tokens(text: str) -> set[str]:
     if current:
         tokens.add("".join(current))
     return {token for token in tokens if token not in STOPWORDS and len(token) > 1}
+
+
+def retrieval_query(question: str, prior_questions: list[str]) -> str:
+    """Prioritize an explicit article reference in the current question."""
+    current_question = question.strip()
+    if ARTICLE_REFERENCE_PATTERN.search(current_question):
+        return current_question
+    return " ".join([*prior_questions[-4:], current_question])
 
 
 def load_corpus(path: Path = CORPUS_PATH) -> list[dict[str, Any]]:
@@ -116,11 +129,7 @@ def retrieve(question: str, limit: int | None = None) -> list[dict[str, Any]]:
         and not token.isdigit()
     }
     normalized_question = question.casefold()
-    article_reference = re.search(
-        r"(?:\b(?:article|art|anuchhed)\s*[-.]?\s*(?P<article_id>\d+[a-z]?)\b|\u0905\u0928\u0941\u091a\u094d\u091b\u0947\u0926\s*[-.]?\s*(?P<hindi_id>\d+[a-z]?)\b)",
-        question,
-        re.IGNORECASE,
-    )
+    article_reference = ARTICLE_REFERENCE_PATTERN.search(question)
     documents = load_corpus()
     if article_reference:
         article_id = (article_reference.group("article_id") or article_reference.group("hindi_id")).casefold()

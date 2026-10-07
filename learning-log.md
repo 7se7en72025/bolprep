@@ -1,5 +1,10 @@
 # Learning log
 
+## Prioritize article references from the current turn - 2026-10-07
+
+- The local and agent tutor routes combined older user questions with the current question before retrieval. If the earlier turn named a different article, that stale reference could win. An explicit article in the current question now scopes retrieval by itself; unreferenced follow-ups still include the last four user questions for context.
+- Verification: Python 3.11 syntax compilation passed; a focused retrieval probe selects Article 21 over earlier Article 14 context while retaining history for an unreferenced follow-up. The offline `/api/answer` route returned the Article 21 note and source for the same two-turn scenario. All 129 constructed retrieval examples passed (100% exact match and supported recall@3; 0% unsupported false positives), including three multi-turn cases. This does not measure real learner questions or live-model behavior.
+
 ## Ignore client resets while reading the next request - 2026-10-07
 
 - A local offline API smoke check passed, but the server printed a socket traceback when the HTTP client reset its keep-alive connection as the server waited for another request. The request handler now treats connection resets as a normal disconnect at the request loop as well as during response writes.
