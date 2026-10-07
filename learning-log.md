@@ -880,3 +880,8 @@
 - Stopping the tutor while waiting for **Next question** no longer makes the previous quiz question answerable again. A pending answer is restored only when its scoring request was interrupted.
 - Canceling or failing to start a replacement quiz restores **Next question** for the earlier quiz when it was between questions.
 - Verification: `node --check web/app.js` and `git diff --check` passed. The click and request timing still needs a browser check; no microphone, provider, or test suite was used.
+
+## Keep final browser transcripts during later interim events - 2026-10-07
+
+- Browser recognition now keeps the final transcript in the question box if a later result event contains only interim words. A new final result can still extend the final text. The first-final timing remains recorded once per listening attempt.
+- Verification: JavaScript syntax and whitespace checks passed. The late-event sequence still needs a browser and device check; no microphone, provider, or test suite was used.

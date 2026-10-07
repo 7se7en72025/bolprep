@@ -1207,6 +1207,7 @@ micButton.addEventListener("click", () => {
   window.speechSynthesis?.cancel();
   const run = ++recognitionRun;
   const capture = new SpeechRecognition();
+  let finalTranscript = "";
   recognition = capture;
   capture.lang = speechLanguage.value;
   capture.interimResults = true;
@@ -1224,9 +1225,12 @@ micButton.addEventListener("click", () => {
   };
   capture.onresult = (event) => {
     if (run !== recognitionRun || !recognitionListening) return;
-    let transcript = "";
+    const transcriptParts = [];
+    const finalParts = [];
     for (let i = 0; i < event.results.length; i += 1) {
-      transcript += event.results[i][0].transcript;
+      const part = event.results[i][0].transcript.trim();
+      if (part) transcriptParts.push(part);
+      if (event.results[i].isFinal && part) finalParts.push(part);
       if (event.results[i].isFinal && event.results[i][0].transcript.trim()
         && !recognitionHadFinalResult && recognitionStartedAt !== null) {
         recognitionHadFinalResult = true;
@@ -1238,7 +1242,8 @@ micButton.addEventListener("click", () => {
           + recognitionTimingSummary(capture.lang);
       }
     }
-    input.value = transcript.trim();
+    if (finalParts.length) finalTranscript = finalParts.join(" ");
+    input.value = finalTranscript || transcriptParts.join(" ");
   };
   capture.onerror = (event) => {
     if (run === recognitionRun && recognitionListening && !recognitionHadFinalResult) {
