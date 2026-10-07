@@ -832,3 +832,8 @@
 
 - Added a manual STT run-sheet case for changing the language selector during a recorded clip. It checks that the language captured at recording start remains the status and transcription language, in both Hindi-to-English and English-to-Hindi directions.
 - Verification: confirmed the run-sheet describes the client behavior that captures `speechLanguage.value` before recording begins; `git diff --check` passed. No recording or provider request was made, so device/provider behavior remains unverified.
+
+## Preserve manual edits during browser recognition - 2026-10-07
+
+- Editing the question box while browser recognition is active now stops listening. This prevents a later recognition result from replacing the user's corrected question or quiz answer.
+- Verification: `node --check web/app.js` and `git diff --check` passed. Added a manual run-sheet case for editing during capture; browser and device event timing remains unverified. No recording or provider request was used.

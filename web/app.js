@@ -1125,6 +1125,11 @@ if (SpeechRecognition) {
 }
 
 updateMicrophoneButton(false);
+input.addEventListener("input", () => {
+  if (!recognitionListening) return;
+  stopRecognition();
+  statusLine.textContent = "Voice input stopped so your edit stays in the question box. Review it, then ask.";
+});
 micButton.addEventListener("click", () => {
   if (!recognitionAvailable) return;
   if (recognitionListening) {

@@ -89,6 +89,7 @@ Run these checks in a browser with speech playback available. Use the same brows
 5. While an answer is still speaking, submit a typed follow-up. Record whether playback stops as the new request starts and does not resume while the tutor is thinking.
 6. Start microphone capture, press **Stop**, then start a fresh capture and speak a different question. Record whether any late result from the stopped capture changes the fresh transcript or status. If the browser does not deliver delayed recognition events, mark this case unavailable rather than assuming stale-event handling passed.
 7. With experimental streamed speech enabled, start a tutor answer and press **Stop** while its audio is arriving or playing. Start a new answer immediately. Record whether the old audio stops and stays stopped, with no late chunk playing over the new turn. Note the selected streamed voice; each attempt may incur API usage. If no API key or supported audio browser is available, mark this case unavailable.
+8. Start **Speak**, then edit the question box before recognition finishes. Record whether listening stops, your edit remains in the box, and a late recognition result leaves it unchanged. If recognition ends before you can edit, mark the attempt unavailable.
 
 | Case | Attempts | Passes | Failures / unavailable | Browser event or visible symptom |
 | --- | ---: | ---: | ---: | --- |
@@ -99,6 +100,7 @@ Run these checks in a browser with speech playback available. Use the same brows
 | Submit typed follow-up during playback | | | | |
 | Submit typed quiz answer during prompt or feedback playback | | | | |
 | Stop and restart microphone capture | | | | |
+| Edit the question during microphone capture | | | | |
 | Interrupt streamed speech, then start a new turn | | | | |
 
 For each attempt, add one row below before summarizing the totals above. Keep the browser, device, language, and answer fixed across repetitions; if any setting changes, start a separate run sheet. Use the visible browser status or event as the observation, and mark unsupported browser behavior as unavailable rather than pass or fail.
