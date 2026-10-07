@@ -70,6 +70,11 @@ TOOLS: list[dict[str, Any]] = [
     },
 ]
 
+QUIZ_INTENT = re.compile(r"\b(quiz|test|viva)\b|\u0915\u094d\u0935\u093f\u091c")
+REVISION_INTENT = re.compile(
+    r"\b(revis(e|ion)|weak|practice more|what should i study)\b|\u0915\u092e\u091c\u094b\u0930|\u0926\u094b\u0939\u0930\u093e"
+)
+
 
 def run_agent_turn(
     question: str,
@@ -98,10 +103,15 @@ def run_agent_turn(
         for document in documents
     ) or "No checked study note matched this turn. Do not answer factual study questions from memory."
     instructions = (
-        f"{INSTRUCTIONS} You may use start_quiz to start a quiz, score_answer to score an answer "
-        "with the server's fixed rubric, and get_weak_topics to read this browser session's saved results. "
-        "Never claim a tool succeeded unless its result says ok."
+        INSTRUCTIONS
     )
+    tools_requested = _has_tool_intent(question)
+    if tools_requested:
+        instructions = (
+            f"{instructions} You may use start_quiz to start a quiz, score_answer to score an answer "
+            "with the server's fixed rubric, and get_weak_topics to read this browser session's saved results. "
+            "Never claim a tool succeeded unless its result says ok."
+        )
     input_items: list[Any] = [
         *history,
         {"role": "user", "content": f"{question.strip()}\n\nChecked study notes:\n{evidence}"},
@@ -111,9 +121,10 @@ def run_agent_turn(
             "model": os.getenv("OPENAI_MODEL", "gpt-6-astra"),
             "instructions": instructions,
             "input": input_items,
-            "tools": TOOLS,
-            "parallel_tool_calls": False,
         }
+        if tools_requested:
+            request["tools"] = TOOLS
+            request["parallel_tool_calls"] = False
         if on_text_delta is None:
             return responses_client.create(**request)
         return _stream_response(responses_client, request, on_text_delta)
@@ -242,8 +253,8 @@ def _offline_turn(
 ) -> dict[str, Any]:
     tool_events: list[dict[str, Any]] = []
     normalized = question.casefold()
-    quiz_intent = re.search(r"\b(quiz|test|viva)\b|\u0915\u094d\u0935\u093f\u091c", normalized)
-    revision_intent = re.search(r"\b(revis(e|ion)|weak|practice more|what should i study)\b|\u0915\u092e\u091c\u094b\u0930|\u0926\u094b\u0939\u0930\u093e", normalized)
+    quiz_intent = QUIZ_INTENT.search(normalized)
+    revision_intent = REVISION_INTENT.search(normalized)
     if quiz_intent:
         quiz = start_quiz(language=language)
         quiz_id = str(uuid.uuid4())
@@ -267,6 +278,11 @@ def _offline_turn(
         "tool_events": tool_events,
         "mode": "offline",
     }
+
+
+def _has_tool_intent(question: str) -> bool:
+    normalized = question.casefold()
+    return bool(QUIZ_INTENT.search(normalized) or REVISION_INTENT.search(normalized))
 
 
 def _retrieval_query(question: str, history: list[dict[str, str]]) -> str:

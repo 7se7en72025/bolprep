@@ -1020,3 +1020,9 @@
 
 - Extended the local STT scorer to report whether configurations for each language use the same prompt IDs and the same number of attempts per prompt. It reports the common prompt count and leaves comparison flags null when only one configuration is present; this makes mismatched comparison inputs visible without claiming a quality result.
 - Updated the run sheet and README with the new fields and interpretation.
+
+
+## Limit Responses tools to quiz and revision intent - 2026-10-07
+
+- The model agent now sends quiz and progress tools only when the current question matches the existing quiz or revision cues. Ordinary explanation turns omit tool schemas and tool-specific instructions; the offline tutor shares the same intent patterns. This reduces accidental tool calls on study questions.
+- Updated the README, including a stale corpus limitation that incorrectly said Articles 43A and 43B were missing.
