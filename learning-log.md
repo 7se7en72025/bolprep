@@ -1,5 +1,10 @@
 # Learning log
 
+## Count empty STT attempts in comparison WER - 2026-10-07
+
+- The local STT scorer now reports `all_attempts_wer` alongside success-only `wer`. A failed or empty transcript contributes one deletion per reference word, so a configuration with many failures cannot appear strong based only on its successful transcripts. Failure counts remain separate.
+- Verification: JavaScript syntax, a synthetic two-attempt scoring probe, and `git diff --check` passed. No real speech, browser, or provider evaluation was run; these numbers are only a scorer check.
+
 ## Prioritize article references from the current turn - 2026-10-07
 
 - The local and agent tutor routes combined older user questions with the current question before retrieval. If the earlier turn named a different article, that stale reference could win. An explicit article in the current question now scopes retrieval by itself; unreferenced follow-ups still include the last four user questions for context.

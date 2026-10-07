@@ -37,20 +37,31 @@ function score(trials) {
       throw new Error(`Trial ${index + 1} needs config, language, nonempty reference, and transcript (string or null).`);
     }
     const key = JSON.stringify([config.trim(), language]);
-    if (!groups.has(key)) groups.set(key, { config: config.trim(), language, attempts: 0, failures: 0, scored: 0, errors: 0, reference_words: 0 });
+    if (!groups.has(key)) groups.set(key, {
+      config: config.trim(), language, attempts: 0, failures: 0, scored: 0,
+      errors: 0, reference_words: 0, all_attempts_errors: 0, all_attempts_reference_words: 0,
+    });
     const group = groups.get(key);
+    const referenceWords = words(reference);
     group.attempts += 1;
+    group.all_attempts_reference_words += referenceWords.length;
     if (!transcript || !words(transcript).length) {
       group.failures += 1;
+      group.all_attempts_errors += referenceWords.length;
       continue;
     }
-    const referenceWords = words(reference);
+    const wordErrors = editDistance(referenceWords, words(transcript));
     group.scored += 1;
     group.reference_words += referenceWords.length;
-    group.errors += editDistance(referenceWords, words(transcript));
+    group.errors += wordErrors;
+    group.all_attempts_errors += wordErrors;
   }
   return [...groups.values()].sort((a, b) => a.config.localeCompare(b.config) || a.language.localeCompare(b.language))
-    .map((group) => ({ ...group, wer: group.reference_words ? Number((group.errors / group.reference_words).toFixed(4)) : null }));
+    .map((group) => ({
+      ...group,
+      wer: group.reference_words ? Number((group.errors / group.reference_words).toFixed(4)) : null,
+      all_attempts_wer: Number((group.all_attempts_errors / group.all_attempts_reference_words).toFixed(4)),
+    }));
 }
 
 if (process.argv.length !== 3) {
