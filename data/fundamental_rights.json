@@ -1093,5 +1093,25 @@
       "section": "Part IV, Article 49",
       "checked_on": "2026-10-07"
     }
+  },
+  {
+    "id": "article-50",
+    "title": "Article 50 - separation of judiciary and executive",
+    "title_hi": "अनुच्छेद 50 - न्यायपालिका और कार्यपालिका का पृथक्करण",
+    "title_hinglish": "Article 50 - judiciary aur executive ka separation",
+    "summary": "Article 50 directs the State to take steps to separate the judiciary from the executive in the public services of the State. This note summarizes the constitutional text and does not describe a particular administrative structure or legal interpretation.",
+    "summary_hi": "अनुच्छेद 50 राज्य को अपनी सार्वजनिक सेवाओं में न्यायपालिका को कार्यपालिका से अलग करने के लिए कदम उठाने का निर्देश देता है। यह नोट संवैधानिक पाठ का सार है; किसी विशेष प्रशासनिक संरचना या कानूनी व्याख्या का विवरण नहीं देता।",
+    "summary_hinglish": "Article 50 State ko apni public services mein judiciary ko executive se alag karne ke liye steps lene ko direct karta hai. Yeh constitutional text ka summary hai; kisi specific administrative structure ya legal interpretation ka detail nahi deta.",
+    "keywords": [
+      "article 50", "separation of judiciary", "separation of executive", "judiciary", "executive", "public services", "directive principles", "part iv",
+      "anuchhed 50", "nyayapalika", "karyapalika", "alag karna", "public seva",
+      "न्यायपालिका", "कार्यपालिका", "पृथक्करण", "अलग करना", "सार्वजनिक सेवाएं"
+    ],
+    "source": {
+      "title": "The Constitution of India - Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part IV, Article 50",
+      "checked_on": "2026-10-07"
+    }
   }
 ]
