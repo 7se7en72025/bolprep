@@ -65,11 +65,14 @@ let recognitionHadFinalResult = false;
 let pendingQuestion = null;
 let matchingSpeechVoices = [];
 let streamingTtsAvailable = false;
+let modelModeAvailable = false;
 let activeSpeechController = null;
 let speechAudioContext = null;
 const scheduledSpeechSources = new Set();
 const speechSamples = [];
 const speechFailures = [];
+const modelStreamSamples = [];
+const modelStreamFailures = [];
 const recognitionSamples = [];
 const recognitionFailures = [];
 const recordedTranscriptionSamples = [];
@@ -591,14 +594,40 @@ function buildSpeechDiagnostics() {
       failure_reasons: group.failure_reasons,
       upload_to_result: percentiles(group.completed.map((sample) => sample.elapsedMs)),
     }));
+  const modelStreamGroups = new Map();
+  const getModelStreamGroup = (language) => {
+    if (!modelStreamGroups.has(language)) {
+      modelStreamGroups.set(language, { language, completed: [], failures: 0, cancellations: 0 });
+    }
+    return modelStreamGroups.get(language);
+  };
+  modelStreamSamples.forEach((sample) => getModelStreamGroup(sample.language).completed.push(sample));
+  modelStreamFailures.forEach((sample) => {
+    const group = getModelStreamGroup(sample.language);
+    if (sample.reason === "cancelled") group.cancellations += 1;
+    else group.failures += 1;
+  });
+  const modelStreams = [...modelStreamGroups.values()]
+    .sort((left, right) => left.language.localeCompare(right.language))
+    .map((group) => ({
+      language: group.language,
+      completed_count: group.completed.length,
+      failure_count: group.failures,
+      cancellation_count: group.cancellations,
+      time_to_first_text: percentiles(group.completed
+        .filter((sample) => sample.firstTextMs !== null)
+        .map((sample) => sample.firstTextMs)),
+      total_response_duration: percentiles(group.completed.map((sample) => sample.totalMs)),
+    }));
   return {
-    schema_version: 2,
+    schema_version: 3,
     generated_at_utc: new Date().toISOString(),
     scope: "Current page only",
     privacy: "Timing and failure categories only; no transcript text or audio.",
     tts,
     stt,
     recorded_stt: recordedStt,
+    model_streams: modelStreams,
   };
 }
 
@@ -885,6 +914,9 @@ async function sendQuestion(question) {
   activeRequest?.abort();
   activeRequest = new AbortController();
   const controller = activeRequest;
+  const requestLanguage = speechLanguage.value;
+  const requestStartedAt = performance.now();
+  let firstTextMs = null;
   pendingQuestion = question;
   sendButton.disabled = true;
   statusLine.textContent = "Thinking…";
@@ -894,15 +926,24 @@ async function sendQuestion(question) {
     const response = await fetch("/api/agent/turn", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question, history: history.slice(-20), language: speechLanguage.value }),
+      body: JSON.stringify({ question, history: history.slice(-20), language: requestLanguage }),
       signal: controller.signal,
     });
     const payload = await readAgentStream(response, (delta) => {
       if (requestTurn !== turn) return;
+      if (firstTextMs === null) firstTextMs = performance.now() - requestStartedAt;
       if (!activePartialMessage) activePartialMessage = addMessage("assistant", "");
       activePartialMessage.querySelector("p").textContent += delta;
       statusLine.textContent = "Tutor is answering…";
     });
+    if (payload.mode === "model") {
+      modelStreamSamples.push({
+        language: requestLanguage,
+        firstTextMs,
+        totalMs: performance.now() - requestStartedAt,
+      });
+      if (modelStreamSamples.length > 500) modelStreamSamples.shift();
+    }
     if (requestTurn !== turn) return;
     activePartialMessage?.remove();
     activePartialMessage = null;
@@ -931,6 +972,13 @@ async function sendQuestion(question) {
       speak(payload.answer);
     }
   } catch (error) {
+    if (modelModeAvailable) {
+      modelStreamFailures.push({
+        language: requestLanguage,
+        reason: error.name === "AbortError" ? "cancelled" : "failed",
+      });
+      if (modelStreamFailures.length > 500) modelStreamFailures.shift();
+    }
     if (error.name !== "AbortError" && requestTurn === turn) {
       activePartialMessage?.remove();
       activePartialMessage = null;
@@ -1344,6 +1392,7 @@ serverTranscribeButton.addEventListener("click", () => {
 
 fetch("/health").then((response) => response.json()).then((health) => {
   const mode = health.mode === "model" ? "Model answers enabled" : "Offline practice mode";
+  modelModeAvailable = health.mode === "model";
   streamingTtsAvailable = Boolean(health.streaming_tts);
   streamedTtsOption.disabled = !streamingTtsAvailable;
   streamedTtsVoice.disabled = !streamingTtsAvailable || !streamedTtsOption.checked;

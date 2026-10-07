@@ -945,3 +945,9 @@
 - Model-mode tutor turns now stream Responses API text deltas over a chunked NDJSON response, and the browser renders partial text while generation continues. The final event supplies the completed answer, sources, and tool results; offline mode still sends a single completed result. Stopping removes partial text and closes the local consumer stream, but provider-side cancellation is not claimed.
 - Added a manual model-stream check to the voice run sheet. The live provider/browser behavior remains unverified because no API request or browser microphone session was used.
 - Verification: `py_compile` for the changed Python modules, `node --check web/app.js`, and an offline HTTP smoke check are recorded with this change; `git diff --check` passed.
+
+## Measure streamed model response latency - 2026-10-07
+
+- Speech diagnostics now group model-mode turns by selected language and export browser request-to-first-text and total request-to-completion p50/p95, completed counts, failures, and cancellations. Offline turns are excluded; partial/complete answer text is never stored in the metrics. Each page retains at most 500 timing samples and 500 failure/cancellation records until reload.
+- Updated the manual voice run sheet and diagnostic privacy copy. These fields are measurement instrumentation only; no real model runs have been collected.
+- Verification: `node --check web/app.js`, Python syntax checks from the streaming-text change, an offline HTTP smoke check, and `git diff --check` passed.
