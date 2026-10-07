@@ -1054,3 +1054,9 @@
 
 - The Windows launcher now checks that `.venv` can start Python 3.11 or later. If it is missing, broken, or older, the launcher rebuilds the repository-local environment with the selected supported Python before installing dependencies. It refuses to clear a linked `.venv` directory.
 - Verification: the PowerShell script parser accepted the launcher; the existing Python 3.11.9 environment reused successfully, dependencies were already satisfied, `/health` returned offline mode with 47 notes, and the home page and `app.js` returned HTTP 200. The broken-environment reset branch was not exercised in this run.
+
+## Restore the composer after unconfirmed browser speech - 2026-10-08
+
+- Browser recognition now restores the text present before listening when an attempt errors or ends without a final transcript. Interim words remain visible while listening, but cannot be mistaken for a confirmed transcript after that attempt fails. A final transcript remains available for review.
+- Added a browser run-sheet case for interim words followed by an error or normal end without a final result.
+- Verification: JavaScript syntax and whitespace checks passed. Browser event ordering and microphone behavior still need a device check; no speech quality result is claimed.

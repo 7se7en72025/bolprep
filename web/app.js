@@ -1434,6 +1434,7 @@ micButton.addEventListener("click", () => {
   window.speechSynthesis?.cancel();
   const run = ++recognitionRun;
   const capture = new SpeechRecognition();
+  const inputBeforeListening = input.value;
   let finalTranscript = "";
   recognition = capture;
   capture.lang = speechLanguage.value;
@@ -1476,6 +1477,7 @@ micButton.addEventListener("click", () => {
     const hadFinalResult = recognitionHadFinalResult;
     stopRecognition();
     if (!hadFinalResult) {
+      input.value = inputBeforeListening;
       recognitionFailures.push({ language: capture.lang, reason: event.error || "unknown" });
       if (recognitionFailures.length > 500) recognitionFailures.shift();
       statusLine.textContent = `${recognitionErrorMessage(event.error)} ${recognitionTimingSummary(capture.lang)}`;
@@ -1487,10 +1489,11 @@ micButton.addEventListener("click", () => {
     recognitionListening = false;
     updateMicrophoneButton(false);
     if (wasListening && !recognitionHadFinalResult) {
+      input.value = inputBeforeListening;
       const language = capture.lang;
       recognitionFailures.push({ language, reason: "no-final-transcript" });
       if (recognitionFailures.length > 500) recognitionFailures.shift();
-      statusLine.textContent = `No final transcript was received. ${recognitionTimingSummary(language)}`;
+      statusLine.textContent = `No final transcript was received; partial words were discarded. Try again or type. ${recognitionTimingSummary(language)}`;
     }
   };
   recognitionListening = true;
