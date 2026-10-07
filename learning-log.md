@@ -1118,3 +1118,9 @@
 
 - Reviewed the note against the official text and filled in details that the first summary had compressed too far: abiding by the Constitution, rendering national service, brotherhood across diversity, renouncing practices derogatory to women, named environmental protections, and excellence across individual and collective activity. Updated the English, Hindi, and Hinglish summaries while keeping the no-legal-interpretation limit.
 - Retrieved Article 51A by direct article-reference questions in the previous focused check. This content edit does not change retrieval terms or the reported evaluation results.
+
+## Keep unconfirmed browser speech out of questions - 2026-10-08
+
+- The tutor Stop control, Escape, and a speech-language change now restore the question text from before listening when browser recognition has only interim words. A final transcript remains available for review. Editing the box still keeps the student's edit.
+- Submitting a question or quiz answer while only interim words are visible now waits for a final transcript, so an unconfirmed recognition result is not sent as the student's answer.
+- Added manual run-sheet checks for interim submission and each cancellation route. Browser recognition event ordering still needs device verification; no speech accuracy result is claimed.

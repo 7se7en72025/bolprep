@@ -177,7 +177,10 @@ function rememberTurn(userMessage, assistantMessage) {
   history.splice(0, Math.max(0, history.length - 20));
 }
 
-function stopRecognition() {
+function stopRecognition(restoreUnconfirmed = false) {
+  if (restoreUnconfirmed && recognitionListening && !recognitionHadFinalResult) {
+    input.value = recognitionOriginalInput;
+  }
   recognitionListening = false;
   updateMicrophoneButton(false);
   if (!recognition) return;
@@ -398,7 +401,7 @@ function stopTutor() {
     quizSession.pendingAnswer = "";
   }
   if (quizSession && !quizSession.awaitingAnswer) nextQuestionButton.hidden = false;
-  stopRecognition();
+  stopRecognition(true);
   serverRecordingStartCancelled = true;
   serverRecordingRun += 1;
   serverRecordingStarting = false;
@@ -1263,6 +1266,10 @@ async function submitQuizAnswer(answer) {
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
+  if (recognitionListening && !recognitionHadFinalResult) {
+    statusLine.textContent = "Wait for a final transcript, or stop listening and type your question before sending.";
+    return;
+  }
   const question = input.value.trim();
   if (!question || sendButton.disabled) return;
   if (question.length > input.maxLength) {
@@ -1424,8 +1431,8 @@ if (SpeechRecognition) {
   recognition = null;
   speechLanguage.addEventListener("change", () => {
     if (recognitionListening) {
-      stopRecognition();
-      statusLine.textContent = "Speech language changed. Tap Speak to start a new transcript.";
+      stopRecognition(true);
+      statusLine.textContent = "Speech language changed. Partial words were discarded; tap Speak to start a new transcript.";
     }
   });
 }
@@ -1452,8 +1459,7 @@ micButton.addEventListener("click", () => {
   if (!recognitionAvailable) return;
   if (recognitionListening) {
     const hadFinalResult = recognitionHadFinalResult;
-    stopRecognition();
-    if (!hadFinalResult) input.value = recognitionOriginalInput;
+    stopRecognition(true);
     statusLine.textContent = hadFinalResult
       ? "Listening stopped. Review the final transcript, then ask."
       : "Listening stopped. Partial words were discarded; your previous text is restored.";
