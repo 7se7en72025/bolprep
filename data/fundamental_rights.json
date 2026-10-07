@@ -1033,5 +1033,25 @@
       "section": "Part IV, Article 46",
       "checked_on": "2026-10-07"
     }
+  },
+  {
+    "id": "article-47",
+    "title": "Article 47 - nutrition, living standards, and public health",
+    "title_hi": "अनुच्छेद 47 - पोषण, जीवन स्तर और सार्वजनिक स्वास्थ्य",
+    "title_hinglish": "Article 47 - nutrition, living standard aur public health",
+    "summary": "Article 47 treats raising nutrition and living standards and improving public health as primary duties of the State. It also says the State shall endeavour to prohibit consumption of intoxicating drinks and health-injurious drugs, except for medicinal purposes. This note summarizes the constitutional text and does not describe a particular policy or law.",
+    "summary_hi": "अनुच्छेद 47 पोषण और जीवन स्तर बढ़ाने तथा सार्वजनिक स्वास्थ्य सुधारने को राज्य के प्राथमिक कर्तव्यों में रखता है। यह राज्य से चिकित्सा प्रयोजन को छोड़कर नशीले पेयों और स्वास्थ्य के लिए हानिकारक औषधियों के सेवन पर रोक लगाने का प्रयास करने को भी कहता है। यह नोट संवैधानिक पाठ का सार है; किसी विशेष नीति या कानून का विवरण नहीं देता।",
+    "summary_hinglish": "Article 47 nutrition aur living standards ko improve karne aur public health sudharne ko State ke primary duties mein rakhta hai. Yeh medicinal purpose ko chhodkar intoxicating drinks aur health ke liye harmful drugs ke consumption par rok lagane ka endeavour karne ko bhi kehta hai. Yeh constitutional text ka summary hai; kisi specific policy ya law ka detail nahi deta.",
+    "keywords": [
+      "article 47", "nutrition", "standard of living", "public health", "intoxicating drinks", "medicinal purposes", "injurious drugs", "directive principles", "part iv",
+      "anuchhed 47", "poshan", "jeevan star", "jan swasthya", "nashile pey", "chikitsa prayojan", "hanikarak dava", "nashile padarth",
+      "पोषण", "जीवन स्तर", "सार्वजनिक स्वास्थ्य", "नशीले पेय", "चिकित्सा प्रयोजन", "हानिकारक औषधियां", "स्वास्थ्य सुधार"
+    ],
+    "source": {
+      "title": "The Constitution of India - Legislative Department, Government of India",
+      "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+      "section": "Part IV, Article 47",
+      "checked_on": "2026-10-07"
+    }
   }
 ]
