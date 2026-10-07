@@ -1075,3 +1075,8 @@
 
 - The Escape shortcut now treats an active progressive browser-speech controller as work to stop, including the interval before its first sentence starts playing. The run sheet includes that timing window and a follow-up check.
 - Verification: JavaScript syntax and whitespace checks passed. The browser event timing and audible playback still need a device check; this does not establish speech quality or provider-side cancellation.
+
+## Observe browser speech start on an offline answer - 2026-10-08
+
+- In Chrome, submitted a typed Article 14 question to the offline tutor. The cited answer appeared and the status reported browser speech starting after 1.42 seconds.
+- This confirms the browser `speechSynthesis` start event for that attempt, not that sound was audible or intelligible. The browser session was interrupted before completion; no microphone or model API was used.
