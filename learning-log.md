@@ -885,3 +885,8 @@
 
 - Browser recognition now keeps the final transcript in the question box if a later result event contains only interim words. A new final result can still extend the final text. The first-final timing remains recorded once per listening attempt.
 - Verification: JavaScript syntax and whitespace checks passed. The late-event sequence still needs a browser and device check; no microphone, provider, or test suite was used.
+
+## Release browser voice input on recognition errors - 2026-10-07
+
+- A browser recognition error now ends the listening state immediately and counts the failed attempt once, even if the browser sends no later end event. An error after a final transcript leaves that transcript and ready status intact.
+- Verification: JavaScript syntax and whitespace checks passed. The error/end event order still needs a browser and device check; no microphone or provider request was used.

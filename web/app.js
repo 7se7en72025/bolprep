@@ -73,7 +73,6 @@ const recognitionSamples = [];
 const recognitionFailures = [];
 const recordedTranscriptionSamples = [];
 const recordedTranscriptionFailures = [];
-let recognitionLastError = null;
 let turn = 0;
 let speechTurn = 0;
 let progressRequestId = 0;
@@ -1220,7 +1219,6 @@ micButton.addEventListener("click", () => {
     updateMicrophoneButton(true);
     recognitionStartedAt = performance.now();
     recognitionHadFinalResult = false;
-    recognitionLastError = null;
     statusLine.textContent = "Listening… speak now.";
   };
   capture.onresult = (event) => {
@@ -1246,9 +1244,13 @@ micButton.addEventListener("click", () => {
     input.value = finalTranscript || transcriptParts.join(" ");
   };
   capture.onerror = (event) => {
-    if (run === recognitionRun && recognitionListening && !recognitionHadFinalResult) {
-      recognitionLastError = event.error;
-      statusLine.textContent = recognitionErrorMessage(event.error);
+    if (run !== recognitionRun || !recognitionListening) return;
+    const hadFinalResult = recognitionHadFinalResult;
+    stopRecognition();
+    if (!hadFinalResult) {
+      recognitionFailures.push({ language: capture.lang, reason: event.error || "unknown" });
+      if (recognitionFailures.length > 500) recognitionFailures.shift();
+      statusLine.textContent = `${recognitionErrorMessage(event.error)} ${recognitionTimingSummary(capture.lang)}`;
     }
   };
   capture.onend = () => {
@@ -1258,12 +1260,9 @@ micButton.addEventListener("click", () => {
     updateMicrophoneButton(false);
     if (wasListening && !recognitionHadFinalResult) {
       const language = capture.lang;
-      recognitionFailures.push({ language, reason: recognitionLastError || "no-final-transcript" });
+      recognitionFailures.push({ language, reason: "no-final-transcript" });
       if (recognitionFailures.length > 500) recognitionFailures.shift();
-      const reason = recognitionLastError
-        ? recognitionErrorMessage(recognitionLastError)
-        : "No final transcript was received.";
-      statusLine.textContent = `${reason} ${recognitionTimingSummary(language)}`;
+      statusLine.textContent = `No final transcript was received. ${recognitionTimingSummary(language)}`;
     }
   };
   recognitionListening = true;

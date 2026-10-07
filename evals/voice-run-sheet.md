@@ -99,6 +99,7 @@ Run these checks in a browser with speech playback available. Use the same brows
 9. If the browser provides an interim recognition result after a final transcript, check that the final words remain in the question box. Record the visible event order; mark unavailable if the browser never produces this order.
 10. With server transcription configured, start **Record** and type in the question box while recording. Repeat while the microphone permission prompt is open and while transcription is pending. Record whether capture or transcription stops, your edit remains, and no late transcript replaces it. Use a self-authored phrase; if the provider or browser path is unavailable, mark that case unavailable.
 11. Start a quiz, press **Stop** while it is preparing, then immediately start a quiz again. Record whether the quiz button stays disabled until the second request finishes, even if the canceled first request settles during it. If both requests finish too quickly to overlap, mark this case unavailable.
+12. Trigger a browser recognition error, such as denying microphone permission, before a final transcript. Check that **Speak** becomes available again without waiting for an end event, the status explains the error, and diagnostics count exactly one failed attempt. Mark unavailable if the browser does not expose this event order.
 
 | Case | Attempts | Passes | Failures / unavailable | Browser event or visible symptom |
 | --- | ---: | ---: | ---: | --- |
@@ -111,6 +112,7 @@ Run these checks in a browser with speech playback available. Use the same brows
 | Stop and restart microphone capture | | | | |
 | Edit the question during microphone capture | | | | |
 | Final transcript followed by interim recognition | | | | |
+| Recognition error before an end event | | | | |
 | Edit the question during recording or transcription | | | | |
 | Interrupt streamed speech, then start a new turn | | | | |
 | Stop and restart quiz preparation | | | | |
