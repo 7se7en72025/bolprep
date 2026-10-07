@@ -1,5 +1,10 @@
 # Learning log
 
+## Cancel pending recorded voice input from Record - 2026-10-07
+
+- The Record control now shows Cancel while microphone permission or server transcription is pending. Cancel invalidates the pending capture or aborts the request, so a late result cannot replace the question box; the separate Stop control still works.
+- Verification: JavaScript syntax and whitespace checks passed. The browser permission and provider timing still need the manual run-sheet check; no microphone recording or provider request was used.
+
 ## Count empty STT attempts in comparison WER - 2026-10-07
 
 - The local STT scorer now reports `all_attempts_wer` alongside success-only `wer`. A failed or empty transcript contributes one deletion per reference word, so a configuration with many failures cannot appear strong based only on its successful transcripts. Failure counts remain separate.

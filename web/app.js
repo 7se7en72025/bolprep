@@ -148,10 +148,12 @@ function stopRecognition() {
 function updateServerTranscribeButton(state = "idle") {
   serverTranscribeButton.hidden = !serverTranscriptionAvailable;
   const recording = state === "recording";
+  const cancelable = state === "starting" || state === "transcribing";
   serverTranscribeButton.disabled = !serverTranscriptionAvailable || state === "busy";
-  serverTranscribeButton.querySelector(".button-label").textContent = recording ? "Stop" : "Record";
+  serverTranscribeButton.querySelector(".button-label").textContent = recording ? "Stop" : cancelable ? "Cancel" : "Record";
   const label = recording
     ? "Stop recording and transcribe the question"
+    : cancelable ? "Cancel recording or transcription"
     : "Record a question for server transcription";
   serverTranscribeButton.setAttribute("aria-label", label);
   serverTranscribeButton.title = label;
@@ -181,7 +183,7 @@ async function startServerRecording() {
   serverRecordingStartCancelled = false;
   serverRecordingStarting = true;
   const recordingRun = ++serverRecordingRun;
-  updateServerTranscribeButton("busy");
+  updateServerTranscribeButton("starting");
   statusLine.textContent = "Allow microphone access, then ask a short question. Audio is sent for transcription when you stop.";
   let stream;
   try {
@@ -261,7 +263,7 @@ async function transcribeRecordedAudio(audio, language) {
   const startedAt = performance.now();
   const controller = new AbortController();
   activeTranscriptionController = controller;
-  updateServerTranscribeButton("busy");
+  updateServerTranscribeButton("transcribing");
   statusLine.textContent = `Transcribing in ${speechLanguageLabel(language)}. Review the text before asking.`;
   try {
     const response = await fetch("/api/transcribe", {
@@ -1286,6 +1288,11 @@ micButton.addEventListener("click", () => {
 });
 
 serverTranscribeButton.addEventListener("click", () => {
+  if (serverRecordingStarting || activeTranscriptionController) {
+    stopTutor();
+    statusLine.textContent = "Recording or transcription canceled. You can record again or type your question.";
+    return;
+  }
   if (activeMediaRecorder?.state === "recording") {
     stopServerRecording(false);
     return;
