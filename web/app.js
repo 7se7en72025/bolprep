@@ -80,6 +80,7 @@ const recordedTranscriptionSamples = [];
 const recordedTranscriptionFailures = [];
 let turn = 0;
 let speechTurn = 0;
+let activeProgressiveSpeech = null;
 let progressRequestId = 0;
 let quizSession = null;
 
@@ -132,7 +133,7 @@ function addMessage(role, text, sources = []) {
   return article;
 }
 
-async function readAgentStream(response, onTextDelta) {
+async function readAgentStream(response, onTextDelta, onSpeechMode) {
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
     throw new Error(error.error || "Tutor request failed.");
@@ -146,6 +147,7 @@ async function readAgentStream(response, onTextDelta) {
     if (!line.trim()) return;
     const event = JSON.parse(line);
     if (event.type === "delta" && typeof event.text === "string") onTextDelta(event.text);
+    else if (event.type === "speech_mode" && typeof event.progressive === "boolean") onSpeechMode?.(event.progressive);
     else if (event.type === "complete") payload = event.payload;
     else if (event.type === "error") throw new Error(event.error || "Tutor request failed.");
   }
@@ -360,6 +362,8 @@ function preserveInterruptedTurn() {
 
 function stopSpeechOutput() {
   speechTurn += 1;
+  activeProgressiveSpeech?.cancel();
+  activeProgressiveSpeech = null;
   window.speechSynthesis?.cancel();
   activeSpeechController?.abort();
   activeSpeechController = null;
@@ -895,6 +899,106 @@ function speakWithBrowser(text, completionText = "Ready when you are.", kind = "
   });
 }
 
+function createProgressiveBrowserSpeech(completionText = "Answer ready.") {
+  if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) return null;
+  const requestSpeechTurn = speechTurn;
+  const queuedAt = performance.now();
+  const language = speechLanguage.value;
+  const selectedVoice = matchingSpeechVoices.find((voice) =>
+    `${voice.name}|${voice.lang}|${voice.voiceURI}` === speechVoice.value
+  );
+  const sample = {
+    language,
+    voice: selectedVoice ? `${selectedVoice.name} (${selectedVoice.lang})` : "browser default",
+    kind: "tutor",
+    startEvent: "speech_synthesis_onstart",
+  };
+  let buffer = "";
+  let queuedCount = 0;
+  let startedAt = null;
+  let finished = false;
+  let failed = false;
+  let cancelled = false;
+  let hadQueuedSpeech = false;
+
+  const complete = () => {
+    if (!finished || queuedCount || requestSpeechTurn !== speechTurn || failed || cancelled) return;
+    if (startedAt === null) {
+      statusLine.textContent = completionText;
+      return;
+    }
+    const endedAt = performance.now();
+    const startDelay = ((startedAt - queuedAt) / 1000).toFixed(2);
+    const playbackDuration = ((endedAt - startedAt) / 1000).toFixed(2);
+    speechSamples.push({ ...sample, startMs: startedAt - queuedAt, playbackMs: endedAt - startedAt });
+    if (speechSamples.length > 500) speechSamples.shift();
+    statusLine.textContent = `${completionText} This run: start ${startDelay}s, playback ${playbackDuration}s. `
+      + speechTimingSummary(sample);
+  };
+
+  const enqueue = (text) => {
+    for (const chunk of splitSpeechText(text)) {
+      if (requestSpeechTurn !== speechTurn || failed || cancelled) return;
+      const utterance = new SpeechSynthesisUtterance(chunk);
+      utterance.lang = language;
+      utterance.rate = 0.96;
+      if (selectedVoice) utterance.voice = selectedVoice;
+      queuedCount += 1;
+      hadQueuedSpeech = true;
+      utterance.onstart = () => {
+        if (requestSpeechTurn !== speechTurn || failed || startedAt !== null) return;
+        startedAt = performance.now();
+        const startDelay = ((startedAt - queuedAt) / 1000).toFixed(2);
+        statusLine.textContent = `Tutor is speaking as the answer arrives (started in ${startDelay}s). Tap Stop audio or Speak to interrupt.`;
+      };
+      utterance.onend = () => {
+        if (requestSpeechTurn !== speechTurn || failed) return;
+        queuedCount = Math.max(0, queuedCount - 1);
+        complete();
+      };
+      utterance.onerror = (event) => {
+        if (requestSpeechTurn !== speechTurn || failed) return;
+        failed = true;
+        speechFailures.push({ ...sample, reason: event.error || "unknown" });
+        if (speechFailures.length > 500) speechFailures.shift();
+        statusLine.textContent = `${speechErrorMessage(event.error)} ${speechTimingSummary(sample)}`;
+        window.speechSynthesis.cancel();
+      };
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  const consume = (delta) => {
+    if (requestSpeechTurn !== speechTurn || failed || cancelled || finished) return;
+    buffer += delta;
+    const sentenceEnd = /[.!?\u0964\u0965]["'\u2019\u201d)\]]*\s+/u;
+    let match = sentenceEnd.exec(buffer);
+    while (match) {
+      const end = match.index + match[0].length;
+      enqueue(buffer.slice(0, end).trim());
+      buffer = buffer.slice(end);
+      match = sentenceEnd.exec(buffer);
+    }
+  };
+
+  const finish = () => {
+    if (requestSpeechTurn !== speechTurn) return cancelled || hadQueuedSpeech;
+    if (failed || cancelled || finished) return cancelled || hadQueuedSpeech;
+    if (buffer.trim()) enqueue(buffer.trim());
+    buffer = "";
+    finished = true;
+    complete();
+    return queuedCount > 0 || startedAt !== null;
+  };
+
+  return {
+    consume,
+    finish,
+    cancel: () => { cancelled = true; buffer = ""; },
+    isSpeaking: () => startedAt !== null && queuedCount > 0,
+  };
+}
+
 previewVoiceButton.addEventListener("click", () => {
   const preview = speechLanguage.value === "en-IN"
     ? "Hello, let's study fundamental rights together."
@@ -920,6 +1024,8 @@ async function sendQuestion(question) {
   const requestLanguage = speechLanguage.value;
   const requestStartedAt = performance.now();
   let firstTextMs = null;
+  const progressiveSpeechAllowed = !streamedTtsOption.checked;
+  let progressiveSpeech = null;
   pendingQuestion = question;
   sendButton.disabled = true;
   statusLine.textContent = "Thinking…";
@@ -937,7 +1043,14 @@ async function sendQuestion(question) {
       if (firstTextMs === null) firstTextMs = performance.now() - requestStartedAt;
       if (!activePartialMessage) activePartialMessage = addMessage("assistant", "");
       activePartialMessage.querySelector("p").textContent += delta;
-      statusLine.textContent = "Tutor is answering…";
+      progressiveSpeech?.consume(delta);
+      statusLine.textContent = progressiveSpeech?.isSpeaking()
+        ? "Tutor is answering and speaking…"
+        : "Tutor is answering…";
+    }, (progressive) => {
+      if (requestTurn !== turn || !progressive || !progressiveSpeechAllowed) return;
+      progressiveSpeech = createProgressiveBrowserSpeech();
+      activeProgressiveSpeech = progressiveSpeech;
     });
     if (requestTurn !== turn) {
       if (payload.mode === "model") {
@@ -946,6 +1059,8 @@ async function sendQuestion(question) {
       }
       return;
     }
+    const usedProgressiveSpeech = progressiveSpeech?.finish() || false;
+    if (activeProgressiveSpeech === progressiveSpeech) activeProgressiveSpeech = null;
     if (payload.mode === "model") {
       modelStreamSamples.push({
         language: requestLanguage,
@@ -960,7 +1075,9 @@ async function sendQuestion(question) {
     addMessage("assistant", payload.answer, payload.sources || []);
     rememberTurn(question, payload.answer);
     pendingQuestion = null;
-    statusLine.textContent = "Answer ready.";
+    statusLine.textContent = usedProgressiveSpeech && progressiveSpeech?.isSpeaking()
+      ? "Answer ready; speech is finishing."
+      : "Answer ready.";
     const startedQuiz = (payload.tool_events || []).find((event) => event.name === "start_quiz" && event.ok);
     const scoredAnswer = (payload.tool_events || []).find((event) => event.name === "score_answer" && event.ok);
     if (startedQuiz && startedQuiz.result.questions?.length) {
@@ -978,10 +1095,11 @@ async function sendQuestion(question) {
       addMessage("assistant", `${score.feedback} Score: ${score.score}%.`, [score.source]);
       speak(`${payload.answer} ${score.feedback}`, "Answer ready.");
       loadProgress();
-    } else {
+    } else if (!usedProgressiveSpeech) {
       speak(payload.answer);
     }
   } catch (error) {
+    if (progressiveSpeech && requestTurn === turn && error.name !== "AbortError") stopSpeechOutput();
     if (modelModeAvailable) {
       modelStreamFailures.push({
         language: requestLanguage,
@@ -1246,13 +1364,13 @@ const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecogni
 speechLanguage.addEventListener("change", () => {
   refreshSpeechVoices();
   const speechSynthesis = window.speechSynthesis;
-  if (activeSpeechController || scheduledSpeechSources.size || speechSynthesis?.speaking || speechSynthesis?.pending) {
+  if (activeProgressiveSpeech || activeSpeechController || scheduledSpeechSources.size || speechSynthesis?.speaking || speechSynthesis?.pending) {
     stopSpeechOutput();
     statusLine.textContent = "Speech language changed. Current playback stopped; the new language applies next time.";
   }
 });
 streamedTtsOption.addEventListener("change", () => {
-  if (activeSpeechController || scheduledSpeechSources.size) stopSpeechOutput();
+  if (activeProgressiveSpeech || activeSpeechController || scheduledSpeechSources.size) stopSpeechOutput();
   if (streamedTtsOption.checked && !prepareStreamingAudio()) {
     streamedTtsOption.checked = false;
     statusLine.textContent = "This browser cannot play streamed audio. Use the installed browser voice instead.";
@@ -1260,7 +1378,7 @@ streamedTtsOption.addEventListener("change", () => {
   streamedTtsVoice.disabled = !streamingTtsAvailable || !streamedTtsOption.checked;
 });
 streamedTtsVoice.addEventListener("change", () => {
-  if (activeSpeechController || scheduledSpeechSources.size) {
+  if (activeProgressiveSpeech || activeSpeechController || scheduledSpeechSources.size) {
     stopSpeechOutput();
     statusLine.textContent = "Streamed voice changed. The new voice applies to the next playback.";
   }

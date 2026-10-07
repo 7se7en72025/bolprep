@@ -83,6 +83,7 @@ def run_agent_turn(
     language: str = "hi-IN",
     responses_client: Any | None = None,
     on_text_delta: Callable[[str], None] | None = None,
+    on_speech_mode: Callable[[bool], None] | None = None,
 ) -> dict[str, Any]:
     """Answer a turn, using validated quiz/progress functions in model mode."""
     documents = retrieve(_retrieval_query(question, history))
@@ -106,6 +107,8 @@ def run_agent_turn(
         INSTRUCTIONS
     )
     tools_requested = _has_tool_intent(question)
+    if on_speech_mode is not None:
+        on_speech_mode(not tools_requested and on_text_delta is not None)
     if tools_requested:
         instructions = (
             f"{instructions} You may use start_quiz to start a quiz, score_answer to score an answer "

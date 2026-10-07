@@ -199,6 +199,9 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 self.session_id,
                 language,
                 on_text_delta=lambda delta: self._write_ndjson({"type": "delta", "text": delta}),
+                on_speech_mode=lambda progressive: self._write_ndjson(
+                    {"type": "speech_mode", "progressive": progressive}
+                ),
             )
             self._write_ndjson({"type": "complete", "payload": result})
             self._finish_chunked_response()

@@ -1037,3 +1037,9 @@
 - When quiz scoring is stopped or fails, the submitted answer returns to the input box only if it is empty. A new draft typed while scoring is pending now stays in place for review or retry.
 - Added a browser run-sheet case for editing during scoring and stopping before the score arrives.
 - Verification: JavaScript syntax and whitespace checks passed. The timing of real browser edits and server scoring remains unverified on a device.
+
+
+## Speak model sentences while text streams - 2026-10-07
+
+- Added a server stream-mode event that enables progressive browser speech only for ordinary model turns without tools. The browser queues complete sentences as text deltas arrive, flushes the final remainder when the response completes, and uses the existing stop control, stale-turn guard, selected browser voice, and speech timing diagnostics. Quiz/revision tool turns, offline replies, and optional provider TTS keep their complete-answer speech behavior.
+- Updated README timing limitations and the browser run sheet. Live model, browser, and microphone playback were not available for verification.
