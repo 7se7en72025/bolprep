@@ -1070,3 +1070,8 @@
 
 - Through the localhost API, started a one-question quiz, submitted a rubric-matching answer, and confirmed a complete 100% result appeared in browser-session progress. Retrying the same answer with its idempotency key left the attempt count at one.
 - Cleared the isolated synthetic session and confirmed its progress returned to zero. This exercised the deterministic backend flow, not the browser interface, spoken answers, or model tools.
+
+## Keep Escape available while progressive speech is queued - 2026-10-08
+
+- The Escape shortcut now treats an active progressive browser-speech controller as work to stop, including the interval before its first sentence starts playing. The run sheet includes that timing window and a follow-up check.
+- Verification: JavaScript syntax and whitespace checks passed. The browser event timing and audible playback still need a device check; this does not establish speech quality or provider-side cancellation.

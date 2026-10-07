@@ -1281,7 +1281,7 @@ stopButton.addEventListener("click", () => {
 document.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
   const speechSynthesis = window.speechSynthesis;
-  if (!activeRequest && !activeSpeechController && !scheduledSpeechSources.size
+  if (!activeRequest && !activeSpeechController && !activeProgressiveSpeech && !scheduledSpeechSources.size
     && !recognitionListening && !activeMediaRecorder && !serverRecordingStarting
     && !activeTranscriptionController && !speechSynthesis?.speaking && !speechSynthesis?.pending) return;
   event.preventDefault();
