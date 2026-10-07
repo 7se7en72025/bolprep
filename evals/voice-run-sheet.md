@@ -97,6 +97,7 @@ Run these checks in a browser with speech playback available. Use the same brows
 7. With experimental streamed speech enabled, start a tutor answer and press **Stop** while its audio is arriving or playing. Start a new answer immediately. Record whether the old audio stops and stays stopped, with no late chunk playing over the new turn. Note the selected streamed voice; each attempt may incur API usage. If no API key or supported audio browser is available, mark this case unavailable.
 8. Start **Speak**, then edit the question box before recognition finishes. Record whether listening stops, your edit remains in the box, and a late recognition result leaves it unchanged. If recognition ends before you can edit, mark the attempt unavailable.
 9. With server transcription configured, start **Record** and type in the question box while recording. Repeat while the microphone permission prompt is open and while transcription is pending. Record whether capture or transcription stops, your edit remains, and no late transcript replaces it. Use a self-authored phrase; if the provider or browser path is unavailable, mark that case unavailable.
+10. Start a quiz, press **Stop** while it is preparing, then immediately start a quiz again. Record whether the quiz button stays disabled until the second request finishes, even if the canceled first request settles during it. If both requests finish too quickly to overlap, mark this case unavailable.
 
 | Case | Attempts | Passes | Failures / unavailable | Browser event or visible symptom |
 | --- | ---: | ---: | ---: | --- |
@@ -110,6 +111,7 @@ Run these checks in a browser with speech playback available. Use the same brows
 | Edit the question during microphone capture | | | | |
 | Edit the question during recording or transcription | | | | |
 | Interrupt streamed speech, then start a new turn | | | | |
+| Stop and restart quiz preparation | | | | |
 
 For each attempt, add one row below before summarizing the totals above. Keep the browser, device, language, and answer fixed across repetitions; if any setting changes, start a separate run sheet. Use the visible browser status or event as the observation, and mark unsupported browser behavior as unavailable rather than pass or fail.
 

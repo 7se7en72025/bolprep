@@ -360,6 +360,7 @@ function stopTutor() {
   transcriptionController?.abort();
   turn += 1;
   sendButton.disabled = false;
+  quizButton.disabled = false;
   micButton.disabled = !recognitionAvailable;
 }
 
@@ -929,7 +930,7 @@ async function startQuiz() {
       statusLine.textContent = "Quiz could not start. Your conversation is still open.";
     }
   } finally {
-    quizButton.disabled = false;
+    if (requestTurn === turn) quizButton.disabled = false;
     if (activeRequest === controller) activeRequest = null;
   }
 }

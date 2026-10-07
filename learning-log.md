@@ -853,3 +853,9 @@
 - Added current-page, per-language upload-to-result p50/p95 timings and capture, recording, empty-clip, and transcription failure counts for the optional recorded-file STT path. The diagnostics JSON now has a separate `recorded_stt` field in schema version 2; canceled attempts are excluded. The timing begins after capture and is not speech-end latency.
 - Updated the README and voice run sheet to keep recorded-file metrics separate from browser recognition and end-to-end stopwatch observations. The export retains counts and timings only, not transcript text or audio.
 - Verification: `node --check web/app.js` and `git diff --check` passed. No microphone, provider, or device check was made, so measured latency and failure behavior remain unverified in a browser.
+
+## Keep quiz preparation bound to its turn - 2026-10-07
+
+- Stopping a pending quiz start now makes the quiz button available immediately. A canceled quiz request can no longer re-enable that button while a newer quiz start is still pending.
+- Added a manual run-sheet case for stopping and restarting quiz preparation quickly.
+- Verification: `node --check web/app.js` and `git diff --check` passed. The request-order race was not exercised in a browser or on a device; no provider call or test suite was used.
