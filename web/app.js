@@ -996,6 +996,7 @@ function createProgressiveBrowserSpeech(completionText = "Answer ready.") {
     finish,
     cancel: () => { cancelled = true; buffer = ""; },
     isSpeaking: () => startedAt !== null && queuedCount > 0,
+    hasFailed: () => failed,
   };
 }
 
@@ -1044,9 +1045,11 @@ async function sendQuestion(question) {
       if (!activePartialMessage) activePartialMessage = addMessage("assistant", "");
       activePartialMessage.querySelector("p").textContent += delta;
       progressiveSpeech?.consume(delta);
-      statusLine.textContent = progressiveSpeech?.isSpeaking()
-        ? "Tutor is answering and speaking…"
-        : "Tutor is answering…";
+      if (!progressiveSpeech?.hasFailed()) {
+        statusLine.textContent = progressiveSpeech?.isSpeaking()
+          ? "Tutor is answering and speaking…"
+          : "Tutor is answering…";
+      }
     }, (progressive) => {
       if (requestTurn !== turn || !progressive || !progressiveSpeechAllowed) return;
       progressiveSpeech = createProgressiveBrowserSpeech();
@@ -1075,9 +1078,11 @@ async function sendQuestion(question) {
     addMessage("assistant", payload.answer, payload.sources || []);
     rememberTurn(question, payload.answer);
     pendingQuestion = null;
-    statusLine.textContent = usedProgressiveSpeech && progressiveSpeech?.isSpeaking()
-      ? "Answer ready; speech is finishing."
-      : "Answer ready.";
+    if (!progressiveSpeech?.hasFailed()) {
+      statusLine.textContent = usedProgressiveSpeech && progressiveSpeech?.isSpeaking()
+        ? "Answer ready; speech is finishing."
+        : "Answer ready.";
+    }
     const startedQuiz = (payload.tool_events || []).find((event) => event.name === "start_quiz" && event.ok);
     const scoredAnswer = (payload.tool_events || []).find((event) => event.name === "score_answer" && event.ok);
     if (startedQuiz && startedQuiz.result.questions?.length) {

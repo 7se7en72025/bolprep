@@ -1043,3 +1043,8 @@
 
 - Added a server stream-mode event that enables progressive browser speech only for ordinary model turns without tools. The browser queues complete sentences as text deltas arrive, flushes the final remainder when the response completes, and uses the existing stop control, stale-turn guard, selected browser voice, and speech timing diagnostics. Quiz/revision tool turns, offline replies, and optional provider TTS keep their complete-answer speech behavior.
 - Updated README timing limitations and the browser run sheet. Live model, browser, and microphone playback were not available for verification.
+
+## Keep progressive speech errors visible - 2026-10-07
+
+- When browser speech fails during a streaming model answer, later text deltas and answer completion now leave the speech error visible. The answer continues to render as text, and the existing TTS diagnostic records the failure.
+- Verification: JavaScript syntax and whitespace checks passed. Browser speech error timing and live model playback remain unverified on a device.
