@@ -17,7 +17,7 @@ from pathlib import Path
 from threading import BoundedSemaphore
 from typing import Any
 
-from bolprep import api_is_configured, ask_model, offline_answer
+from bolprep import api_is_configured, ask_model, configure_cli, offline_answer, offline_requested
 from conversation_history import clean_history, prior_queries
 from agent import run_agent_turn
 from progress import ProgressConflict, clear_progress, create_quiz_run, get_progress, save_answer
@@ -826,6 +826,8 @@ class BolPrepHandler(BaseHTTPRequestHandler):
 def main() -> None:
     server = ThreadingHTTPServer((HOST, PORT), BolPrepHandler)
     print(f"BolPrep is ready at http://{HOST}:{PORT}")
+    if offline_requested():
+        print("Offline mode requested: model/provider routes are disabled.")
     print("Press Ctrl+C to stop the local server.")
     try:
         server.serve_forever()
@@ -836,4 +838,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    configure_cli("BolPrep local browser study tutor")
     main()

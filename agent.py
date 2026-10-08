@@ -9,7 +9,7 @@ import sqlite3
 import uuid
 from typing import Any, Callable
 
-from bolprep import MAX_MODEL_ANSWER_CHARS, api_is_configured, checked_evidence, offline_answer, response_instructions, require_completed_response
+from bolprep import MAX_MODEL_ANSWER_CHARS, api_is_configured, checked_evidence, offline_answer, offline_requested, response_instructions, require_completed_response
 from conversation_history import model_history, prior_queries
 from progress import (
     ProgressConflict,
@@ -112,7 +112,7 @@ def run_agent_turn(
     if on_sources is not None:
         on_sources([_source(document) for document in documents])
     if (not documents and is_generic_question(selected_query) and not _has_tool_intent(question)) or (
-        responses_client is None and not api_is_configured()
+        offline_requested() or (responses_client is None and not api_is_configured())
     ):
         return _offline_turn(question, documents, session_id, language, quiz_difficulty,
                              retrieval_question=selected_query)

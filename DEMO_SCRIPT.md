@@ -8,7 +8,7 @@ Use [ARCHITECTURE.md](ARCHITECTURE.md) to trace the observed turn through code a
 
 ## Reproducible local walkthrough
 
-Start BolPrep with `tools/run-local.ps1` and open `http://127.0.0.1:8000`. Keep the app in offline mode so the walkthrough does not need a model credential or incur provider usage.
+Start BolPrep with `tools/run-local.ps1 -Offline` (optionally add `-Frozen`) and open `http://127.0.0.1:8000`. Keep the app in offline mode so the walkthrough does not need a model credential or incur provider usage.
 
 1. **Show the setup state.** Point out that the page reports offline practice mode and that the question is answered from the local, source-linked study notes.
 2. **Ask in Hinglish.** Submit “Article 14 kya kehta hai?” Show the answer and open its Constitution source link. Say that this answer is a checked note summary, not a generated model explanation.

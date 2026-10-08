@@ -1,4 +1,4 @@
-param([switch]$Frozen)
+param([switch]$Frozen, [switch]$Offline)
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
@@ -108,4 +108,6 @@ if (-not (Test-Path -LiteralPath $envPath)) {
 }
 
 Write-Output 'Starting BolPrep at http://127.0.0.1:8000 (press Ctrl+C to stop).'
-& $venvPython (Join-Path $repoRoot 'server.py')
+$serverArguments = @()
+if ($Offline) { $serverArguments += '--offline' }
+& $venvPython (Join-Path $repoRoot 'server.py') @serverArguments

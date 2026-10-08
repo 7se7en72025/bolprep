@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import os
 import re
 import sys
@@ -20,9 +21,22 @@ if load_dotenv is not None:
     load_dotenv()
 
 
+def offline_requested() -> bool:
+    """Offline mode overrides a configured key without changing credentials."""
+    return os.getenv("BOLPREP_OFFLINE", "0").strip() == "1"
+
+
 def api_is_configured() -> bool:
-    """Return whether model mode has a key available to the server process."""
-    return bool(os.getenv("OPENAI_API_KEY", "").strip())
+    """Return whether provider mode is enabled and a key is available."""
+    return not offline_requested() and bool(os.getenv("OPENAI_API_KEY", "").strip())
+
+
+def configure_cli(description: str) -> None:
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument("--offline", action="store_true", help="Disable model/provider routes without editing .env")
+    args = parser.parse_args()
+    if args.offline:
+        os.environ["BOLPREP_OFFLINE"] = "1"
 
 
 INSTRUCTIONS = (
@@ -124,6 +138,8 @@ def ask_model(
     language: str | None = None,
 ) -> str:
     """Answer one turn using recent context and retrieved local study notes."""
+    if offline_requested():
+        raise RuntimeError("Provider requests are disabled in offline mode.")
     try:
         from openai import OpenAI
     except ImportError as exc:
@@ -165,6 +181,8 @@ def run() -> int:
     print("Language: /language hi for Hindi/Hinglish, /language en for English, /language auto for model inference (offline English).")
     if has_api_key:
         print("Model mode: using OPENAI_MODEL (or the default model).")
+    elif offline_requested():
+        print("Offline mode requested: model/provider routes are disabled.")
     else:
         print("Offline practice mode: set OPENAI_API_KEY to enable model answers.")
 
@@ -231,4 +249,5 @@ def run() -> int:
 
 
 if __name__ == "__main__":
+    configure_cli("BolPrep terminal study tutor")
     raise SystemExit(run())

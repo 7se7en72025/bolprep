@@ -24,6 +24,8 @@ The launcher prepares `.venv`, installs dependencies, creates `.env` if missing,
 
 For the observed dependency snapshot, add `-Frozen` to the launcher command or install with `-r requirements.lock.txt` in manual setup. The snapshot records application-package versions from Windows / CPython 3.11 on 2026-10-08; fresh installation and runtime compatibility remain unverified. It does not pin Python, pip, wheel hashes, system audio/browser behavior, or provider models. Default setup continues to use the ranges in `requirements.txt`.
 
+For an explicitly offline demo, add `-Offline` to the launcher, or `--offline` to `server.py`/`bolprep.py`. It overrides a configured key for that process without editing `.env`; local quizzes, notes, and the configured access gate remain available. Dependencies still install normally, and browser speech services may use the network.
+
 Manual setup:
 
 ```powershell
@@ -42,6 +44,7 @@ Edit your local `.env`; keep credentials out of commits.
 | Variable | Purpose |
 | --- | --- |
 | `OPENAI_API_KEY` | Optional. Enables model responses and provider speech/transcription; usage may incur charges. |
+| `BOLPREP_OFFLINE` | Set `1` to disable model/provider routes even with a key; default `0`. Restart after changes. |
 | `OPENAI_MODEL` | Requested tutor model; the example defaults to `gpt-6-astra`. |
 | `BOLPREP_STT_MODEL` | Optional requested recorded-file STT model; default `gpt-transcribe`. Restart after changes; provider/account availability is unverified. Live STT is separate. |
 | `BOLPREP_ACCESS_PASSWORD` | Optional 16-256 character password for the local demo gate. |

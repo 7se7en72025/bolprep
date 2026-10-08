@@ -1985,3 +1985,9 @@
 - Inspected installed package metadata and recorded 15 application packages at their observed versions in requirements.lock.txt, excluding installer tools. Added -Frozen to the local launcher; default setup retains requirements.txt ranges. No environment or dependency installation was changed.
 - Documented Windows/CPython 3.11 snapshot scope, unverified fresh installation/runtime, and unpinned interpreter/installer/wheel/provider behavior. Acceptance gates still require actual browser/provider/evaluation/human/demo evidence.
 - Verification: read installed package metadata, PowerShell parser check, and git diff whitespace checks. No tests, package installations, server launches, browser/provider checks, reports, or reproducibility experiments were performed.
+
+## Add explicit offline demo launch - 2026-10-08
+
+- Added BOLPREP_OFFLINE=1 and shared --offline CLI handling for server/terminal, plus -Offline launcher forwarding. The process override disables configured provider capability/route checks, direct ask_model, and injected-client agent model execution without changing .env credentials or access-gate settings.
+- Updated startup feedback, setup instructions, and demo command. Dependency installation and browser speech network behavior are explicitly separate from provider-route disabling; prior sessions in other processes are not revoked.
+- Verification: Python compilation, both CLI help commands, PowerShell parser check, and git diff whitespace checks with static guard/call inspection. No tests, installations, server launches, model/tool/provider calls, browser/device checks, or demo recording.
