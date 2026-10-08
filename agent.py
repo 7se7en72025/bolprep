@@ -325,14 +325,20 @@ def _offline_turn(
     quiz_intent = QUIZ_INTENT.search(normalized)
     revision_intent = REVISION_INTENT.search(normalized)
     if quiz_intent:
-        quiz = start_quiz(language=language, difficulty=difficulty)
-        quiz_id = str(uuid.uuid4())
-        create_quiz_run(session_id, quiz_id, quiz["topic"], [item["id"] for item in quiz["questions"]])
+        try:
+            quiz = start_quiz(language=language, difficulty=difficulty)
+            quiz_id = str(uuid.uuid4())
+            create_quiz_run(session_id, quiz_id, quiz["topic"], [item["id"] for item in quiz["questions"]])
+        except (sqlite3.Error, OSError):
+            return _offline_tool_unavailable("start_quiz", documents, language)
         result = {**quiz, "quiz_id": quiz_id}
         tool_events.append({"name": "start_quiz", "ok": True, "result": result})
         answer = "Thik hai, checked question bank se quiz shuru kar raha hoon." if language == "hi-IN" else "Starting a quiz from the checked question bank."
     elif revision_intent:
-        result = get_progress(session_id)
+        try:
+            result = get_progress(session_id)
+        except (sqlite3.Error, OSError):
+            return _offline_tool_unavailable("get_weak_topics", documents, language)
         tool_events.append({"name": "get_weak_topics", "ok": True, "result": result})
         if result["weak_topics"]:
             topics = ", ".join(item["topic"] for item in result["weak_topics"])
@@ -346,6 +352,24 @@ def _offline_turn(
         "sources": [_source(document) for document in documents],
         "tool_events": tool_events,
         "mode": "offline",
+    }
+
+
+def _offline_tool_unavailable(
+    name: str, documents: list[dict[str, Any]], language: str,
+) -> dict[str, Any]:
+    message = "Study tool data is unavailable. Try again later; check saved progress before retrying."
+    action = "start the quiz" if name == "start_quiz" else "load saved revision topics"
+    answer = (
+        "Study tool ka data abhi available nahi hai; requested action complete nahi hua. "
+        "Baad mein try karo aur saved progress check karo. Tutor se padhai ka sawal pooch sakte ho."
+        if language == "hi-IN" else
+        f"I could not {action} because study tool data is unavailable. Try later and check saved progress. "
+        "You can still ask the tutor a study question."
+    )
+    return {
+        "answer": answer, "sources": [_source(document) for document in documents],
+        "tool_events": [{"name": name, "ok": False, "error": message}], "mode": "offline",
     }
 
 

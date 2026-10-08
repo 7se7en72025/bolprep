@@ -1830,3 +1830,10 @@
 - Static tool review found SQLite/file-access errors escaped _execute_tool and aborted the whole tutor turn before the model saw a failed action. Added generic failed tool results/outcomes for these errors, without exposing database/path details or claiming rollback.
 - Existing argument/conflict handling and call/round bounds remain; the model can narrate the unavailable action, but compliance and browser diagnostics remain unverified. Offline tool failures retain their separate existing turn-error path.
 - Verification: Python compilation and git diff whitespace checks only. No tests, failure injection, tool executions, database writes, browser checks, or provider calls were performed.
+
+
+## Keep offline tool failures actionable - 2026-10-08
+
+- Added SQLite/file-access recovery around offline quiz creation and weak-topic lookup. Instead of escaping as a generic tutor failure, these paths return one failed tool event and an English/Roman Hinglish reply stating that the requested action did not complete.
+- Successful quiz/revision behavior remains unchanged. A completed recovery reply is explicitly separate from tool success; no quiz result, save success, rollback, or automatic retry is claimed.
+- Verification: Python compilation and git diff whitespace checks only. No tests, offline tool executions, storage failure exercises, database writes, browser checks, or provider calls were performed.
