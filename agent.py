@@ -80,7 +80,9 @@ QUIZ_INTENT = re.compile(
     r"\u0936\u0941\u0930\u0942\s+\u0915\u0930\u094b)"
 )
 REVISION_INTENT = re.compile(
-    r"\b(?:revis(?:e|ion)|practice more|what should i study|"
+    r"\b(?:practice more|what should i study|(?:help me|let'?s)\s+revise|"
+    r"revise\s+(?:fundamental rights|article\s+\d+|this|these topics?|karo|karao|karwao)|"
+    r"revision\s+(?:karao|karwao|please)|"
     r"weak\s+(?:topics?|areas?)|where am i weak(?:\s+at)?|my weak points|"
     r"kamzor\s+(?:topics?|areas?)|kamzori\s+(?:batao|dikhao)|"
     r"dohra(?:o|na|ana))\b|\u0915\u092e\u091c\u094b\u0930|\u0926\u094b\u0939\u0930\u093e"

@@ -5,6 +5,11 @@
 - The old quiz detector treated any mention of `test` or `viva` as a quiz request, so a question about the Article 14 legal test could start a quiz. English and Roman Hinglish now need request wording such as `test me`, `start a quiz`, `quiz karwao`, or `mera viva lo`; the Devanagari quiz cue also needs an action such as `lo` or `karao`.
 - A focused local intent check covered quiz requests and explanatory questions. No API call, browser microphone, or learner audio was used.
 
+## Keep legal revision questions out of study-progress tools - 2026-10-08
+
+- The revision tool previously matched the word `revision` anywhere, so legal questions about a revision petition or procedure could open saved weak-topic progress. Revision now requires explicit request wording such as `help me revise fundamental rights`, `revise Article 14`, or `revision karao`.
+- A focused local intent check confirmed these commands still match while questions about revision petitions and procedures remain explanations. No API call, browser microphone, or learner audio was used.
+
 ## Keep explanation questions out of the revision tool path - 2026-10-08
 
 - The earlier revision detector treated any standalone `weak` or `kamzor` as a request to read saved progress, so questions about a weak point in a constitutional article could unexpectedly enter revision mode. English and Roman Hinglish now require a revision command phrase such as `weak topics`, `kamzor topics batao`, or `dohrao fundamental rights`; ordinary explanatory questions stay on the answer path. Existing Devanagari cues remain supported.
