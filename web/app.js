@@ -1433,6 +1433,8 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
   let playbackTimedOut = false;
   let idleTimer = null;
   let playbackTimer = null;
+  let speechReader = null;
+  let speechReadEnded = false;
   const resetIdleDeadline = () => {
     window.clearTimeout(idleTimer);
     idleTimer = window.setTimeout(() => {
@@ -1473,7 +1475,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
       if (timedOut) throw new Error("Streamed speech timed out.");
       return;
     }
-    const reader = response.body.getReader();
+    speechReader = response.body.getReader();
     let pending = new Uint8Array(0);
     let audioChunks = 0;
     const waitForPlayback = () => new Promise((resolve, reject) => {
@@ -1522,8 +1524,8 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
       audioChunks += 1;
     };
     while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
+      const { value, done } = await speechReader.read();
+      if (done) { speechReadEnded = true; break; }
       if (!value.length) continue;
       resetIdleDeadline();
       const combined = new Uint8Array(pending.length + value.length);
@@ -1592,6 +1594,10 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
   } finally {
     window.clearTimeout(idleTimer);
     window.clearTimeout(playbackTimer);
+    if (speechReader) {
+      if (!speechReadEnded) void speechReader.cancel().catch(() => {});
+      speechReader.releaseLock();
+    }
     controller.signal.removeEventListener("abort", onAbort);
     if (activeSpeechController === controller) activeSpeechController = null;
   }

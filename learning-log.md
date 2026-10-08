@@ -1774,3 +1774,10 @@
 - Static parser review confirmed terminal-event ordering but found finally awaited reader.cancel(), potentially holding recovery after malformed/oversized data. Cancellation is now dispatched without awaiting its promise before releasing the reader lock.
 - Added strict streaming UTF-8 decoding with a generic encoding failure, so invalid or truncated character bytes cannot silently become replacement characters in completed answers. Existing turn failure handling owns progressive speech cancellation and context recovery.
 - Verification: JavaScript syntax and git diff whitespace checks only. No tests, stream injection, browser/device checks, server requests, or provider calls were performed. Added explicit unperformed encoding/cancellation scenarios to the run sheet.
+
+
+## Release provider PCM response readers - 2026-10-08
+
+- Static playback review found the PCM response reader was scoped inside try and never released. Added explicit request-owned reader/end state and finally cleanup: cancel unfinished reads without awaiting the cancellation promise, then release the lock.
+- Preserved source scheduling, stop/fallback behavior, deadlines, and active-controller ownership. Added unperformed completion/error/abort/progressive-queue scenarios to the manual run sheet.
+- Verification: JavaScript syntax and git diff whitespace checks only. No tests, audio playback, stream injection, browser/device checks, recordings, or provider calls were performed.
