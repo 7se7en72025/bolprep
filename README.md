@@ -70,7 +70,7 @@ Live mode offers optional continuous conversation and 3/5/8-second quiet-pause c
 
 ## Sources and quizzes
 
-The starter corpus contains **48 checked notes** spanning selected Articles 12-51A. It is a bounded study collection with lexical retrieval and explicit article-reference handling. Numeric references normalize Unicode decimal digits and leading zeros before lookup, including supported Latin suffixes; unknown article IDs and invalid ranges still abstain. It is not a complete legal reference or a demonstrated semantic-retrieval system.
+The starter corpus contains **48 checked notes** spanning selected Articles 12-51A. It is a bounded study collection with lexical retrieval and explicit article-reference handling. Numeric references normalize Unicode decimal digits and leading zeros before lookup, including supported Latin suffixes; unknown article IDs and invalid ranges still abstain. Generic fundamental-rights requests can return the full collection; topic-qualified requests rank their subject terms instead of receiving every note solely from the broad label. It is not a complete legal reference or a demonstrated semantic-retrieval system.
 
 - [Corpus manifest](data/corpus_manifest.json): inventory, hashes, and source metadata.
 - [Source review](data/SOURCE_REVIEW.md): linked PDF edition and unresolved reuse-policy questions. Repository Hindi/Hinglish summaries are not official translations.

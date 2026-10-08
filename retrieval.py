@@ -262,8 +262,19 @@ def retrieve(question: str, limit: int | None = None, *, scoring: str = "overlap
         results = list(selected.values())
         return results[:limit] if limit is not None else results
 
-    if any(phrase in normalized_question for phrase in ("fundamental rights", "\u092e\u094c\u0932\u093f\u0915 \u0905\u0927\u093f\u0915\u093e\u0930", "maulik adhikar")):
-        return documents if limit is None else documents[:limit]
+    broad_phrases = ("fundamental rights", "\u092e\u094c\u0932\u093f\u0915 \u0905\u0927\u093f\u0915\u093e\u0930", "maulik adhikar")
+    matched_phrases = [phrase for phrase in broad_phrases if phrase in normalized_question]
+    if matched_phrases:
+        topic_tokens = informative_tokens.copy()
+        for phrase in matched_phrases:
+            topic_tokens -= _tokens(phrase)
+        # Overview scaffolding is not evidence of a subject-specific question.
+        topic_tokens -= {"from", "starter", "notes", "study", "upsc", "exam", "preparation"}
+        if not topic_tokens:
+            return documents if limit is None else documents[:limit]
+        # Rank the requested subject, without the broad label supplying matches
+        # that would mask an unrelated or unsupported topic.
+        query_tokens = topic_tokens
 
     token_fields = [_note_token_fields(document) for document in documents]
     weights: dict[str, float] = {}

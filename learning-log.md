@@ -1851,3 +1851,10 @@
 - Static tool-result review found successful get_weak_topics data bypassed the saved-progress validator, and arbitrary successful tool names were accepted. Revision results now use the existing count/question/weak-topic consistency checks; unsupported successful names fail validation.
 - Existing quiz start/score validators and bounded failed-tool reporting remain. Added unperformed empty/populated/malformed revision and unsupported-tool scenarios; no semantic quality or provenance guarantee is claimed.
 - Verification: JavaScript syntax and git diff whitespace checks only. No tests, result injection, browser sessions, database writes, scoring/retrieval evaluation, or provider calls were performed.
+
+
+## Keep broad-topic labels from masking unsupported subjects - 2026-10-08
+
+- Static retrieval review found any question containing the broad fundamental-rights label returned the entire corpus, bypassing subject ranking. Generic overviews now retain the broad path after removing label/scaffolding terms; topic-qualified requests rank the remaining informative subject terms through the existing lexical scorer.
+- Explicit article eligibility and corpus records are unchanged. Both overlap/rarity use the same scope logic. This is not semantic validation or evidence of improved measured quality; current results need a fresh authorized evaluation.
+- Verification: Python compilation and git diff whitespace checks only. No tests, parser/scoring examples, retrieval evaluation, browser checks, database writes, or provider calls were performed.
