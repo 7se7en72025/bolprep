@@ -8,7 +8,7 @@ import re
 import uuid
 from typing import Any, Callable
 
-from bolprep import api_is_configured, checked_evidence, offline_answer, response_instructions
+from bolprep import MAX_MODEL_ANSWER_CHARS, api_is_configured, checked_evidence, offline_answer, response_instructions
 from conversation_history import model_history, prior_queries
 from progress import (
     ProgressConflict,
@@ -203,6 +203,8 @@ def run_agent_turn(
     answer = output_text.strip() if isinstance(output_text, str) else ""
     if not answer:
         raise RuntimeError("The model returned an empty response. Please try again.")
+    if len(answer) > MAX_MODEL_ANSWER_CHARS:
+        raise RuntimeError("The model answer exceeded 12,000 characters. Ask a narrower question.")
     sources = [_source(document) for document in documents]
     reported_usages = [item for item in response_usages if item is not None]
     usage = None
@@ -232,12 +234,16 @@ def _stream_response(client: Any, request: dict[str, Any], on_text_delta: Callab
     """Yield text deltas while retaining the completed response for tool handling."""
     stream = client.create(**request, stream=True)
     completed = None
+    text_characters = 0
     try:
         for event in stream:
             event_type = _field(event, "type", "")
             if event_type == "response.output_text.delta":
                 delta = _field(event, "delta", "")
                 if isinstance(delta, str) and delta:
+                    text_characters += len(delta)
+                    if text_characters > MAX_MODEL_ANSWER_CHARS:
+                        raise RuntimeError("The model stream exceeded 12,000 characters. Ask a narrower question.")
                     on_text_delta(delta)
             elif event_type == "response.completed":
                 completed = _field(event, "response")

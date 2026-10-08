@@ -1795,3 +1795,10 @@
 - Static health review found missing/invalid notes could escape the route without a response. Corpus read/validation failures now return generic corpus-unavailable 503 with no session cookie.
 - Browser readiness now uses bounded strict JSON, a 20-second deadline, HTTP status checks, and typed/consistent mode/model/note/capability fields before applying controls. Failures show setup/reload guidance rather than being treated as offline readiness. This describes configuration, not provider/device/storage success.
 - Verification: Python compilation, JavaScript syntax, and git diff whitespace checks only. No tests, health requests, corpus mutation, browser/device checks, storage writes, or provider calls were performed.
+
+
+## Bound model answer text before retaining or speaking - 2026-10-08
+
+- Added a shared 12,000-code-point model-answer cap to agent and terminal/legacy completed answers. Streamed provider text is counted per response and rejected before forwarding an overflowing delta; existing finally closes the provider stream.
+- Added browser completed-answer mode/length validation with an initial UTF-16 size guard before code-point counting. No silent truncation, offline note-summary cap, provider billing cap, or rollback of earlier speech/tool writes is claimed.
+- Verification: Python compilation, JavaScript syntax, and git diff whitespace checks only. No tests, model responses, browser/device checks, boundary executions, database writes, or provider calls were performed. Added unperformed overflow/recovery scenarios to the run sheet.

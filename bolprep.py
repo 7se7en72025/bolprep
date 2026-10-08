@@ -9,6 +9,8 @@ import sys
 from retrieval import retrieval_query, retrieve
 from conversation_history import model_history, prior_queries
 
+MAX_MODEL_ANSWER_CHARS = 12000
+
 try:
     from dotenv import load_dotenv
 except ImportError:
@@ -131,6 +133,8 @@ def ask_model(
     answer = response.output_text.strip()
     if not answer:
         raise RuntimeError("The model returned an empty response. Please try again.")
+    if len(answer) > MAX_MODEL_ANSWER_CHARS:
+        raise RuntimeError("The model answer exceeded 12,000 characters. Ask a narrower question.")
     return answer
 
 

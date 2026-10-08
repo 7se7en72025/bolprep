@@ -415,6 +415,8 @@ async function readAgentStream(response, onTextDelta, onSpeechMode, onActivity, 
       const result = event.payload;
       if (!result || typeof result !== "object" || Array.isArray(result)
         || typeof result.answer !== "string" || !result.answer.trim()
+        || !["offline", "model"].includes(result.mode)
+        || (result.mode === "model" && (result.answer.length > 24_000 || [...result.answer].length > 12_000))
         || (result.sources !== undefined && !validStudySources(result.sources))
         || (result.tool_events !== undefined && !validTutorToolEvents(result.tool_events))) {
         throw new Error("The tutor sent an invalid completed response.");
