@@ -1760,3 +1760,10 @@
 - Static review found the tool loop could create several quizzes in one turn while the browser selected only the first successful start event. Added an explicit instruction and execution guard: after one successful start, subsequent start_quiz calls receive a failed result without calling the storage-creating tool.
 - Failed starts remain correctable, other tools retain their existing bounds, and the guard resets for each tutor turn. Documented duplicate calls within/across rounds and remaining cancellation/failure orphan limits; no cross-turn idempotency or rollback is claimed.
 - Verification: Python compilation and git diff whitespace checks only. No tests, tool executions, database writes, browser checks, or provider calls were performed.
+
+
+## Reject ambiguous retries of historical scores - 2026-10-08
+
+- Static persistence review found migrated attempts without retry keys returned their historical result for every submission. Such submissions now raise ProgressConflict with an explicit preserved-score/new-quiz instruction, instead of presenting old feedback as if it described a fresh answer. Direct HTTP scoring already maps this to 409 and model tools map it to failure.
+- Historical records/progress remain intact; matching-key replay and different-key conflict behavior are unchanged. Added isolated legacy migration/retry review instructions without modifying any database.
+- Verification: Python compilation and git diff whitespace checks only. No tests, migrations, score executions, database writes, browser checks, or provider calls were performed.

@@ -80,7 +80,7 @@ Quiz questions currently cover Articles 14, 19, 21, and 22. Basic selects 14/21,
 
 ## Saved data and local limits
 
-Quiz results and explicitly saved conversations use local SQLite storage, scoped by a browser cookie. This is not a learner account system; stored text is not encrypted. Losing the cookie can make earlier records inaccessible.
+Quiz results and explicitly saved conversations use local SQLite storage, scoped by a browser cookie. Scores with a matching retry key return the retained result; older migrated scores without a key reject new submissions and require a new quiz, while remaining visible in progress. This is not a learner account system; stored text is not encrypted. Losing the cookie can make earlier records inaccessible.
 
 Snapshots contain up to 20 recent messages, bounded text, citations, and supported request metadata. Audio, unsent drafts, and partial transcription deltas are not saved. Opening a snapshot cancels active work and restores context without automatically resuming a quiz or playing speech. Conversation deletion and quiz-progress deletion are separate actions.
 

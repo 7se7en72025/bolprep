@@ -152,7 +152,7 @@ def save_answer(
         ).fetchone()
         if saved:
             if saved["idempotency_key"] is None:
-                return json.loads(saved["result_json"])
+                raise ProgressConflict("This historical quiz answer has no retry key. Its score is preserved; start a new quiz to answer again.")
             if saved["idempotency_key"] != idempotency_key:
                 raise ProgressConflict("This quiz answer was already saved. Start a new quiz to answer again.")
             return json.loads(saved["result_json"])

@@ -432,3 +432,8 @@ Inspect direct score responses and score_answer tool events with matched/missing
 ### One successful quiz start per tutor turn (not yet verified)
 
 When tool-loop verification is authorized, inspect two start_quiz calls in the same response and repeated calls in later rounds. After the first successful start, later starts should return an explicit failed tool result and create no extra quiz rows. The browser should receive one successful quiz and display its returned questions/ID. Failed argument-validation starts should still allow a corrected start; weak-topic/scoring tools and the total call/round bounds should retain existing behavior. A new tutor turn should be able to start a new quiz. Cancellation or a final model failure after creation may still leave an unused quiz; this guard is not transaction rollback or cross-turn idempotency. No model, tool-loop, browser, or storage checks have been performed for this addition.
+
+
+### Historical score retry identity (not yet verified)
+
+In an authorized isolated legacy-database review, migrate a retained attempt whose idempotency key is null. A new score submission must receive a conflict directing a new quiz, retain the original result/count, and remain visible in progress. Inspect both the direct score endpoint and model score tool: the tool should report failure, rather than present historical feedback as the new answer's result. Existing matching-key attempts should still return the retained result without duplicate writes, and different keys should conflict. Keep the draft available after failure and start a new quiz for a fresh attempt. Do not rewrite real learner records. Migration, conflict, UI recovery, and idempotent replay checks have not been performed.
