@@ -375,41 +375,41 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         try:
             from openai import OpenAI
 
-            client = OpenAI(timeout=60.0, max_retries=0)
-            instructions = (
-                "Speak clearly in Hindi with a conversational pace."
-                if language == "hi-IN"
-                else "Speak clearly in Indian English with a conversational pace."
-            )
-            with client.audio.speech.with_streaming_response.create(
-                model="gpt-4o-mini-tts",
-                voice=voice,
-                input=text.strip(),
-                instructions=instructions,
-                response_format="pcm",
-            ) as response:
-                self.send_response(200)
-                self.send_header("Content-Type", "audio/pcm")
-                self.send_header("X-Audio-Sample-Rate", "24000")
-                self.send_header("Transfer-Encoding", "chunked")
-                self.send_header("Cache-Control", "no-store")
-                self.send_header("X-Content-Type-Options", "nosniff")
-                self._send_session_cookie_if_needed()
-                self.end_headers()
-                response_started = True
-                for chunk in response.iter_bytes(chunk_size=4096):
-                    if not chunk:
-                        continue
-                    self.wfile.write(f"{len(chunk):X}\r\n".encode("ascii"))
-                    self.wfile.write(chunk)
-                    self.wfile.write(b"\r\n")
+            with OpenAI(timeout=60.0, max_retries=0) as client:
+                instructions = (
+                    "Speak clearly in Hindi with a conversational pace."
+                    if language == "hi-IN"
+                    else "Speak clearly in Indian English with a conversational pace."
+                )
+                with client.audio.speech.with_streaming_response.create(
+                    model="gpt-4o-mini-tts",
+                    voice=voice,
+                    input=text.strip(),
+                    instructions=instructions,
+                    response_format="pcm",
+                ) as response:
+                    self.send_response(200)
+                    self.send_header("Content-Type", "audio/pcm")
+                    self.send_header("X-Audio-Sample-Rate", "24000")
+                    self.send_header("Transfer-Encoding", "chunked")
+                    self.send_header("Cache-Control", "no-store")
+                    self.send_header("X-Content-Type-Options", "nosniff")
+                    self._send_session_cookie_if_needed()
+                    self.end_headers()
+                    response_started = True
+                    for chunk in response.iter_bytes(chunk_size=4096):
+                        if not chunk:
+                            continue
+                        self.wfile.write(f"{len(chunk):X}\r\n".encode("ascii"))
+                        self.wfile.write(chunk)
+                        self.wfile.write(b"\r\n")
+                        self.wfile.flush()
+                    self.wfile.write(b"0\r\n\r\n")
                     self.wfile.flush()
-                self.wfile.write(b"0\r\n\r\n")
-                self.wfile.flush()
         except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
             self.close_connection = True
         except Exception as exc:
-            print(f"Streamed speech request failed: {exc}")
+            print(f"Streamed speech request failed: {type(exc).__name__}")
             if response_started:
                 self.close_connection = True
             else:
@@ -493,23 +493,23 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         try:
             from openai import OpenAI
 
-            client = OpenAI(timeout=60.0, max_retries=0)
-            response = client.audio.transcriptions.create(
-                model="gpt-transcribe",
-                file=(filename, audio, content_type),
-                language=language_code,
-            )
-            transcript = getattr(response, "text", "")
-            if not isinstance(transcript, str) or not transcript.strip():
-                self._send_json(502, {"error": "The transcription provider returned no text. Try again or type your question."})
-                return
-            transcript = transcript.strip()
-            if len(transcript) > MAX_RECORDED_TRANSCRIPT_CHARS:
-                self._send_json(422, {"error": "The transcript is over 6,000 characters and cannot be shown. Record a shorter clip or type your question."})
-                return
-            self._send_json(200, {"transcript": transcript})
+            with OpenAI(timeout=60.0, max_retries=0) as client:
+                response = client.audio.transcriptions.create(
+                    model="gpt-transcribe",
+                    file=(filename, audio, content_type),
+                    language=language_code,
+                )
+                transcript = getattr(response, "text", "")
+                if not isinstance(transcript, str) or not transcript.strip():
+                    self._send_json(502, {"error": "The transcription provider returned no text. Try again or type your question."})
+                    return
+                transcript = transcript.strip()
+                if len(transcript) > MAX_RECORDED_TRANSCRIPT_CHARS:
+                    self._send_json(422, {"error": "The transcript is over 6,000 characters and cannot be shown. Record a shorter clip or type your question."})
+                    return
+                self._send_json(200, {"transcript": transcript})
         except Exception as exc:
-            print(f"Transcription request failed: {exc}")
+            print(f"Transcription request failed: {type(exc).__name__}")
             self._send_json(502, {"error": "The transcription provider could not return text. Check the server terminal and try again."})
 
     def _read_json_body(self) -> dict[str, Any] | None:

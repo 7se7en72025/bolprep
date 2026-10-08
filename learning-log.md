@@ -1871,3 +1871,9 @@
 - Added a stdlib label-only runner with strict schema, duplicate-key rejection, bounded UTF-8 input, anonymous IDs, complete per-review unit labels, and frozen evidence-hash references. It does not read or echo raw questions, answers, notes, or rationales.
 - Reports outcome/missing-review coverage, claim and displayed-note counts, disposition/relevance ratings, and paired claim-label agreement overall and by configuration/language. Repeated reviewer observations, overlapping answer categories, zero denominators, and unsupported comparison/evidence checks are explicit.
 - Verification: Python compilation, CLI help, and git diff whitespace checks only. No tests, label collection, human ratings, report computation, browser/device checks, recordings, or provider calls were performed. Actual data and computation remain pending.
+
+## Close speech provider clients - 2026-10-08
+
+- Recorded transcription and streamed PCM speech now scope their per-request OpenAI HTTP clients with context managers. Response consumption remains inside the client scope; early validation returns and disconnected streams also exit the scope.
+- These two routes log exception class names instead of raw provider exception text. Existing generic browser errors and pre/post-header stream failure handling remain. Added manual resource/failure observations to the run sheet.
+- Verification: Python compilation and git diff whitespace checks, with static scope inspection. No tests, provider calls, recordings, browser/device checks, resource measurements, or cancellation/billing claims.

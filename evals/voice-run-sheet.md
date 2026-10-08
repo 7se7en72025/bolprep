@@ -497,3 +497,8 @@ Inspect get_weak_topics tool events with empty valid progress, populated valid p
 ### Broad-topic retrieval scope (not yet verified)
 
 Compare generic fundamental-rights overviews in English, Hindi, and Hinglish with questions that add a supported subject and questions that add an unrelated subject. Generic wording, starter-note/study/UPSC scaffolding, and language/repetition instructions should preserve the broad overview; supported subject terms should rank their matching notes, while the broad label alone must not supply overlap for unrelated subjects. Include explicit article IDs/lists/ranges, which retain their existing reference path, and contextual follow-ups under both overlap/rarity scoring. Inspect sources, unsupported replies, and differences from historical reports. This is lexical scope handling, not semantic eligibility or citation-support proof. No retrieval/scoring/browser checks or benchmark runs were performed.
+
+
+### Speech provider client cleanup (not yet verified)
+
+During authorized provider checks, repeat recorded transcription and streamed speech, including empty/oversized transcription results, provider rejection/timeout, and browser playback disconnects. Confirm the per-request client context exits after success and failure and that speech/transcription server error logs contain exception types rather than provider response bodies. Streamed speech must finish its response before client closure; a failure after audio headers must close the connection instead of appending a JSON error to PCM. Client cleanup does not prove provider-side cancellation or billing cessation. No provider, network-resource, disconnect, or browser checks were performed.
