@@ -1208,3 +1208,9 @@
 - The client now requires `audio/pcm` and a 24 kHz sample-rate header before decoding streamed speech. Unexpected response formats fall back to the browser voice before scheduling audio. Decoder and playback errors also abort the local stream, so a failed consumer does not keep an unread response open.
 - Audible playback and provider cancellation still need device/provider verification.
 - Verification: JavaScript syntax and diff checks passed. A temporary simulation executed the actual streamed-speech function with wrong content type, wrong/missing sample rate, valid PCM, and a decoder error; rejection before decoding, fallback, successful completion, and stream cleanup passed. No real audio or provider request was used.
+
+## Recover stalled streamed speech - 2026-10-08
+
+- Added a 90-second idle deadline while fetching streamed speech, refreshed by each nonempty audio chunk and cleared before buffered playback finishes. Timeout failures use `stream-timeout`, fall back before playback starts, and stop queued sources after playback has started. Deliberate interruption also releases the pending playback wait without requiring an audio-ended event.
+- Browser timers may be delayed in suspended tabs. Actual audible playback and provider cancellation remain unverified.
+- Verification: JavaScript syntax and diff checks passed. A temporary actual-source simulation verified initial and midstream idle timeouts, correct fallback/queued-source cleanup, timer removal, and cancellation during buffered playback without recording success or failure. No provider or audio device was used.

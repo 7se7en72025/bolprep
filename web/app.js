@@ -830,6 +830,18 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
   let resolvePlayback;
   const requestSources = new Set();
   const playbackDone = new Promise((resolve) => { resolvePlayback = resolve; });
+  const onAbort = () => resolvePlayback();
+  controller.signal.addEventListener("abort", onAbort, { once: true });
+  let timedOut = false;
+  let idleTimer = null;
+  const resetIdleDeadline = () => {
+    window.clearTimeout(idleTimer);
+    idleTimer = window.setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, 90_000);
+  };
+  resetIdleDeadline();
   try {
     const response = await fetch("/api/speech", {
       method: "POST",
@@ -848,6 +860,10 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
     }
     if (!response.body) throw new Error("This browser cannot receive streamed audio.");
     await context.resume();
+    if (controller.signal.aborted) {
+      if (timedOut) throw new Error("Streamed speech timed out.");
+      return;
+    }
     const reader = response.body.getReader();
     let pending = new Uint8Array(0);
     let audioChunks = 0;
@@ -885,6 +901,8 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
+      if (!value.length) continue;
+      resetIdleDeadline();
       const combined = new Uint8Array(pending.length + value.length);
       combined.set(pending);
       combined.set(value, pending.length);
@@ -894,10 +912,11 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
     }
     if (pending.length) throw new Error("The speech stream ended on an incomplete audio sample.");
     if (!audioChunks) throw new Error("The speech provider returned no audio.");
+    window.clearTimeout(idleTimer);
     streamFinished = true;
     if (requestSources.size === 0) resolvePlayback();
     await playbackDone;
-    if (requestSpeechTurn !== speechTurn) return;
+    if (requestSpeechTurn !== speechTurn || controller.signal.aborted) return;
     const endedAt = performance.now();
     const startDelay = ((firstAudioAt - queuedAt) / 1000).toFixed(2);
     const playbackDuration = ((endedAt - firstAudioAt) / 1000).toFixed(2);
@@ -906,22 +925,25 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
     statusLine.textContent = `${completionText} Stream start ${startDelay}s, playback ${playbackDuration}s. `
       + speechTimingSummary(sample);
   } catch (error) {
-    if (error.name === "AbortError" || requestSpeechTurn !== speechTurn) return;
+    if ((error.name === "AbortError" && !timedOut) || requestSpeechTurn !== speechTurn) return;
     controller.abort();
     requestSources.forEach((source) => {
       try { source.stop(); } catch { /* The source may already have ended. */ }
       scheduledSpeechSources.delete(source);
     });
     requestSources.clear();
-    speechFailures.push({ ...sample, reason: "stream-failed" });
+    speechFailures.push({ ...sample, reason: timedOut ? "stream-timeout" : "stream-failed" });
     if (speechFailures.length > 500) speechFailures.shift();
+    const message = timedOut ? "No streamed speech data arrived for 90 seconds." : error.message;
     if (firstAudioAt === null) {
-      statusLine.textContent = `${error.message} Falling back to the browser voice.`;
+      statusLine.textContent = `${message} Falling back to the browser voice.`;
       speakWithBrowser(text, completionText, kind);
     } else {
-      statusLine.textContent = `${error.message} Streamed speech stopped.`;
+      statusLine.textContent = `${message} Streamed speech stopped.`;
     }
   } finally {
+    window.clearTimeout(idleTimer);
+    controller.signal.removeEventListener("abort", onAbort);
     if (activeSpeechController === controller) activeSpeechController = null;
   }
 }
