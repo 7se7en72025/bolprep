@@ -226,3 +226,10 @@ Save each page export as an ignored local-live JSON file and note its correspond
 Export the same completed live attempt twice: its attempt_id should stay the same, and the report should count one unique attempt with one duplicate by ID. Complete another conversation turn on the reused connection: it should get a different ID. Repeat with an early connection failure and deliberate cancellation; each terminal attempt should retain its allocated ID. With UUID generation unavailable, the exported ID should be null and the report should state its metadata fallback counts.
 
 For report review, check that conflicting selected metadata under one ID is rejected with an input/attempt index, while separate IDs with otherwise matching metadata stay separate. Avoid mixing legacy and current snapshots of the same session. These checks remain manual and unverified.
+
+### Tutor stream deadline checks (not yet performed)
+
+- Stall a tutor request before response headers, then after one text segment: after 90 seconds without data, verify a timeout message, restored send control, removed incomplete answer, and no pending speech restart. The question should remain in history as a failed turn.
+- Keep response chunks arriving less than 90 seconds apart but hold the turn open for five minutes: verify the total deadline ends it. Completed tool effects may remain; inspect actual progress before retrying.
+- Stop/Escape or start a follow-up before expiry: the old turn should count as canceled and old timers must not affect the new request. Complete a normal answer then leave playback running: tutor timers should not stop it.
+- Export diagnostics: timeouts should increase failure counts, not cancellation or success counts. Record browser timer delays and missing trace metadata separately. Provider generation cancellation remains unverified.

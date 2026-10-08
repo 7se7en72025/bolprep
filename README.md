@@ -243,3 +243,9 @@ Only syntax and command-help checks have been performed for this tool; imported 
 ## Live attempt identity
 
 Diagnostics schema 10 adds attempt_id to each live transcription attempt. It is allocated before connection startup, preserved through listening/finalization and repeated exports, and replaced before each reused conversation turn. Where browser crypto.randomUUID is unavailable, it is null and the report uses its legacy metadata fallback. IDs stay in page memory and exported diagnostics; they are independent of progress cookies, access tokens, and provider credentials. They identify an attempt, not a learner or a recording. Reload resets page records. IDs and conflict checks do not prove that an imported export is authentic. Browser generation, reused-turn identity, and report conflict handling remain unverified at runtime.
+
+## Tutor request deadlines
+
+Browser tutor turns have a 90-second data-idle deadline covering connection setup and gaps between response bytes, plus a five-minute overall deadline. Headers and nonempty stream chunks reset the idle deadline; total time is never reset. A timeout aborts the local fetch, clears pending progressive speech, removes the incomplete displayed answer, shows a retry message, and restores the send control. The question remains in bounded history with a failure note. Tutor traces and model-stream summaries count timeouts as failures; deliberate Stop/Escape and superseded turns remain cancellations.
+
+Timers are cleared when the text response completes, fails, or is canceled, so they do not limit normal subsequent playback. Speech has its own deadlines. Aborting the client does not prove provider-side generation cancellation or roll back a tool action already completed on the server. No automatic retry is performed. Browser suspension can delay deadlines, and stalled-header/body recovery and new-turn isolation remain unverified in a real browser.

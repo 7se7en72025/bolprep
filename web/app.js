@@ -155,7 +155,7 @@ function addMessage(role, text, sources = []) {
   return article;
 }
 
-async function readAgentStream(response, onTextDelta, onSpeechMode) {
+async function readAgentStream(response, onTextDelta, onSpeechMode, onActivity) {
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
     throw new Error(error.error || "Tutor request failed.");
@@ -179,6 +179,7 @@ async function readAgentStream(response, onTextDelta, onSpeechMode) {
   }
   while (true) {
     const { value, done } = await reader.read();
+    if (value?.length) onActivity?.();
     pending += decoder.decode(value || new Uint8Array(), { stream: !done });
     const lines = pending.split("\n");
     pending = lines.pop();
@@ -1360,6 +1361,19 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
   const requestLanguage = speechLanguage.value;
   const requestStartedAt = performance.now();
   const clientStartedAtUtc = new Date().toISOString();
+  let timeoutReason = null;
+  let idleTimer = null;
+  const expire = (reason) => {
+    if (controller.signal.aborted) return;
+    timeoutReason = reason;
+    controller.abort();
+  };
+  const resetIdleDeadline = () => {
+    window.clearTimeout(idleTimer);
+    idleTimer = window.setTimeout(() => expire("idle"), 90_000);
+  };
+  resetIdleDeadline();
+  const totalTimer = window.setTimeout(() => expire("total"), 300_000);
   let requestId = null;
   let traceRecorded = false;
   const recordTrace = (outcome, trace = null) => {
@@ -1403,6 +1417,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
       signal: controller.signal,
     });
     requestId = response.headers.get("X-Request-ID");
+    resetIdleDeadline();
     const payload = await readAgentStream(response, (delta) => {
       if (requestTurn !== turn) return;
       if (firstTextMs === null) firstTextMs = performance.now() - requestStartedAt;
@@ -1420,7 +1435,9 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
         ? createProgressiveStreamedSpeech()
         : createProgressiveBrowserSpeech();
       activeProgressiveSpeech = progressiveSpeech;
-    });
+    }, resetIdleDeadline);
+    window.clearTimeout(idleTimer);
+    window.clearTimeout(totalTimer);
     if (requestTurn !== turn) {
       recordTrace("cancelled", payload.trace);
       if (payload.mode === "model") {
@@ -1472,25 +1489,36 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
       speak(payload.answer);
     }
   } catch (error) {
-    recordTrace(error.name === "AbortError" || requestTurn !== turn ? "cancelled" : "failed", error.trace);
-    if (progressiveSpeech && requestTurn === turn && error.name !== "AbortError") stopSpeechOutput();
+    const cancelled = requestTurn !== turn || (error.name === "AbortError" && !timeoutReason);
+    controller.abort();
+    recordTrace(cancelled ? "cancelled" : "failed", error.trace);
+    if (progressiveSpeech && requestTurn === turn && !cancelled) stopSpeechOutput();
     if (modelModeAvailable) {
       modelStreamFailures.push({
         language: requestLanguage,
         model: modelName,
-        reason: error.name === "AbortError" || requestTurn !== turn ? "cancelled" : "failed",
+        reason: cancelled ? "cancelled" : "failed",
       });
       if (modelStreamFailures.length > 500) modelStreamFailures.shift();
     }
-    if (error.name !== "AbortError" && requestTurn === turn) {
+    if (!cancelled && requestTurn === turn) {
       activePartialMessage?.remove();
       activePartialMessage = null;
       pendingQuestion = null;
-      addMessage("assistant", error.message);
+      const message = timeoutReason === "idle"
+        ? "No tutor data arrived for 90 seconds. Try again or ask a shorter question."
+        : timeoutReason === "total"
+          ? "The tutor request reached its five-minute limit. Try again with a shorter question."
+          : error.message;
+      addMessage("assistant", message);
       rememberTurn(question, "The tutor request failed before an answer was produced.");
-      statusLine.textContent = "Request failed. Your conversation is still open.";
+      statusLine.textContent = timeoutReason
+        ? "Tutor request timed out. Your conversation is still open."
+        : "Request failed. Your conversation is still open.";
     }
   } finally {
+    window.clearTimeout(idleTimer);
+    window.clearTimeout(totalTimer);
     if (requestTurn === turn) {
       sendButton.disabled = false;
       activeRequest = null;
