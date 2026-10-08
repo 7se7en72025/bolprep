@@ -1362,3 +1362,9 @@
 - Added optional rarity-weighted token scoring while preserving the app default overlap scorer, overlap eligibility, article/broad-topic rules, result limits, and deterministic ties. Weight is log(1 + N/(1 + document frequency)); keywords retain double contribution. It is a heuristic candidate with no measured improvement claim.
 - Added evaluator --scoring/--compare modes, configuration/input hashes, changed examples, exact-match gains/regressions, and stable-input guards. Fixed supported_recall_at_3 to count only the first three results and retained full-result support recall under a separate name. Historical README recall figures were clarified as full-result support recall; no corrected or candidate results were invented.
 - Verification: Python compilation, evaluator --help, and git diff whitespace checks passed. No tests, evaluator dataset runs, or provider calls were performed. Candidate behavior, comparison/regression counts, and corrected top-three metrics remain unverified at runtime.
+
+## End live transcription visibly on microphone loss - 2026-10-08
+
+- Added track-ended watchers and startup rejection for missing/already-ended audio tracks. Unexpected loss fails with capture-ended, closes resources, restores the prior draft, and asks for deliberate reconnection or typing. Watchers persist across reused turns and are removed before cleanup. Temporary mute is not permanent loss.
+- Updated the local report to accept the new failure reason. Consulted MDN MediaStreamTrack ended-event documentation for hardware/revocation events and the distinction from local track.stop. Added README/manual device-loss guidance.
+- Verification: affected JavaScript syntax, report --help, and git diff whitespace checks passed. No tests or provider calls were run; hardware removal, revoked permission, draft restoration, normal finalization, and single-outcome/stale-event behavior remain unverified on real devices.

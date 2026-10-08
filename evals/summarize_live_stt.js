@@ -11,7 +11,7 @@ const failureReasons = new Set([
   "final-transcript-timeout", "transcript-too-long", "empty-transcript",
   "buffer-clear-timeout", "analysis-unavailable", "analysis-suspended",
   "analysis-failed", "connection-timeout", "session-limit", "server-busy",
-  "rate-limited", "capture-permission", "capture-failed", "session-failed",
+  "rate-limited", "capture-permission", "capture-failed", "capture-ended", "session-failed",
 ]);
 const finishReasons = new Set(["manual", "quiet-pause", "capture-limit"]);
 const fallbackReasons = new Set(["analysis-unavailable", "analysis-suspended", "analysis-failed"]);

@@ -300,3 +300,9 @@ Rarity weighting uses log(1 + N/(1 + df)) for each query token, where N is corpu
 The comparison reports each configuration, changed example IDs, exact-match gains/regressions, and dataset/corpus SHA-256 hashes; changed inputs abort the run. Strict supported_recall_at_3 now uses only the first three results, while retrieved_support_recall uses all results. Broad-topic labels expecting the full corpus will therefore have lower strict top-three recall even when full-set exact match passes. The historical 100% support-recall result above used all returned notes; it was previously mislabeled recall@3. No corrected top-three or rarity results have been measured in this turn.
 
 Only Python compilation, evaluator help, and whitespace checks were performed. Comparison execution and alternative runtime behavior remain unverified; constructed examples do not measure learner questions, speech, or answer quality.
+
+## Live microphone loss
+
+Live mic watches audio tracks for unexpected ended events and rejects missing or already-ended audio tracks before provider connection. Device loss records `capture-ended`, closes capture/peer/detection resources through existing failure cleanup, restores the previous draft, and asks the learner to reconnect or type. Reused conversation turns retain the watcher. Capture does not restart automatically.
+
+[MDN documents track ended events](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrack/ended_event) for permanent source loss, including hardware removal or permission revocation; local track.stop does not emit this event. Watchers are removed on cleanup. Temporary mute is not classified as permanent loss. Real-device removal, permission revocation, normal Done, draft restoration, and duplicate-outcome behavior remain unverified.

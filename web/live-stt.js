@@ -16,6 +16,7 @@ class BolPrepLiveTranscription {
     this.partial = "";
     this.itemId = null;
     this.committedItemId = null;
+    this.trackEndListeners = [];
   }
 
   later(callback, delay) {
@@ -36,6 +37,8 @@ class BolPrepLiveTranscription {
   cancel(outcome = "cancelled", reason = null) {
     if (this.closed) return;
     this.closed = true;
+    this.trackEndListeners.forEach(([track, listener]) => track.removeEventListener("ended", listener));
+    this.trackEndListeners.length = 0;
     this.controller.abort();
     this.timers.forEach(clearTimeout);
     this.timers.clear();
@@ -319,10 +322,23 @@ class BolPrepLiveTranscription {
         return;
       }
       this.stream = stream;
+      const audioTracks = stream.getAudioTracks();
+      if (!audioTracks.length || audioTracks.some((track) => track.readyState === "ended")) {
+        this.fail("The microphone is no longer available. Reconnect it and start Live mic again, or type.", "capture-ended");
+        return;
+      }
+      for (const track of audioTracks) {
+        const onEnded = () => this.fail(
+          "Microphone capture ended unexpectedly. Reconnect or allow the microphone, then start Live mic again. Your previous draft is restored.",
+          "capture-ended",
+        );
+        this.trackEndListeners.push([track, onEnded]);
+        track.addEventListener("ended", onEnded, { once: true });
+      }
       stage = "connection";
       const peer = new RTCPeerConnection();
       this.peer = peer;
-      stream.getAudioTracks().forEach((track) => {
+      audioTracks.forEach((track) => {
         track.enabled = false;
         peer.addTrack(track, stream);
       });

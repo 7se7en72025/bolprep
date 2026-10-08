@@ -261,3 +261,9 @@ Follow [rubric version 1](TTS_RUBRIC.md) for matched prompts and anonymous fluen
 Ask a supported Article 14 question in a configured model session with progressive browser/provider speech. Retrieved note links should appear before answer text completes and remain visible during early speech. At completion, the partial message should be replaced with one final answer/source list. Repeat offline and with quiz/revision tools; the early label describes retrieval, not answer-support validation.
 
 Ask an unsupported question: no early evidence links should be invented. Stop, fail, or supersede a turn after source arrival: its partial sources must not appear under the next answer or resume from a late event. Check the actual final answer against the retrieved note separately before claiming citation support.
+
+### Live microphone loss checks (not yet performed)
+
+Unplug or revoke the active microphone during setup, listening, finalization, and a reused conversation turn. Verify closure, reconnect/type guidance, previous draft restoration, no late submission, and one capture-ended outcome for the current attempt. Deliberately start a new session after reconnecting; old ended events must not affect it.
+
+Compare normal Done, Stop, Escape, and the capture limit: local track cleanup should not become capture-ended or add another terminal outcome. Temporary mute is a separate condition. Record actual browser/device behavior and unavailable cases before claiming verified recovery.
