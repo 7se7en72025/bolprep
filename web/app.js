@@ -2822,7 +2822,13 @@ function stopHiddenPageInput() {
   return true;
 }
 
-window.addEventListener("pagehide", stopHiddenPageInput);
+window.addEventListener("pagehide", () => {
+  // A cached page can resume later. Invalidate its old turn and speech queues
+  // before suspension, rather than letting delayed output restart on return.
+  stopHiddenPageInput();
+  stopTutor();
+  statusLine.textContent = "Active study work stopped when leaving the page. Review your draft or start a new turn when ready.";
+});
 document.addEventListener("visibilitychange", () => {
   if (!document.hidden || !stopHiddenPageInput()) return;
   statusLine.textContent = "Speech input canceled when the page was hidden. Review your draft or start the microphone again when ready.";

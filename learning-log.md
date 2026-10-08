@@ -1704,3 +1704,10 @@
 - Added bounded optional provider model IDs in completed response/tool-round order, separately from the requested model. Missing/invalid IDs remain null; offline traces use an empty list and failed traces remain unavailable. Read the installed SDK Response.model declaration before using the field.
 - Carried identity through live diagnostics, exports, explicit conversation snapshots, and report configuration groups. Validators bound IDs and require response-count agreement; older traces remain accepted and server normalization preserves field absence for retained-save retry compatibility. Returned IDs are not claimed as immutable versions or speech provenance.
 - Verification: Python compilation, JavaScript syntax checks, and git diff whitespace checks only. No tests, provider calls, browser/device checks, database writes, or report/evaluation runs. The pending verification request remains unanswered.
+
+
+## Cancel stale output when navigating away - 2026-10-08
+
+- Static lifecycle review found pagehide released input capture but did not cancel active tutor requests or output queues. Added normal Stop handling after immediate input cleanup so tutor/speech identities advance, requests abort, interrupted context is retained, and queued/browser/provider playback is canceled before cached-page suspension. Returning shows an explicit stopped status; no automatic restart was added.
+- Kept visibilitychange limited to input cancellation so hiding a tab does not cancel intended answer playback. Extended the manual lifecycle review instructions with generation/quiz/playback/navigation/cache scenarios.
+- Verification: inspected existing Stop and interruption-context paths, ran JavaScript syntax and git diff whitespace checks. No tests, browser/device/navigation checks, provider calls, or recordings were performed; audible stop and upstream cancellation remain unverified.
