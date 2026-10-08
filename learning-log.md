@@ -1512,3 +1512,9 @@
 - Extracted the existing bounded, deduplicated history-note helper and reused it for terminal provider/browser failures, unavailable browser playback, and failed segments. Progressive failure before model text completion marks the answer when it is remembered. Explicit Stop retains the same note behavior.
 - Early provider failure followed by browser fallback does not mark the answer unless fallback fails. Displayed text/sources remain unchanged; the note does not identify audible words. Added README/manual failure timing, fallback, stale callback, preview, eviction, and duplicate cases.
 - Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, browser interactions, controlled playback, recordings, or provider calls were run; history association, recovery, duplicate suppression, and follow-up context remain unverified at runtime.
+
+## Validate tool results before client completion - 2026-10-08
+
+- Inspection found completed payloads accepted arbitrary tool-event entries, allowing null/malformed successful results to fail after a completed trace was recorded. Added bounded entry/result validation, six-event cap, distinct quiz IDs/prompts/sources, and finite score/feedback/source checks before accepting stream completion.
+- Malformed results use existing request-failure recovery. Server argument validation and idempotent writes remain separate; client rejection does not roll back completed writes. Added README/manual malformed and compatible tool-response cases.
+- Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, controlled responses, browser interactions, or provider calls were performed; valid server compatibility, quiz state, failure traces, score rendering, and post-write recovery remain unverified at runtime.

@@ -173,6 +173,31 @@ function validStudySources(sources) {
   return Array.isArray(sources) && sources.length <= 100 && sources.every(validStudySource);
 }
 
+function validTutorToolEvents(events) {
+  const object = (value) => value && typeof value === "object" && !Array.isArray(value);
+  const text = (value, limit) => typeof value === "string" && Boolean(value.trim()) && value.length <= limit;
+  if (!Array.isArray(events) || events.length > 6) return false;
+  return events.every((event) => {
+    if (!object(event) || !text(event.name, 64) || typeof event.ok !== "boolean") return false;
+    if (!event.ok) return text(event.error, 4096);
+    const result = event.result;
+    if (!object(result)) return false;
+    if (event.name === "start_quiz") {
+      if (!text(result.quiz_id, 128) || !Array.isArray(result.questions)
+        || result.questions.length < 1 || result.questions.length > 3) return false;
+      if (!result.questions.every((question) => object(question) && text(question.id, 128)
+        && text(question.prompt, 3000) && validStudySource(question.source))) return false;
+      return new Set(result.questions.map((question) => question.id)).size === result.questions.length;
+    }
+    if (event.name === "score_answer") {
+      return text(result.feedback, 4096) && typeof result.score === "number"
+        && Number.isFinite(result.score) && result.score >= 0 && result.score <= 100
+        && validStudySource(result.source);
+    }
+    return true;
+  });
+}
+
 function addMessage(role, text, sources = [], sourceLabel = "STUDY SOURCE") {
   const article = document.createElement("article");
   article.className = `message ${role === "user" ? "user-message" : "tutor-message"}`;
@@ -241,7 +266,7 @@ async function readAgentStream(response, onTextDelta, onSpeechMode, onActivity, 
       if (!result || typeof result !== "object" || Array.isArray(result)
         || typeof result.answer !== "string" || !result.answer.trim()
         || (result.sources !== undefined && !validStudySources(result.sources))
-        || (result.tool_events !== undefined && !Array.isArray(result.tool_events))) {
+        || (result.tool_events !== undefined && !validTutorToolEvents(result.tool_events))) {
         throw new Error("The tutor sent an invalid completed response.");
       }
       payload = result;
