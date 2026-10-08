@@ -264,6 +264,8 @@ Use controlled recorded-transcription responses below/at/above the active compos
 
 ### Recorded clip size checks (not yet performed)
 
+With local recorder instrumentation, suppress the stop event after normal Stop or the 20-second limit. After 10 seconds in an active tab, expect one recording-stop-timeout failure, discarded chunks, no upload, track stop commands, and an enabled Record control. Repeat after cancellation, microphone loss, and size overflow: cleanup should release the control without a second failure. Deliver the old stop/error/data callbacks after beginning a new capture; they must not clear its chunks, stop its tracks, change its status, or upload the old clip. Force recorder.stop() to throw and inspect immediate recovery. Normal stop before the deadline should upload once, and no later timer should affect transcription. Observe hardware release and suspended-tab timer delays separately.
+
 Inspect retained chunk bytes with local instrumentation at the exact 5 MiB boundary and above it. At the boundary, normal Stop should keep the upload path; above it, expect one recording-too-large failure, cleared retained chunks, track stop commands, and no upload. Deliver delayed/final chunks after discard and inspect whether they are ignored. Verify ordinary WebM/MP4 capture still creates a usable full clip across one-second chunks. Measure browser encoder memory separately; this cap covers retained chunks, not all browser buffers. Check explicit restart and normal 20-second capture afterward.
 
 ### Recorded microphone loss checks (not yet performed)

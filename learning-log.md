@@ -1530,3 +1530,9 @@
 - Added guarded 30-second client deadlines to direct quiz start/scoring through response JSON parsing. Timeout aborts locally and uses existing control/state recovery; finally clears each timer, and old turn/controller guards protect newer requests. Late completed responses after the deadline are rejected.
 - Scoring timeout preserves the unchanged-answer retry key and explains uncertain saved status. There is no automatic retry or rollback claim. Added README/manual headers/body stalls, cancellation, late responses, newer requests, and post-write retry cases.
 - Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, controlled stalls, browser interactions, or provider calls were performed; deadline timing, restored quiz/draft state, stale isolation, and idempotent recovery remain unverified at runtime.
+
+## Recover when recorded capture never finishes stopping - 2026-10-08
+
+- Record could stay busy forever if the browser omitted its stop event. Added a per-recorder 10-second completion deadline and immediate recovery for stop exceptions. Timeout discards audio, closes tracks, and releases controls; canceled/already-failed capture does not count an additional failure.
+- Cleanup and error callbacks now check recording identity, callbacks are detached after completion, and repeated Stop cannot reverse discard. Ordinary completion keeps transcription/review. Added README and manual stalled-stop, late-callback, duplicate-failure, exception, and normal-completion cases.
+- Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, controlled recorder events, browser interactions, recordings, or provider calls were performed; stop timing, actual device release, retry isolation, and normal upload remain unverified at runtime.

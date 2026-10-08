@@ -71,6 +71,7 @@ let liveSttRun = 0;
 let liveSttOriginalInput = "";
 let activeTranscriptionController = null;
 let activeMediaRecorder = null;
+let activeRecordingStop = null;
 let activeMediaStream = null;
 let serverRecordingChunks = [];
 let discardServerRecording = false;
@@ -380,9 +381,9 @@ function stopServerRecording(discard = false) {
     serverRecordingTimer = null;
   }
   if (!activeMediaRecorder) return;
-  discardServerRecording = discard;
+  discardServerRecording ||= discard;
   updateServerTranscribeButton("busy");
-  if (activeMediaRecorder.state === "recording") activeMediaRecorder.stop();
+  activeRecordingStop?.();
 }
 
 function recordingCaptureFailure(error) {
@@ -422,6 +423,7 @@ async function startServerRecording() {
   statusLine.textContent = "Allow microphone access, then ask a short question. Audio is sent for transcription when you stop.";
   let stream;
   let detachTrackListeners = () => {};
+  let clearStopDeadline = () => {};
   try {
     stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     if (recordingRun !== serverRecordingRun || serverRecordingStartCancelled) {
@@ -476,7 +478,8 @@ async function startServerRecording() {
       serverRecordingChunks.push(event.data);
     };
     recorder.onerror = () => {
-      const unexpected = recordingRun === serverRecordingRun && !discardServerRecording;
+      const unexpected = recordingRun === serverRecordingRun
+        && activeMediaRecorder === recorder && !discardServerRecording;
       if (unexpected) {
         recordedTranscriptionFailures.push({ language: recordingLanguage, reason: "recording-failed" });
         if (recordedTranscriptionFailures.length > 500) recordedTranscriptionFailures.shift();
@@ -484,9 +487,17 @@ async function startServerRecording() {
       if (activeMediaRecorder === recorder) stopServerRecording(true);
       if (unexpected) statusLine.textContent = "Recording failed. Try again or type your question.";
     };
-    recorder.onstop = () => {
+    let stopDeadline = null;
+    clearStopDeadline = () => {
+      if (stopDeadline !== null) window.clearTimeout(stopDeadline);
+      stopDeadline = null;
+    };
+    const finishRecording = () => {
+      if (recordingRun !== serverRecordingRun || activeMediaRecorder !== recorder) return;
+      clearStopDeadline();
       // Some browsers stop the recorder before delivering the track's ended event.
       if (audioTracks.some((track) => track.readyState === "ended")) captureEnded();
+      clearStopDeadline();
       detachTrackListeners();
       if (serverRecordingTimer !== null) {
         window.clearTimeout(serverRecordingTimer);
@@ -496,7 +507,11 @@ async function startServerRecording() {
       const audio = discard ? null : new Blob(serverRecordingChunks, { type: recorder.mimeType });
       serverRecordingChunks = [];
       activeMediaRecorder = null;
-      activeMediaStream?.getTracks().forEach((track) => track.stop());
+      activeRecordingStop = null;
+      recorder.ondataavailable = null;
+      recorder.onerror = null;
+      recorder.onstop = null;
+      stream.getTracks().forEach((track) => track.stop());
       activeMediaStream = null;
       discardServerRecording = false;
       updateServerTranscribeButton();
@@ -509,6 +524,34 @@ async function startServerRecording() {
       }
       void transcribeRecordedAudio(audio, recordingLanguage);
     };
+    recorder.onstop = finishRecording;
+    activeRecordingStop = () => {
+      if (recordingRun !== serverRecordingRun || activeMediaRecorder !== recorder
+        || stopDeadline !== null) return;
+      stopDeadline = window.setTimeout(() => {
+        if (recordingRun !== serverRecordingRun || activeMediaRecorder !== recorder) return;
+        const unexpected = !discardServerRecording;
+        discardServerRecording = true;
+        if (unexpected) {
+          recordedTranscriptionFailures.push({ language: recordingLanguage, reason: "recording-stop-timeout" });
+          if (recordedTranscriptionFailures.length > 500) recordedTranscriptionFailures.shift();
+        }
+        finishRecording();
+        if (unexpected) statusLine.textContent = "The recording did not finish within 10 seconds and was discarded. Record again, or type your question.";
+      }, 10_000);
+      try {
+        if (recorder.state !== "inactive") recorder.stop();
+      } catch {
+        const unexpected = !discardServerRecording;
+        discardServerRecording = true;
+        if (unexpected) {
+          recordedTranscriptionFailures.push({ language: recordingLanguage, reason: "recording-failed" });
+          if (recordedTranscriptionFailures.length > 500) recordedTranscriptionFailures.shift();
+        }
+        finishRecording();
+        if (unexpected) statusLine.textContent = "Recording could not finish. Record again, or type your question.";
+      }
+    };
     recorder.start(1000);
     updateServerTranscribeButton("recording");
     statusLine.textContent = `Recording in ${speechLanguageLabel(recordingLanguage)}. Tap Stop or speak for up to 20 seconds.`;
@@ -517,6 +560,7 @@ async function startServerRecording() {
       stopServerRecording(false);
     }, 20_000);
   } catch (error) {
+    clearStopDeadline();
     detachTrackListeners();
     stream?.getTracks().forEach((track) => track.stop());
     if (recordingRun !== serverRecordingRun || serverRecordingStartCancelled) return;
@@ -524,6 +568,7 @@ async function startServerRecording() {
     recordedTranscriptionFailures.push({ language: recordingLanguage, reason });
     if (recordedTranscriptionFailures.length > 500) recordedTranscriptionFailures.shift();
     activeMediaRecorder = null;
+    activeRecordingStop = null;
     activeMediaStream = null;
     updateServerTranscribeButton();
     statusLine.textContent = message;
