@@ -1,4 +1,4 @@
-param()
+param([switch]$Frozen)
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
@@ -96,8 +96,9 @@ if ($createdVenvVersion -lt [version]'3.11') {
     throw 'The project virtual environment could not start Python 3.11 or later.'
 }
 
-Write-Output 'Installing project dependencies...'
-& $venvPython -m pip install -r (Join-Path $repoRoot 'requirements.txt')
+$dependencyFile = if ($Frozen) { 'requirements.lock.txt' } else { 'requirements.txt' }
+Write-Output "Installing project dependencies from $dependencyFile..."
+& $venvPython -m pip install -r (Join-Path $repoRoot $dependencyFile)
 if ($LASTEXITCODE -ne 0) { throw 'Dependency installation failed.' }
 
 $envPath = Join-Path $repoRoot '.env'

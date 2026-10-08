@@ -1979,3 +1979,9 @@
 - Recorded-audio uploads now require one decimal Content-Length and no transfer encoding. Invalid/empty/oversized/truncated uploads close the connection before provider transcription. Existing WebM/MP4 and 5 MiB controls remain.
 - Socket upload timeouts return generic 408/audio-upload-timeout where the connection can deliver it; browser diagnostics distinguish upload-timeout from its overall transcription timeout and retain unknown model attribution.
 - Verification: Python compilation, Node syntax check, and git diff whitespace checks with static pre-provider/error-path inspection. No tests, HTTP injections, timeout/upload experiments, recordings, browser/device checks, or provider calls.
+
+## Snapshot optional frozen setup dependencies - 2026-10-08
+
+- Inspected installed package metadata and recorded 15 application packages at their observed versions in requirements.lock.txt, excluding installer tools. Added -Frozen to the local launcher; default setup retains requirements.txt ranges. No environment or dependency installation was changed.
+- Documented Windows/CPython 3.11 snapshot scope, unverified fresh installation/runtime, and unpinned interpreter/installer/wheel/provider behavior. Acceptance gates still require actual browser/provider/evaluation/human/demo evidence.
+- Verification: read installed package metadata, PowerShell parser check, and git diff whitespace checks. No tests, package installations, server launches, browser/provider checks, reports, or reproducibility experiments were performed.

@@ -38,7 +38,7 @@ Audit date: 2026-10-08. This is an implementation/evidence inventory, not a rele
 
 | Deliverable | Evidence / status |
 | --- | --- |
-| Repository, reproducible setup, secret-free `.env.example` | Tracked source/setup files exist; setup runtime needs fresh proof. |
+| Repository, reproducible setup, secret-free `.env.example` | Tracked source/setup files and optional requirements.lock.txt package snapshot exist; fresh installation/setup runtime needs proof. |
 | Curated corpus manifest and dataset documentation | `data/corpus_manifest.json` and `evals/DATASETS.md`; inventory generation validates local records, not source accuracy/rights. |
 | Automated interruption/tool/retrieval/persistence checks | Existing Python tests cover portions of tools, retrieval, quiz, and progress. No tracked browser interruption suite or newer history/report coverage was found in this audit. No tests were run. |
 | Benchmark report with measured results/configuration/failures | Historical constructed-text results are preserved in IMPLEMENTATION_NOTES.md; no tracked current voice benchmark report was found. |

@@ -22,6 +22,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\run-local.ps1
 
 The launcher prepares `.venv`, installs dependencies, creates `.env` if missing, and starts the server. The page validates a bounded health response before enabling provider capabilities; missing or invalid study notes return a corpus-unavailable 503. Readiness describes configuration and corpus availability, not a successful provider session. Open **http://127.0.0.1:8000**. Press **Ctrl+C** in the terminal to stop it.
 
+For the observed dependency snapshot, add `-Frozen` to the launcher command or install with `-r requirements.lock.txt` in manual setup. The snapshot records application-package versions from Windows / CPython 3.11 on 2026-10-08; fresh installation and runtime compatibility remain unverified. It does not pin Python, pip, wheel hashes, system audio/browser behavior, or provider models. Default setup continues to use the ranges in `requirements.txt`.
+
 Manual setup:
 
 ```powershell
