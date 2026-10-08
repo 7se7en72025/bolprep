@@ -50,6 +50,7 @@ if (speechPreferences.language && speechPreferences.voice && !savedVoices[speech
 }
 const quizButton = document.querySelector("#quiz-button");
 const nextQuestionButton = document.querySelector("#next-question");
+const endQuizButton = document.querySelector("#end-quiz");
 const sendLabel = document.querySelector("#send-label");
 const progressSummary = document.querySelector("#progress-summary");
 const weakTopics = document.querySelector("#weak-topics");
@@ -2008,9 +2009,45 @@ async function startQuiz() {
   }
 }
 
-function isNextQuizCommand(text) {
-  const command = text.normalize("NFC").toLowerCase()
+function normalizedQuizCommand(text) {
+  return text.normalize("NFC").toLowerCase()
     .replace(/[\p{P}\p{S}]/gu, " ").replace(/\s+/g, " ").trim();
+}
+
+function isEndQuizCommand(text) {
+  return new Set([
+    "end quiz", "stop quiz", "exit quiz", "quiz band karo", "quiz khatam karo",
+    "क्विज बंद करो", "क्विज़ बंद करो", "क्विज खत्म करो", "क्विज़ खत्म करो",
+  ]).has(normalizedQuizCommand(text));
+}
+
+function resetTutorComposer() {
+  endQuizButton.hidden = true;
+  nextQuestionButton.hidden = true;
+  sendLabel.textContent = "Ask tutor";
+  inputLabel.textContent = "Your question";
+  input.maxLength = 1200;
+  input.placeholder = "Type a question… e.g. Right to Equality kya hai?";
+}
+
+function endQuiz({ preserveLive = false, clearDraft = false } = {}) {
+  if (!quizSession) return;
+  const scoringPending = Boolean(quizSession.pendingAnswer);
+  stopTutor({ preserveLive });
+  quizSession = null;
+  resetTutorComposer();
+  if (clearDraft) input.value = "";
+  const message = scoringPending
+    ? "Quiz ended. The interrupted score may already be saved; check saved progress. You can ask the tutor a question."
+    : "Quiz ended. Saved scores remain available. You can ask the tutor a question.";
+  addMessage("assistant", message);
+  statusLine.textContent = message;
+  void loadProgress();
+  input.focus();
+}
+
+function isNextQuizCommand(text) {
+  const command = normalizedQuizCommand(text);
   return new Set([
     "next", "next question", "next question please", "please next question",
     "agla sawal", "agla sawaal", "agla prashn", "agla prashna", "agla sawal pucho",
@@ -2020,6 +2057,7 @@ function isNextQuizCommand(text) {
 
 function showQuizQuestion(speakPrompt = true) {
   if (!quizSession || quizSession.index >= quizSession.questions.length) return;
+  endQuizButton.hidden = false;
   const current = quizSession.questions[quizSession.index];
   quizSession.awaitingAnswer = true;
   nextQuestionButton.hidden = true;
@@ -2029,7 +2067,7 @@ function showQuizQuestion(speakPrompt = true) {
   input.placeholder = "Speak or type your answer…";
   addMessage("assistant", `Question ${quizSession.index + 1} of ${quizSession.questions.length}: ${current.prompt}`, [current.source]);
   const readyText = activeLiveTranscription?.continuous
-    ? "Speak your answer. After feedback, say next question or agla sawal to continue."
+    ? "Speak your answer. After feedback, say next question or agla sawal. Say end quiz or quiz band karo to return to tutoring."
     : "Your answer is ready when you are.";
   statusLine.textContent = readyText;
   if (speakPrompt) speak(current.prompt, readyText);
@@ -2085,10 +2123,7 @@ async function submitQuizAnswer(answer, { preserveLive = false } = {}) {
     if (isLast) {
       const totalQuestions = quizSession.questions.length;
       quizSession = null;
-      sendLabel.textContent = "Ask tutor";
-      inputLabel.textContent = "Your question";
-      input.maxLength = 1200;
-      input.placeholder = "Type a question… e.g. Right to Equality kya hai?";
+      resetTutorComposer();
       statusLine.textContent = `Quiz complete: ${completeCount} of ${totalQuestions} answers covered the rubric. Results are saved for this browser.`;
       speak(feedback, statusLine.textContent);
     } else {
@@ -2136,7 +2171,12 @@ form.addEventListener("submit", (event) => {
     return;
   }
   const question = input.value.trim();
-  if (!question || sendButton.disabled) return;
+  if (!question) return;
+  if (quizSession && isEndQuizCommand(question)) {
+    endQuiz({ clearDraft: true });
+    return;
+  }
+  if (sendButton.disabled) return;
   if (question.length > input.maxLength) {
     const responseName = quizSession ? "answer" : "question";
     statusLine.textContent = `This ${responseName} is over the ${input.maxLength}-character limit. Edit it before sending.`;
@@ -2144,7 +2184,7 @@ form.addEventListener("submit", (event) => {
   }
   if (quizSession) {
     if (!quizSession.awaitingAnswer) {
-      statusLine.textContent = "Tap Next question to continue the quiz, or start a new session.";
+      statusLine.textContent = "Tap Next question to continue the quiz, or End quiz to return to tutoring.";
       return;
     }
     input.value = "";
@@ -2193,17 +2233,14 @@ document.querySelector("#clear-button").addEventListener("click", () => {
   input.value = "";
   conversation.replaceChildren();
   addMessage("assistant", "Namaste! Fundamental Rights ke baare mein kya jaan-na hai?");
-  nextQuestionButton.hidden = true;
-  sendLabel.textContent = "Ask tutor";
-  inputLabel.textContent = "Your question";
-  input.maxLength = 1200;
-  input.placeholder = "Type a question… e.g. Right to Equality kya hai?";
+  resetTutorComposer();
   statusLine.textContent = "New session started.";
   input.focus();
 });
 
 quizButton.addEventListener("click", startQuiz);
 nextQuestionButton.addEventListener("click", showQuizQuestion);
+endQuizButton.addEventListener("click", () => endQuiz());
 
 function validSavedProgress(progress) {
   const object = (value) => value && typeof value === "object" && !Array.isArray(value);
@@ -2576,6 +2613,11 @@ liveSttButton.addEventListener("click", () => {
       if (run !== liveSttRun) return;
       input.value = text;
       if (continuous) {
+        if (quizSession && isEndQuizCommand(text)) {
+          endQuiz({ preserveLive: true, clearDraft: true });
+          liveSttOriginalInput = "";
+          return;
+        }
         if (quizSession && isNextQuizCommand(text)) {
           stopTutor({ preserveLive: true });
           input.value = "";

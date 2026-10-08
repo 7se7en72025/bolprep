@@ -14,8 +14,8 @@ button, textarea { font: inherit; }
 h1 { font: 700 clamp(31px, 5vw, 43px)/1.12 'Segoe UI', sans-serif; letter-spacing: -1.8px; margin: 0; }
 .lede { color: var(--muted); font-size: 15px; margin: 13px auto 0; max-width: 480px; line-height: 1.65; }
 .tutor-card { background: var(--paper); border: 1px solid #ebe9e1; border-radius: 16px; box-shadow: 0 12px 35px #343c2810; overflow: hidden; }
-.card-head { height: 68px; display: flex; align-items: center; justify-content: space-between; padding: 0 22px; border-bottom: 1px solid var(--line); }
-.head-actions { display: flex; align-items: center; gap: 12px; }
+.card-head { min-height: 68px; display: flex; align-items: center; justify-content: space-between; padding: 12px 22px; border-bottom: 1px solid var(--line); }
+.head-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; }
 .tutor-id { display: flex; align-items: center; gap: 11px; }
 .status-dot { width: 9px; height: 9px; background: #75a37f; border-radius: 50%; box-shadow: 0 0 0 4px #75a37f1b; }
 .tutor-id strong, .tutor-id small { display: block; }
