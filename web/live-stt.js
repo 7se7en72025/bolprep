@@ -148,7 +148,7 @@ class BolPrepLiveTranscription {
     try { event = JSON.parse(data); } catch { return; }
     if (!event || typeof event !== "object" || typeof event.type !== "string") return;
     if (this.completedItems.has(event.item_id)) return;
-    if (event.type === "error" || event.type === "conversation.item.input_audio_transcription.failed") {
+    if (event.type === "error") {
       this.fail("The live transcription provider could not finish. Try Record or type your question.");
       return;
     }
@@ -163,11 +163,19 @@ class BolPrepLiveTranscription {
       return;
     }
     if (!["listening", "finalizing"].includes(this.state)) return;
-    if (!event.type?.startsWith("conversation.item.input_audio_transcription.")) return;
+    if (![
+      "conversation.item.input_audio_transcription.delta",
+      "conversation.item.input_audio_transcription.completed",
+      "conversation.item.input_audio_transcription.failed",
+    ].includes(event.type)) return;
     if (typeof event.item_id !== "string" || !event.item_id) return;
     if (this.itemId && this.itemId !== event.item_id) return;
     if (this.committedItemId && this.committedItemId !== event.item_id) return;
     this.itemId = event.item_id;
+    if (event.type === "conversation.item.input_audio_transcription.failed") {
+      this.fail("The live transcription provider could not finish. Try Record or type your question.");
+      return;
+    }
     if (event.type === "conversation.item.input_audio_transcription.delta" && typeof event.delta === "string") {
       if (this.partial.length + event.delta.length > 6000) {
         this.fail("Live transcript is too long. Please use a shorter question.", "transcript-too-long");

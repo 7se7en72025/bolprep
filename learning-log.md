@@ -1458,3 +1458,9 @@
 - Inspection found live final transcripts could bypass the existing partial-text cap. Added a 6,000-UTF-16-unit trimmed final limit before completion reporting/callbacks. Oversized finals use transcript-too-long failure cleanup and cannot reach continuous auto-submit.
 - Partial deltas now check combined length before concatenation or first-partial timing, avoiding retention/counting of rejected text. Limits cover application text rather than incoming transport/JSON buffers. Added README/manual final-only, boundary, delta, cleanup, and restart cases.
 - Verification: live/app JavaScript syntax, live diagnostics CLI help, and git diff whitespace checks passed. No tests, controlled events, browser interactions, recordings, or provider calls were performed; final boundaries, timing counts, draft restoration, and continuous cleanup remain unverified at runtime.
+
+## Filter live item failures by the active turn - 2026-10-08
+
+- Inspection found item-specific failed events bypassed the current/committed-item checks used for transcript text. They now pass those checks before failure cleanup, so completed or mismatched item failures cannot cancel an established current turn. Connection-wide errors keep their existing handling.
+- Restricted identity binding to known delta/completed/failed transcription event types. Unknown types are ignored. An event can still establish identity before the current/committed ID is known; complete stale-order isolation is not claimed. Added README/manual matching, mismatched, reused, and unknown-event cases.
+- Verification: live/app JavaScript syntax and git diff whitespace checks passed. No tests, controlled events, browser interactions, recordings, or provider calls were run; provider compatibility, reused-turn filtering, failure counts, and remaining first-event ambiguity remain unverified at runtime.
