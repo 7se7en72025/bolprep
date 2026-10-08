@@ -10,6 +10,10 @@ function words(text) {
     .replace(/[\p{P}\p{S}]/gu, " ").trim().split(/\s+/u).filter(Boolean);
 }
 
+function characters(text) {
+  return Array.from(words(text).join(" "));
+}
+
 function editDistance(reference, transcript) {
   let previous = Array.from({ length: transcript.length + 1 }, (_, index) => index);
   for (let row = 1; row <= reference.length; row += 1) {
@@ -56,6 +60,8 @@ function score(trials) {
     if (!groups.has(key)) groups.set(key, {
       config: config.trim(), language, attempts: 0, failures: 0, scored: 0,
       errors: 0, reference_words: 0, all_attempts_errors: 0, all_attempts_reference_words: 0,
+      character_errors: 0, reference_characters: 0,
+      all_attempts_character_errors: 0, all_attempts_reference_characters: 0,
       failure_reasons: {}, prompts: new Set(), attempts_by_prompt: new Map(), prompt_results: new Map(),
     });
     const group = groups.get(key);
@@ -66,10 +72,15 @@ function score(trials) {
     if (!group.prompt_results.has(normalizedPromptId)) group.prompt_results.set(normalizedPromptId, {
       prompt_id: normalizedPromptId, attempts: 0, failures: 0,
       errors: 0, reference_words: 0, all_attempts_errors: 0, all_attempts_reference_words: 0,
+      character_errors: 0, reference_characters: 0,
+      all_attempts_character_errors: 0, all_attempts_reference_characters: 0,
     });
     const prompt = group.prompt_results.get(normalizedPromptId);
     group.attempts += 1;
     prompt.attempts += 1;
+    const referenceCharacters = characters(reference);
+    group.all_attempts_reference_characters += referenceCharacters.length;
+    prompt.all_attempts_reference_characters += referenceCharacters.length;
     group.all_attempts_reference_words += referenceWords.length;
     prompt.all_attempts_reference_words += referenceWords.length;
     if (failed) {
@@ -79,9 +90,12 @@ function score(trials) {
       group.failure_reasons[reason] = (group.failure_reasons[reason] || 0) + 1;
       group.all_attempts_errors += referenceWords.length;
       prompt.all_attempts_errors += referenceWords.length;
+      group.all_attempts_character_errors += referenceCharacters.length;
+      prompt.all_attempts_character_errors += referenceCharacters.length;
       continue;
     }
     const wordErrors = editDistance(referenceWords, words(transcript));
+    const characterErrors = editDistance(referenceCharacters, characters(transcript));
     group.scored += 1;
     group.reference_words += referenceWords.length;
     group.errors += wordErrors;
@@ -89,6 +103,12 @@ function score(trials) {
     prompt.reference_words += referenceWords.length;
     prompt.errors += wordErrors;
     prompt.all_attempts_errors += wordErrors;
+    group.reference_characters += referenceCharacters.length;
+    group.character_errors += characterErrors;
+    group.all_attempts_character_errors += characterErrors;
+    prompt.reference_characters += referenceCharacters.length;
+    prompt.character_errors += characterErrors;
+    prompt.all_attempts_character_errors += characterErrors;
   }
   const groupsByLanguage = new Map();
   for (const group of groups.values()) {
@@ -119,10 +139,14 @@ function score(trials) {
         repeat_counts_match: repeatCountsMatch,
         wer: group.reference_words ? Number((group.errors / group.reference_words).toFixed(4)) : null,
         all_attempts_wer: Number((group.all_attempts_errors / group.all_attempts_reference_words).toFixed(4)),
+        cer: group.reference_characters ? Number((group.character_errors / group.reference_characters).toFixed(4)) : null,
+        all_attempts_cer: Number((group.all_attempts_character_errors / group.all_attempts_reference_characters).toFixed(4)),
         prompt_results: [...promptResults.values()].sort((a, b) => a.prompt_id.localeCompare(b.prompt_id)).map((prompt) => ({
           ...prompt,
           wer: prompt.reference_words ? Number((prompt.errors / prompt.reference_words).toFixed(4)) : null,
           all_attempts_wer: Number((prompt.all_attempts_errors / prompt.all_attempts_reference_words).toFixed(4)),
+          cer: prompt.reference_characters ? Number((prompt.character_errors / prompt.reference_characters).toFixed(4)) : null,
+          all_attempts_cer: Number((prompt.all_attempts_character_errors / prompt.all_attempts_reference_characters).toFixed(4)),
         })),
       };
     });

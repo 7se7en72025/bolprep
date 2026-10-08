@@ -1180,3 +1180,9 @@
 
 - Added `tools/check-local.ps1` to start a temporary local server in forced offline mode, verify health and the tutor page, and confirm a Hinglish Article 14 answer includes a source. The script stops the server and restores the caller's API-key environment variable afterward; temporary logs are ignored and removed.
 - This gives Windows users a quick end-to-end setup check without a provider key, browser microphone, or external API call. Requires the prepared `.venv` and free port 8000.
+
+## Add character error rate to the STT scorer - 2026-10-08
+
+- The local scorer now reports CER alongside WER, both by configuration/language and by prompt. CER uses Unicode NFC code points from the same lowercased, punctuation-stripped, whitespace-normalized text; spaces between words count. Failed attempts contribute deletion errors in the all-attempts rate.
+- This gives Devanagari and mixed-script comparisons a second view of recognition differences. It does not assess pronunciation or normalize transliteration; no real speech result is claimed.
+- Verification: `node --check evals/score_stt.js`, `git diff --check`, and a local two-attempt Hindi sample passed. The one-character deletion reported WER 1.0 and CER 0.1667; adding a `no-speech` failure changed all-attempts CER to 0.5833. No microphone or provider was used.
