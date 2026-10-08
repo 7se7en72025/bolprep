@@ -1073,6 +1073,20 @@ function splitSpeechText(text, maxCodePoints = 500) {
   return chunks;
 }
 
+function flushLongSpeechBuffer(text, maxCodePoints, enqueue) {
+  const characters = [...text];
+  let offset = 0;
+  while (characters.length - offset > maxCodePoints) {
+    let end = offset + maxCodePoints;
+    while (end > offset && !/\s/u.test(characters[end])) end -= 1;
+    if (end === offset) end = offset + maxCodePoints;
+    const chunk = characters.slice(offset, end).join("").trim();
+    if (chunk) enqueue(chunk);
+    offset = end;
+  }
+  return characters.slice(offset).join("");
+}
+
 function speak(text, completionText = "Ready when you are.", kind = "tutor", historyEntry = null) {
   stopSpeechOutput();
   activeSpeechHistoryEntry = historyEntry;
@@ -1354,6 +1368,7 @@ function createProgressiveStreamedSpeech(completionText = "Answer ready.") {
       buffer = buffer.slice(end);
       match = sentenceEnd.exec(buffer);
     }
+    buffer = flushLongSpeechBuffer(buffer, 1000, enqueue);
   };
 
   const session = {
@@ -1525,6 +1540,7 @@ function createProgressiveBrowserSpeech(completionText = "Answer ready.") {
       buffer = buffer.slice(end);
       match = sentenceEnd.exec(buffer);
     }
+    buffer = flushLongSpeechBuffer(buffer, 500, enqueue);
   };
 
   const finish = () => {

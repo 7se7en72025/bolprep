@@ -1500,3 +1500,9 @@
 - Inspection found completed answers over the single-request limit switched to browser speech even when provider speech was selected. They now reuse the existing serial segment queue, capturing language/voice and splitting/coalescing to at most 1,000 code points per request. Stop/history association and completion status use the same queue lifecycle.
 - Context-creation failure before queuing retains browser fallback; segment failures clear pending speech without replay through another voice. Diagnostics uses tutor-segment per-request timing, not a whole-answer latency claim. Added README/manual long offline/quiz, failure, cancellation, history, and configuration cases.
 - Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, browser interactions, recordings, or provider calls were run; continuity, long-answer handling, history annotations, recovery, and provider usage remain unverified at runtime.
+
+## Queue long unpunctuated replies during generation - 2026-10-08
+
+- Both progressive speech paths previously waited for punctuation or final model completion before queuing an unpunctuated reply. Added a shared residual-buffer flush that emits prefixes beyond 1,000 code points for provider speech or 500 for browser speech, preferring whitespace and preserving the remaining suffix.
+- Hard splits preserve code points/surrogate pairs but may split words or grapheme clusters. Existing sentence parsing, serial provider playback, and cancellation remain. Added README/manual repeated-delta, suffix, multilingual, Unicode, and stop cases without measured latency claims.
+- Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, controlled streams, browser interactions, recordings, or provider calls were performed; early playback, continuity, suffix retention, cancellation, and acoustic timing remain unverified at runtime.
