@@ -1,11 +1,12 @@
 // The server mints a short-lived credential;
 // media goes directly to the provider over WebRTC and is never saved by BolPrep.
 class BolPrepLiveTranscription {
-  constructor(callbacks, { autoFinish = false, continuous = false, quietPauseMs = 3000 } = {}) {
+  constructor(callbacks, { autoFinish = false, continuous = false, quietPauseMs = 3000, captureLimitMs = 20000 } = {}) {
     this.callbacks = callbacks;
     this.continuous = continuous;
     this.autoFinish = autoFinish || continuous;
     this.quietPauseMs = [3000, 5000, 8000].includes(quietPauseMs) ? quietPauseMs : 3000;
+    this.captureLimitMs = [20000, 60000].includes(captureLimitMs) ? captureLimitMs : 20000;
     this.completedItems = new Set();
     this.turnNumber = 1;
     this.attemptId = window.crypto?.randomUUID?.() ?? null;
@@ -63,6 +64,7 @@ class BolPrepLiveTranscription {
       model: "gpt-live-transcribe",
       auto_finish_requested: this.autoFinish,
       quiet_pause_ms: this.quietPauseMs,
+      capture_limit_ms: this.captureLimitMs,
       continuous: this.continuous,
       turn_number: this.turnNumber,
       connection_reused: this.turnNumber > 1,
@@ -105,10 +107,10 @@ class BolPrepLiveTranscription {
     this.state = "listening";
     this.listeningAt = performance.now();
     this.stream.getAudioTracks().forEach((track) => { track.enabled = true; });
-    this.callbacks.status("Live listening. Tap Done when you finish (20-second speech limit).", this.state);
+    this.callbacks.status(`Live listening. Tap Done when you finish (${this.captureLimitMs / 1000}-second speech limit).`, this.state);
     this.captureTimer = this.continuous
       ? this.later(() => this.fail("No speech detected for 60 seconds. Start Live mic again when ready.", "no-speech"), 60000)
-      : this.later(() => this.finish("capture-limit"), 20000);
+      : this.later(() => this.finish("capture-limit"), this.captureLimitMs);
     this.startSpeechDetection();
   }
 
@@ -224,7 +226,7 @@ class BolPrepLiveTranscription {
         return;
       }
       this.stopSpeechDetection();
-      this.callbacks.status("Automatic pause detection is unavailable. Tap Done when finished (20-second limit).", this.state);
+      this.callbacks.status(`Automatic pause detection is unavailable. Tap Done when finished (${this.captureLimitMs / 1000}-second limit).`, this.state);
     };
     const context = this.detectionContext;
     if (!context || context.state !== "running") {
@@ -270,7 +272,7 @@ class BolPrepLiveTranscription {
                 if (this.continuous) {
                   clearTimeout(this.captureTimer);
                   this.timers.delete(this.captureTimer);
-                  this.captureTimer = this.later(() => this.finish("capture-limit"), 20000);
+                  this.captureTimer = this.later(() => this.finish("capture-limit"), this.captureLimitMs);
                 }
                 this.callbacks.speechStart?.();
               }
@@ -288,7 +290,7 @@ class BolPrepLiveTranscription {
       };
       this.callbacks.status(this.continuous
         ? `Conversation mic is listening. Speak to interrupt; pause for ${this.quietPauseMs / 1000} seconds to send. Stop ends the session.`
-        : `Live listening. A ${this.quietPauseMs / 1000}-second quiet pause finishes your transcript; Done also works (20-second limit).`, this.state);
+        : `Live listening. A ${this.quietPauseMs / 1000}-second quiet pause finishes your transcript; Done also works (${this.captureLimitMs / 1000}-second limit).`, this.state);
       this.detectionTimer = this.later(poll, 50);
     } catch {
       manual("analysis-failed");

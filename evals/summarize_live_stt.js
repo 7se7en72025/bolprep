@@ -49,6 +49,8 @@ function record(attempt, schema, label) {
   if (schema >= 9 && ![3000, 5000, 8000].includes(attempt.quiet_pause_ms)) invalid();
   // Older exports lack this field; do not infer a measured setting.
   result.quiet_pause_ms = schema >= 9 ? attempt.quiet_pause_ms : null;
+  if (schema >= 12 && ![20000, 60000].includes(attempt.capture_limit_ms)) invalid();
+  result.capture_limit_ms = schema >= 12 ? attempt.capture_limit_ms : null;
   for (const field of timingFields) {
     const value = attempt[field];
     if (value !== null && (typeof value !== "number" || !Number.isFinite(value) || value < 0)) invalid();
@@ -89,9 +91,9 @@ function summarize(paths) {
     } catch {
       throw new Error(`${label} must be a readable JSON file no larger than 4 MiB.`);
     }
-    if (!document || ![8, 9, 10, 11].includes(document.schema_version)
+    if (!document || ![8, 9, 10, 11, 12].includes(document.schema_version)
       || !Array.isArray(document.live_stt_attempts) || document.live_stt_attempts.length > 500) {
-      throw new Error(`${label} must be a schema 8-11 diagnostics export with at most 500 live attempts.`);
+      throw new Error(`${label} must be a schema 8-12 diagnostics export with at most 500 live attempts.`);
     }
     schemas.add(document.schema_version);
     document.live_stt_attempts.forEach((raw, index) => {
@@ -114,6 +116,7 @@ function summarize(paths) {
         pause_detection_used: attempt.pause_detection_used,
         continuous: attempt.continuous, connection_reused: attempt.connection_reused,
         quiet_pause_ms: attempt.quiet_pause_ms,
+        capture_limit_ms: attempt.capture_limit_ms,
       };
       const key = JSON.stringify(config);
       if (!groups.has(key)) groups.set(key, { config, attempts: [] });
@@ -138,6 +141,7 @@ function summarize(paths) {
       "Records without IDs deduplicate by identical metadata; distinct attempts may collapse or changed snapshots may remain separate.",
       "Records with and without IDs are kept separate; mixing legacy and new snapshots can count an attempt twice.",
       "Schema 8 quiet-pause configuration is unknown and is kept separate from newer schemas.",
+      "Capture-limit configuration is unknown before schema 12 and remains separate from explicit limits.",
       "Prompt pairing, device/environment, transcript accuracy, and acoustic latency are unavailable.",
     ],
     groups: [...groups.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, group]) => {
@@ -160,7 +164,7 @@ function summarize(paths) {
 
 const paths = process.argv.slice(2);
 if (paths.length === 1 && paths[0] === "--help") {
-  console.log("Usage: node evals/summarize_live_stt.js export1.json [export2.json ...]\nLocal schema 8-11 live-STT diagnostics summary; JSON report on stdout, no provider calls.");
+  console.log("Usage: node evals/summarize_live_stt.js export1.json [export2.json ...]\nLocal schema 8-12 live-STT diagnostics summary; JSON report on stdout, no provider calls.");
 } else if (!paths.length || paths.length > 100) {
   console.error("Provide 1-100 diagnostics exports. Use --help for usage.");
   process.exitCode = 1;

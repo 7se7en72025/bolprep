@@ -1368,3 +1368,9 @@
 - Added track-ended watchers and startup rejection for missing/already-ended audio tracks. Unexpected loss fails with capture-ended, closes resources, restores the prior draft, and asks for deliberate reconnection or typing. Watchers persist across reused turns and are removed before cleanup. Temporary mute is not permanent loss.
 - Updated the local report to accept the new failure reason. Consulted MDN MediaStreamTrack ended-event documentation for hardware/revocation events and the distinction from local track.stop. Added README/manual device-loss guidance.
 - Verification: affected JavaScript syntax, report --help, and git diff whitespace checks passed. No tests or provider calls were run; hardware removal, revoked permission, draft restoration, normal finalization, and single-outcome/stale-event behavior remain unverified on real devices.
+
+## Offer a bounded longer live speech segment - 2026-10-08
+
+- Added session-only 20/60-second live capture limits, validated and captured for each connection/reused turn. Status and timers use the selected value; controls are disabled during active capture. Standard timing starts on listening, continuous timing after detected activity. Done/pause completion can finish earlier; overall/idle session bounds and recorded-file limits remain in place.
+- Schema 12 records capture_limit_ms and groups separate settings. The offline report accepts the new schema, validates supported limits, and keeps older missing configuration unknown. Longer capture does not bypass text length limits or imply improved quality.
+- Verification: affected JavaScript syntax, report --help, and git diff whitespace checks passed. No tests or provider calls were run; rendered controls, timer limits, reused turns, longer transcripts, final-word retention, and real-device speech quality remain unverified.

@@ -12,6 +12,7 @@ const liveSttButton = document.querySelector("#live-stt-button");
 const liveSttNote = document.querySelector("#live-stt-note");
 const liveAutoFinish = document.querySelector("#live-auto-finish");
 const liveQuietPause = document.querySelector("#live-quiet-pause");
+const liveCaptureLimit = document.querySelector("#live-capture-limit");
 const liveConversation = document.querySelector("#live-conversation");
 const stopButton = document.querySelector("#stop-button");
 const modeLabel = document.querySelector("#mode-label");
@@ -237,6 +238,7 @@ function updateLiveSttButton(state = "idle") {
   liveSttButton.disabled = !liveTranscriptionAvailable;
   liveAutoFinish.disabled = !liveTranscriptionAvailable || state !== "idle" || liveConversation.checked;
   liveQuietPause.disabled = !liveTranscriptionAvailable || state !== "idle";
+  liveCaptureLimit.disabled = !liveTranscriptionAvailable || state !== "idle";
   liveConversation.disabled = !liveTranscriptionAvailable || state !== "idle";
   const listening = state === "listening";
   const label = listening ? "Done" : state === "idle" ? "Live mic" : "Cancel";
@@ -767,13 +769,14 @@ function buildSpeechDiagnostics() {
     }));
   const liveSttGroups = new Map();
   liveTranscriptionAttempts.forEach((attempt) => {
-    const key = JSON.stringify([attempt.language, attempt.model, attempt.auto_finish_requested, attempt.pause_detection_used, attempt.continuous, attempt.connection_reused, attempt.quiet_pause_ms]);
+    const key = JSON.stringify([attempt.language, attempt.model, attempt.auto_finish_requested, attempt.pause_detection_used, attempt.continuous, attempt.connection_reused, attempt.quiet_pause_ms, attempt.capture_limit_ms]);
     if (!liveSttGroups.has(key)) {
       liveSttGroups.set(key, {
         language: attempt.language,
         model: attempt.model,
         auto_finish_requested: attempt.auto_finish_requested,
         quiet_pause_ms: attempt.quiet_pause_ms,
+        capture_limit_ms: attempt.capture_limit_ms,
         pause_detection_used: attempt.pause_detection_used,
         continuous: attempt.continuous,
         connection_reused: attempt.connection_reused,
@@ -804,7 +807,7 @@ function buildSpeechDiagnostics() {
         pause_detection_used: group.pause_detection_used,
         continuous: group.continuous,
         connection_reused: group.connection_reused,
-        configuration: { transcription_delay: "low", capture_limit_s: 20, quiet_pause_s: group.quiet_pause_ms / 1000,
+        configuration: { transcription_delay: "low", capture_limit_s: group.capture_limit_ms / 1000, quiet_pause_s: group.quiet_pause_ms / 1000,
           idle_limit_s: group.continuous ? 60 : null, session_limit_s: group.continuous ? 300 : null,
           activity_rms_threshold: 0.015, activity_minimum_ms: 250, quiet_rms_threshold: 0.008 },
         attempt_count: group.attempts.length,
@@ -873,7 +876,7 @@ function buildSpeechDiagnostics() {
       recognition_end_to_start: percentiles(group.samples),
     }));
   return {
-    schema_version: 11,
+    schema_version: 12,
     generated_at_utc: new Date().toISOString(),
     scope: "Current page only",
     privacy: "Diagnostics metadata only; no learner text, audio, cookies, or credentials.",
@@ -2146,7 +2149,7 @@ liveSttButton.addEventListener("click", () => {
       activeLiveTranscription = null;
       updateLiveSttButton();
     },
-  }, { autoFinish: liveAutoFinish.checked, continuous, quietPauseMs: Number(liveQuietPause.value) });
+  }, { autoFinish: liveAutoFinish.checked, continuous, quietPauseMs: Number(liveQuietPause.value), captureLimitMs: Number(liveCaptureLimit.value) });
   activeLiveTranscription = capture;
   updateLiveSttButton("connecting");
   statusLine.textContent = "Connecting live microphone…";

@@ -267,3 +267,9 @@ Ask an unsupported question: no early evidence links should be invented. Stop, f
 Unplug or revoke the active microphone during setup, listening, finalization, and a reused conversation turn. Verify closure, reconnect/type guidance, previous draft restoration, no late submission, and one capture-ended outcome for the current attempt. Deliberately start a new session after reconnecting; old ended events must not affect it.
 
 Compare normal Done, Stop, Escape, and the capture limit: local track cleanup should not become capture-ended or add another terminal outcome. Temporary mute is a separate condition. Record actual browser/device behavior and unavailable cases before claiming verified recovery.
+
+### Live segment length checks (not yet performed)
+
+Repeat a short prompt at 20 and 60 seconds, then use a longer self-authored quiz answer. Confirm standard capture limits start on listening, while continuous limits start after detected activity. Done and selected quiet-pause completion should work earlier; Stop/Escape must cancel either length. The selector should remain disabled throughout one connection and re-enable after closure. Recorded-file capture must still stop at its own 20-second limit.
+
+Export schema 12: attempts should carry capture_limit_ms, summary capture_limit_s should match, and different limits should stay separate. Keep old unknown-limit exports separate. Verify the five-minute session/sixty-second idle limits, long-transcript review safeguards, and final-word retention. Record actual failures; a longer capture option is not evidence of better STT or quiz scoring.
