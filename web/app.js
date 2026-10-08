@@ -2186,6 +2186,48 @@ document.querySelector("#clear-button").addEventListener("click", () => {
 quizButton.addEventListener("click", startQuiz);
 nextQuestionButton.addEventListener("click", showQuizQuestion);
 
+function validSavedProgress(progress) {
+  const object = (value) => value && typeof value === "object" && !Array.isArray(value);
+  const score = (value) => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100;
+  const text = (value, limit) => typeof value === "string" && Boolean(value.trim()) && value.length <= limit;
+  if (!object(progress) || !Number.isSafeInteger(progress.attempt_count) || progress.attempt_count < 0
+    || !Array.isArray(progress.questions) || progress.questions.length > 1000
+    || !Array.isArray(progress.weak_topics) || progress.weak_topics.length > 1000) return false;
+  if (progress.attempt_count === 0) {
+    return progress.average_score === null && !progress.questions.length && !progress.weak_topics.length;
+  }
+  if (!score(progress.average_score) || !progress.questions.length) return false;
+  const questions = new Map();
+  let attempts = 0;
+  for (const question of progress.questions) {
+    if (!object(question) || !text(question.question_id, 128) || !text(question.topic, 256)
+      || questions.has(question.question_id)
+      || !Number.isSafeInteger(question.attempts) || question.attempts < 1
+      || !score(question.average_score) || !score(question.latest_score)
+      || typeof question.latest_complete !== "boolean"
+      || !text(question.last_attempt_at, 64)
+      || !/(?:Z|\+00:00)$/.test(question.last_attempt_at)
+      || !Number.isFinite(Date.parse(question.last_attempt_at))) return false;
+    attempts += question.attempts;
+    if (!Number.isSafeInteger(attempts)) return false;
+    questions.set(question.question_id, question);
+  }
+  if (attempts !== progress.attempt_count) return false;
+  const expectedWeak = [...questions.values()].filter((question) =>
+    !question.latest_complete || question.latest_score < 70
+  );
+  if (expectedWeak.length !== progress.weak_topics.length) return false;
+  const seenWeak = new Set();
+  return progress.weak_topics.every((topic) => {
+    if (!object(topic) || seenWeak.has(topic.question_id)) return false;
+    const question = questions.get(topic.question_id);
+    if (!question || (question.latest_complete && question.latest_score >= 70)) return false;
+    seenWeak.add(topic.question_id);
+    return ["topic", "attempts", "average_score", "latest_score", "latest_complete", "last_attempt_at"]
+      .every((field) => topic[field] === question[field]);
+  });
+}
+
 async function loadProgress() {
   if (clearingProgress) return;
   const requestId = ++progressRequestId;
@@ -2193,6 +2235,7 @@ async function loadProgress() {
   const controller = new AbortController();
   activeProgressController = controller;
   let timedOut = false;
+  let invalidProgress = false;
   const deadline = window.setTimeout(() => {
     if (requestId !== progressRequestId || activeProgressController !== controller) return;
     timedOut = true;
@@ -2207,6 +2250,10 @@ async function loadProgress() {
     if (requestId !== progressRequestId) return;
     if (timedOut) throw new Error("Progress request timed out.");
     if (!response.ok) throw new Error(progress?.error || "Could not load saved results.");
+    if (!validSavedProgress(progress)) {
+      invalidProgress = true;
+      throw new Error("Saved progress data was invalid.");
+    }
     if (!progress.attempt_count) {
       progressSummary.textContent = "No saved quiz answers yet. Complete a quiz to build your revision list.";
       return;
@@ -2227,7 +2274,8 @@ async function loadProgress() {
     weakTopics.replaceChildren();
     progressSummary.textContent = timedOut
       ? "Saved progress did not load within 20 seconds. Check the local server and refresh results."
-      : "Saved progress could not load. Check that the local server is running.";
+      : invalidProgress ? "Saved progress data was invalid. Refresh results or check the local server."
+        : "Saved progress could not load. Check that the local server is running.";
   } finally {
     window.clearTimeout(deadline);
     if (activeProgressController === controller) activeProgressController = null;
