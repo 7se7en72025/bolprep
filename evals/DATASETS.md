@@ -16,6 +16,8 @@ The exporter parses and validates the same byte snapshot it hashes. It inventori
 
 `run_retrieval_eval.py` emits evaluation schema 2 with UTC generation time, exact raw-byte dataset/corpus and retrieval/evaluator source hashes, Python version/implementation, scorer, language breakdowns, exact match, strict recall@3, support over all retrieved notes, and unsupported false positives. It rejects invalid or duplicate labels and unknown expected IDs. Baseline overlap and experimental rarity scoring share query construction and eligibility logic. Source bytes are captured before retrieval import and checked before/after evaluation; dataset/corpus bytes are checked after each run. Comparisons require matching input and implementation metadata. These checks catch persistent file changes, not changes restored between checks or an authenticated execution environment. Hashes include line endings; preserve the exact files/environment with the report. Use `--compare` on the same versions when evaluation runs are requested. Archive the actual report, commit, environment, configuration, and failures with a comparison; a historical README percentage is not proof of current retrieval quality.
 
+Current provider-free before/after runs are archived in [reports/README.md](reports/README.md), including source hashes, failures, denominators, and the distinction between constructed labels and real learner/voice evidence. Both scorers match the same 180 authored cases after the fixes; these cases informed the changes and are not an independent held-out evaluation.
+
 ## Private speech and review observations
 
 | Input | Procedure / runner | Coverage and limits |

@@ -56,8 +56,9 @@ HINDI_STOPWORDS = {
 STOPWORDS = {
     "a", "about", "an", "and", "are", "can", "explain", "for", "hai", "hain",
     "ho", "how", "in", "is", "ka", "ke", "ki", "kya", "me", "mein", "of",
-    "article", "art", "do", "does", "please", "tell", "the", "to", "what", "who", "which", "why", "ya", "ye", "your",
+    "article", "art", "also", "do", "does", "please", "tell", "the", "then", "to", "what", "who", "which", "why", "with", "ya", "ye", "your",
     "right", "rights", "fundamental", "freedom", "freedoms", "adhikar", "adhikaar",
+    "का", "की", "के", "को", "में", "से", "पर", "है", "हैं", "क्या", "किस", "किन", "देता",
     *HINDI_STOPWORDS,
 }
 GENERIC_ARTICLE_QUERY_TOKENS = {
@@ -145,6 +146,45 @@ def _article_references(question: str) -> list[tuple[str, list[str]]]:
             end = continuation.end()
         references.append((question[reference.start():end], article_ids))
     return references
+
+
+COMPARISON_TOKENS = {
+    "compare", "comparison", "difference", "differences", "between", "vs", "versus",
+    "antar", "farq", "fark", "tulna", "अंतर", "तुलना",
+}
+RELATION_TOKENS = {
+    "protect", "protected", "protection", "conflict", "conflicts", "exception",
+    "संरक्षण", "बचाता", "टकराता",
+}
+
+
+def _target_article_ids(
+    question: str, references: list[tuple[str, list[str]]], by_id: dict[str, dict[str, Any]],
+) -> list[str]:
+    """Omit contextual citations only when the primary note explicitly cites them."""
+    all_ids = [article_id for _, article_ids in references for article_id in article_ids]
+    if len(references) < 2 or len(references[0][1]) != 1:
+        return all_ids
+    question_tokens = _tokens(question)
+    if question_tokens & COMPARISON_TOKENS or not question_tokens & RELATION_TOKENS:
+        return all_ids
+    first_end = question.find(references[0][0]) + len(references[0][0])
+    next_start = question.find(references[1][0], first_end)
+    gap = question[first_end:next_start]
+    if re.fullmatch(r"\s*(?:and|aur|और|or|या|&|vs\.?|versus|,)\s*", gap, re.IGNORECASE):
+        return all_ids
+    if re.search(r"\b(?:then|also|phir)\b|फिर", gap, re.IGNORECASE):
+        return all_ids
+    primary_id = _normalize_article_id(references[0][1][0])
+    primary = by_id[f"article-{primary_id}"]
+    cited_ids = {
+        _normalize_article_id(article_id)
+        for _, article_ids in _article_references(" ".join(primary["keywords"]))
+        for article_id in article_ids
+    }
+    if all(_normalize_article_id(article_id) in cited_ids for article_id in all_ids[1:]):
+        return references[0][1]
+    return all_ids
 
 
 def is_generic_question(question: str) -> bool:
@@ -241,6 +281,13 @@ def _note_token_fields(document: dict[str, Any]) -> tuple[set[str], set[str]]:
     return _tokens(" ".join(document["keywords"])), _tokens(body)
 
 
+def _contains_keyword_phrase(question: str, keyword: str) -> bool:
+    """Match a full phrase without accepting prefixes inside longer words."""
+    phrase = unicodedata.normalize("NFC", keyword.casefold())
+    boundary = r"[\w\u0900-\u097f]"
+    return bool(re.search(rf"(?<!{boundary}){re.escape(phrase)}(?!{boundary})", question))
+
+
 def retrieve(question: str, limit: int | None = None, *, scoring: str = "overlap") -> list[dict[str, Any]]:
     """Rank notes with shared article checks and a selected lexical scoring rule."""
     if (
@@ -258,7 +305,7 @@ def retrieve(question: str, limit: int | None = None, *, scoring: str = "overlap
         if token not in GENERIC_ARTICLE_QUERY_TOKENS | {"article", "art", "anuchhed"}
         and not token.isdigit()
     }
-    normalized_question = question.casefold()
+    normalized_question = unicodedata.normalize("NFC", question.casefold())
     article_references = _article_references(question)
     documents = load_corpus()
     if article_references:
@@ -266,12 +313,13 @@ def retrieve(question: str, limit: int | None = None, *, scoring: str = "overlap
         for reference_text, _ in article_references:
             informative_tokens -= _tokens(reference_text)
         by_id = {document["id"]: document for document in documents}
+        all_ids = [article_id for _, article_ids in article_references for article_id in article_ids]
+        if any(f"article-{_normalize_article_id(article_id)}" not in by_id for article_id in all_ids):
+            return []
         selected: dict[str, dict[str, Any]] = {}
-        for raw_id in (article_id for _, article_ids in article_references for article_id in article_ids):
+        for raw_id in _target_article_ids(question, article_references, by_id):
             article_id = _normalize_article_id(raw_id)
             document = by_id.get(f"article-{article_id}")
-            if document is None:
-                return []
             if informative_tokens:
                 keyword_tokens, body_tokens = _note_token_fields(document)
                 if not informative_tokens & (keyword_tokens | body_tokens):
@@ -304,9 +352,19 @@ def retrieve(question: str, limit: int | None = None, *, scoring: str = "overlap
     for document, (keyword_tokens, body_tokens) in zip(documents, token_fields):
         score = 2 * len(query_tokens & keyword_tokens) + len(query_tokens & body_tokens)
         if score >= 2:
+            # A full author-supplied phrase is stronger evidence than one shared
+            # topic word, especially for short Hindi questions.
+            phrase_bonus = max((
+                2 * len(keyword.split())
+                for keyword in document["keywords"]
+                if len(keyword.split()) > 1
+                and keyword.casefold() not in broad_phrases
+                and _contains_keyword_phrase(normalized_question, keyword)
+            ), default=0)
             if scoring == "rarity":
                 score = 2 * sum(weights[token] for token in query_tokens & keyword_tokens)
                 score += sum(weights[token] for token in query_tokens & body_tokens)
+            score += phrase_bonus
             scored.append((score, document))
     scored.sort(key=lambda result: (-result[0], result[1]["id"]))
     if not scored:

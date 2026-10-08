@@ -445,7 +445,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
 
     def _handle_transcription_session(self, body: dict[str, Any]) -> None:
         # Browser-only, local endpoint: never expose the project API key.
-        if self.headers.get("Origin") not in {"http://127.0.0.1:8000", "http://localhost:8000"}:
+        if self.headers.get("Origin") not in self._local_origins():
             self._send_json(403, {"error": "Start live transcription from the local tutor page."})
             return
         language = body.get("language")
@@ -691,11 +691,13 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         morsel = cookie.get(ACCESS_COOKIE)
         return morsel.value if morsel else None
 
+    def _local_origins(self) -> set[str]:
+        port = self.server.server_address[1]
+        return {f"http://127.0.0.1:{port}", f"http://localhost:{port}"}
+
     def _require_access(self) -> bool:
         if ACCESS_GATE.allowed(self._access_token()):
-            if ACCESS_GATE.enabled and self.command in {"POST", "DELETE"} and self.headers.get("Origin") not in {
-                "http://127.0.0.1:8000", "http://localhost:8000"
-            }:
+            if ACCESS_GATE.enabled and self.command in {"POST", "DELETE"} and self.headers.get("Origin") not in self._local_origins():
                 self.close_connection = True
                 self._send_json(403, {"error": "Use the local tutor page.", "code": "unexpected-origin"},
                                 include_session_cookie=False)
@@ -713,7 +715,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         self._finish_response(b"")
 
     def _handle_access(self, body: dict[str, Any]) -> None:
-        if self.headers.get("Origin") not in {"http://127.0.0.1:8000", "http://localhost:8000"}:
+        if self.headers.get("Origin") not in self._local_origins():
             self._send_json(403, {"error": "Use the local sign-in page."}, include_session_cookie=False)
             return
         token = self._access_token()
@@ -838,5 +840,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    configure_cli("BolPrep local browser study tutor")
+    args = configure_cli("BolPrep local browser study tutor", include_port=True)
+    PORT = args.port
     main()

@@ -1,4 +1,4 @@
-param([switch]$Frozen, [switch]$Offline)
+param([switch]$Frozen, [switch]$Offline, [ValidateRange(1, 65535)][int]$Port = 8000)
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
@@ -107,7 +107,7 @@ if (-not (Test-Path -LiteralPath $envPath)) {
     Write-Output 'Created .env from the example. Add an API key there for model answers; offline mode works without one.'
 }
 
-Write-Output 'Starting BolPrep at http://127.0.0.1:8000 (press Ctrl+C to stop).'
-$serverArguments = @()
+Write-Output "Starting BolPrep at http://127.0.0.1:$Port (press Ctrl+C to stop)."
+$serverArguments = @('--port', $Port)
 if ($Offline) { $serverArguments += '--offline' }
 & $venvPython (Join-Path $repoRoot 'server.py') @serverArguments

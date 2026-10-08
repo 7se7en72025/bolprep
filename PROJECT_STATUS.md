@@ -22,7 +22,7 @@ Audit date: 2026-10-08. This is an implementation/evidence inventory, not a rele
 | Retrieval, answer support, tool behavior have labeled checks | Constructed retrieval labels, existing mocked tool tests, and ANSWER_SUPPORT_RUBRIC.md procedure with a local label summarizer | Fresh retrieval comparison, actual generated-answer/support labels and report computation, current tool coverage. |
 | Human speech/quiz reviews documented | Versioned TTS/quiz review procedures | Actual independent reviews, disagreements, coverage, and measured reports. |
 | Accessible working demo and setup | Local startup scripts, README, `.env.example` | Fresh local/browser run; any hosted demo needs a separate concrete deployment decision. |
-| README architecture, limits, actual benchmarks, reproduction | Architecture/setup/limits and historical constructed retrieval figures | Retrieval runner now emits input/code hashes, interpreter/scorer, and UTC time; actual current reports, reproducibility proof, and real voice results remain missing. |
+| README architecture, limits, actual benchmarks, reproduction | Architecture/setup/limits and historical constructed retrieval figures | Current constructed retrieval reports with exact hashes and reproduction commands are archived; real voice results and independent answer-quality evidence remain missing. |
 | Short recorded demo demonstrates full flow | `DEMO_SCRIPT.md` outline | Actual video showing observed Hinglish speech, interruption, sources, tools, diagnostics. |
 | Technical walkthrough explains tradeoffs and a failure-led improvement | ARCHITECTURE.md maps current paths/tradeoffs and the reviewed Article 14 alias defect | Written implementation artifact exists; the defect is static reasoning, and current runtime/video evidence is still missing. |
 
@@ -38,12 +38,12 @@ Audit date: 2026-10-08. This is an implementation/evidence inventory, not a rele
 
 | Deliverable | Evidence / status |
 | --- | --- |
-| Repository, reproducible setup, secret-free `.env.example` | Tracked source/setup files and optional requirements.lock.txt package snapshot exist; fresh installation/setup runtime needs proof. |
+| Repository, reproducible setup, secret-free `.env.example` | Fresh pinned Windows/CPython 3.11 installation and pip check pass; local Python/HTTP/browser checks pass. Other platforms and provider/audio paths need proof. |
 | Curated corpus manifest and dataset documentation | `data/corpus_manifest.json` and `evals/DATASETS.md`; inventory generation validates local records, not source accuracy/rights. |
-| Automated interruption/tool/retrieval/persistence checks | Existing Python tests cover portions of tools, retrieval, quiz, and progress. No tracked browser interruption suite or newer history/report coverage was found in this audit. No tests were run. |
-| Benchmark report with measured results/configuration/failures | Historical constructed-text results are preserved in IMPLEMENTATION_NOTES.md; no tracked current voice benchmark report was found. |
+| Automated interruption/tool/retrieval/persistence checks | Existing Python tests cover portions of tools, retrieval, quiz, and progress. Added headless Chrome text-turn cancellation/save-open/quiz/diagnostics coverage plus mocked live-STT/speech cancellation checks. Local checks were run; real microphone/acoustic races remain unverified. |
+| Benchmark report with measured results/configuration/failures | Current before/after constructed retrieval reports are archived in evals/reports; real voice benchmark results remain absent. |
 | Demo video and architecture walkthrough | DEMO_SCRIPT.md outline and ARCHITECTURE.md walkthrough exist; no completed demo-video artifact was found. |
 
 ## Next evidence to collect
 
-First run the existing local tests and provider-free smoke/evaluation checks when explicitly requested, then address failures and missing coverage. Browser/microphone checks, configured provider behavior, human ratings, and recording remain separate gates. Test runs were not requested during this audit; no tests were added or run. Existing manual procedures cover these checks, but their presence does not prove a pass. Preserve this audit's scope when updating status: a green narrow check must not be used to mark a whole phase complete.
+Authorized local verification now passes: 41 Python tests, the temporary-server offline smoke flow, four mocked live-STT protocol checks, offline headless Chrome flows, and the 180-case constructed retrieval comparison. See README verification commands and evals/reports/README.md for scope and denominators. Browser/microphone checks, configured provider behavior, human ratings, and recording remain separate gates. The earlier static audit predates these authorized runs; row-level missing browser/device/measurement gates still require their stated evidence. Existing manual procedures cover these checks, but their presence does not prove a pass. Preserve this audit's scope when updating status: a green narrow check must not be used to mark a whole phase complete.

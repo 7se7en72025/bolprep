@@ -17,6 +17,7 @@ class QuizToolTests(unittest.TestCase):
             "What two ideas does Article 14 protect?",
             "Name any two freedoms listed in Article 19(1).",
             "Which two interests does Article 21 protect?",
+            "Name two safeguards for an arrested person under Article 22(1)-(2).",
         })
 
     def test_start_quiz_rejects_unavailable_topic_and_unbounded_count(self):
@@ -37,6 +38,11 @@ class QuizToolTests(unittest.TestCase):
         result = score_answer("art21_protection", "Article 21 protects life.", "hi-IN")
         self.assertEqual(result["score"], 50)
         self.assertFalse(result["complete"])
+        self.assertIn("vyaktigat swatantrata", result["feedback"])
+
+    def test_score_answer_gives_devanagari_feedback_for_devanagari_answer(self):
+        result = score_answer("art21_protection", "जीवन का अधिकार", "hi-IN")
+        self.assertEqual(result["score"], 50)
         self.assertIn("व्यक्तिगत स्वतंत्रता", result["feedback"])
 
     def test_unknown_question_and_empty_answer_are_rejected(self):

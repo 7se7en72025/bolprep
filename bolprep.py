@@ -31,12 +31,17 @@ def api_is_configured() -> bool:
     return not offline_requested() and bool(os.getenv("OPENAI_API_KEY", "").strip())
 
 
-def configure_cli(description: str) -> None:
+def configure_cli(description: str, *, include_port: bool = False) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--offline", action="store_true", help="Disable model/provider routes without editing .env")
+    if include_port:
+        parser.add_argument("--port", type=int, default=8000, help="Local HTTP port (1-65535; default 8000)")
     args = parser.parse_args()
+    if include_port and not 1 <= args.port <= 65535:
+        parser.error("--port must be between 1 and 65535")
     if args.offline:
         os.environ["BOLPREP_OFFLINE"] = "1"
+    return args
 
 
 INSTRUCTIONS = (

@@ -1,4 +1,4 @@
-param()
+param([ValidateRange(1, 65535)][int]$Port = 8000)
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
@@ -14,6 +14,7 @@ $stdoutPath = Join-Path $stateDirectory "$runId.stdout.log"
 $stderrPath = Join-Path $stateDirectory "$runId.stderr.log"
 $progressDatabasePath = Join-Path $stateDirectory "$runId.sqlite3"
 $process = $null
+$baseUrl = "http://127.0.0.1:$Port"
 $hadOpenAiKey = Test-Path Env:OPENAI_API_KEY
 $previousOpenAiKey = $env:OPENAI_API_KEY
 $hadAccessPassword = Test-Path Env:BOLPREP_ACCESS_PASSWORD
@@ -28,13 +29,16 @@ function Test-CheckServerListener {
     # Inspect ownership before requesting health: another offline server can
     # otherwise satisfy readiness and receive this check's quiz writes.
     $listeners = @(Get-NetTCPConnection -ErrorAction Stop | Where-Object {
-        $_.State -eq 'Listen' -and $_.LocalPort -eq 8000 -and $_.LocalAddress -in @('127.0.0.1', '0.0.0.0', '::', '::1')
+        $_.State -eq 'Listen' -and $_.LocalPort -eq $Port -and $_.LocalAddress -in @('127.0.0.1', '0.0.0.0', '::', '::1')
     })
-    if (@($listeners | Where-Object { $_.OwningProcess -ne $process.Id }).Count -gt 0) {
-        throw 'Port 8000 belongs to another process. Stop that server yourself, then rerun the check. No HTTP request was sent.'
+    # Windows venv python.exe may redirect to a direct interpreter child.
+    $ownedProcessIds = @($process.Id) + @(Get-CimInstance Win32_Process -Filter "ParentProcessId = $($process.Id)" -ErrorAction Stop |
+        Where-Object { $_.Name -eq 'python.exe' } | ForEach-Object { $_.ProcessId })
+    if (@($listeners | Where-Object { $_.OwningProcess -notin $ownedProcessIds }).Count -gt 0) {
+        throw "Port $Port belongs to another process. Choose another -Port or stop that server yourself. No HTTP request was sent."
     }
     return @($listeners | Where-Object {
-        $_.OwningProcess -eq $process.Id -and $_.LocalAddress -eq '127.0.0.1'
+        $_.OwningProcess -in $ownedProcessIds -and $_.LocalAddress -eq '127.0.0.1'
     }).Count -eq 1
 }
 
@@ -49,7 +53,7 @@ try {
     $env:BOLPREP_ACCESS_PASSWORD = ''
     $env:BOLPREP_DATABASE_PATH = $progressDatabasePath
     $process = Start-Process -FilePath $pythonPath -ArgumentList @(
-        '-u', ('"{0}"' -f (Join-Path $repoRoot 'server.py')), '--offline'
+        '-u', ('"{0}"' -f (Join-Path $repoRoot 'server.py')), '--offline', '--port', $Port
     ) `
         -WorkingDirectory $repoRoot -WindowStyle Hidden -PassThru `
         -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
@@ -65,7 +69,7 @@ try {
             continue
         }
         try {
-            $health = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health' -TimeoutSec 2
+            $health = Invoke-RestMethod -Uri "$baseUrl/health" -TimeoutSec 2
             break
         }
         catch {
@@ -78,7 +82,7 @@ try {
     }
 
     Assert-CheckServerListener
-    $page = Invoke-WebRequest -Uri 'http://127.0.0.1:8000/' -UseBasicParsing -TimeoutSec 5
+    $page = Invoke-WebRequest -Uri "$baseUrl/" -UseBasicParsing -TimeoutSec 5
     if ($page.StatusCode -ne 200 -or $page.Content -notmatch 'BolPrep') {
         throw 'The tutor page did not load correctly.'
     }
@@ -89,7 +93,7 @@ try {
         history = @()
     } | ConvertTo-Json -Depth 4
     Assert-CheckServerListener
-    $answer = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/api/answer' `
+    $answer = Invoke-RestMethod -Uri "$baseUrl/api/answer" `
         -Method Post -ContentType 'application/json' -Body $body -TimeoutSec 10
     if ($answer.answer -notmatch 'Article 14' -or -not $answer.sources -or $answer.sources.Count -lt 1) {
         throw 'The offline tutor did not return an Article 14 answer with a source.'
@@ -97,7 +101,7 @@ try {
 
     $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
     Assert-CheckServerListener
-    $quizPage = Invoke-WebRequest -Uri 'http://127.0.0.1:8000/' -UseBasicParsing -WebSession $session -TimeoutSec 5
+    $quizPage = Invoke-WebRequest -Uri "$baseUrl/" -UseBasicParsing -WebSession $session -TimeoutSec 5
     if ($quizPage.StatusCode -ne 200) { throw 'The quiz browser session could not be created.' }
     $quizBody = @{
         topic = 'fundamental rights'
@@ -105,7 +109,7 @@ try {
         language = 'hi-IN'
     } | ConvertTo-Json -Depth 4
     Assert-CheckServerListener
-    $quiz = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/api/quiz/start' `
+    $quiz = Invoke-RestMethod -Uri "$baseUrl/api/quiz/start" `
         -Method Post -ContentType 'application/json' -Body $quizBody -WebSession $session -TimeoutSec 10
     if (-not $quiz.quiz_id -or $quiz.questions.Count -ne 1) { throw 'The offline quiz did not return one question.' }
 
@@ -117,13 +121,13 @@ try {
         language = 'hi-IN'
     } | ConvertTo-Json -Depth 4
     Assert-CheckServerListener
-    $score = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/api/quiz/score' `
+    $score = Invoke-RestMethod -Uri "$baseUrl/api/quiz/score" `
         -Method Post -ContentType 'application/json' -Body $scoreBody -WebSession $session -TimeoutSec 10
     Assert-CheckServerListener
-    $retry = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/api/quiz/score' `
+    $retry = Invoke-RestMethod -Uri "$baseUrl/api/quiz/score" `
         -Method Post -ContentType 'application/json' -Body $scoreBody -WebSession $session -TimeoutSec 10
     Assert-CheckServerListener
-    $progress = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/api/progress' `
+    $progress = Invoke-RestMethod -Uri "$baseUrl/api/progress" `
         -WebSession $session -TimeoutSec 5
     if (($score.question_id -ne $quiz.questions[0].id) -or
         ($retry.score -ne $score.score) -or
@@ -134,7 +138,7 @@ try {
 
     $turnBody = @{ question = 'weak topics'; language = 'hi-IN'; history = @() } | ConvertTo-Json -Depth 4
     Assert-CheckServerListener
-    $turnResponse = Invoke-WebRequest -Uri 'http://127.0.0.1:8000/api/agent/turn' `
+    $turnResponse = Invoke-WebRequest -Uri "$baseUrl/api/agent/turn" `
         -Method Post -ContentType 'application/json' -Body $turnBody -WebSession $session -UseBasicParsing -TimeoutSec 10
     $turnText = if ($turnResponse.Content -is [byte[]]) {
         [Text.Encoding]::UTF8.GetString($turnResponse.Content)
@@ -155,6 +159,10 @@ try {
 }
 finally {
     if ($process -and -not $process.HasExited) {
+        Get-CimInstance Win32_Process -Filter "ParentProcessId = $($process.Id)" -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -eq 'python.exe' } | ForEach-Object {
+                Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+            }
         Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
         [void]$process.WaitForExit(5000)
     }

@@ -6,7 +6,7 @@ BolPrep combines a reviewed note collection, a browser voice interface, and a Py
 
 ## Project status
 
-The prototype implements text tutoring, three voice-input paths, progressive speech, quizzes, saved progress, and explicit conversation snapshots. Browser/device verification, current evaluation runs, human speech and scoring reviews, and a recorded demonstration remain pending. Production readiness and measured voice quality have not been established.
+The prototype implements text tutoring, three voice-input paths, progressive speech, quizzes, saved progress, and explicit conversation snapshots. Local Python/HTTP tests, offline headless Chrome flows, live-transcription protocol tests, and a current constructed retrieval comparison now pass. Real microphone/provider sessions, human speech and scoring reviews, and a recorded voice demonstration remain pending. Production readiness and measured voice quality have not been established.
 
 See [PROJECT_STATUS.md](PROJECT_STATUS.md) for the acceptance audit and [ARCHITECTURE.md](ARCHITECTURE.md) for the implementation walkthrough. Historical metrics and detailed development notes are preserved in [IMPLEMENTATION_NOTES.md](IMPLEMENTATION_NOTES.md).
 
@@ -22,7 +22,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\run-local.ps1
 
 The launcher prepares `.venv`, installs dependencies, creates `.env` if missing, and starts the server. The page validates a bounded health response before enabling provider capabilities; missing or invalid study notes return a corpus-unavailable 503. Readiness describes configuration and corpus availability, not a successful provider session. Open **http://127.0.0.1:8000**. Press **Ctrl+C** in the terminal to stop it.
 
-For the observed dependency snapshot, add `-Frozen` to the launcher command or install with `-r requirements.lock.txt` in manual setup. The snapshot records application-package versions from Windows / CPython 3.11 on 2026-10-08; fresh installation and runtime compatibility remain unverified. It does not pin Python, pip, wheel hashes, system audio/browser behavior, or provider models. Default setup continues to use the ranges in `requirements.txt`.
+For the observed dependency snapshot, add `-Frozen` to the launcher command or install with `-r requirements.lock.txt` in manual setup. The snapshot records application-package versions from Windows / CPython 3.11 on 2026-10-08; a fresh Windows / CPython 3.11 environment installed this snapshot, passed pip check and 41 Python tests, and served the offline browser verification. Other platforms and real provider/audio behavior remain unverified. It does not pin Python, pip, wheel hashes, system audio/browser behavior, or provider models. Default setup continues to use the ranges in `requirements.txt`.
 
 For an explicitly offline demo, add `-Offline` to the launcher, or `--offline` to `server.py`/`bolprep.py`. It overrides a configured key for that process without editing `.env`; local quizzes, notes, and the configured access gate remain available. Dependencies still install normally, and browser speech services may use the network.
 
@@ -94,7 +94,7 @@ Browser quiz-start, scoring, and progress-load responses are capped at 1 MiB bef
 
 ## Evaluation and diagnostics
 
-The page exposes request diagnostics and exports for local review. Open Speech diagnostics to view a current-page timing table, or select Refresh table after another attempt. It shows configuration groups, timing sample counts, p50/p95 seconds, outcome counts, and available failure reasons from the same snapshot used by JSON exports. Missing values remain unavailable; counts repeat across metrics and should not be summed. TTS groups now include local cancellation counts/reasons for active or pending browser playback and provider segments. Future queued provider segments are excluded; these counts do not confirm upstream cancellation or audible stop. Older schema 13 exports without these optional fields have unknown cancellation counts, not zero. Browser progressive speech counts one playback attempt; provider progressive speech counts each active segment separately. This view contains observations only, not preloaded benchmarks or accuracy grades. Browser rendering and real timing runs remain unverified. Schema 13 recorded-STT groups retain language and the requested model from server responses; missing metadata and pre-response failures remain null/unknown rather than being attributed to a model. These IDs are not resolved provider versions, and grouping does not establish paired comparisons. Completed recorded-STT groups separate upload-to-result time from the server transcription-call duration, retaining missing timing counts. The server call includes provider transport, processing, and decoding; it is not provider compute time, speech-end latency, or audible response latency. Software timings do not measure audible latency, and token counts are not cost estimates. Saved request metadata is client-supplied and is not authenticated provenance. Tutor traces distinguish the requested model from provider-reported model IDs for each completed response/tool round; missing IDs remain unavailable. Report groups preserve this ordered list. Returned IDs may still be aliases, not immutable model versions, and speech models are outside these tutor traces.
+The page exposes request diagnostics and exports for local review. Open Speech diagnostics to view a current-page timing table, or select Refresh table after another attempt. It shows configuration groups, timing sample counts, p50/p95 seconds, outcome counts, and available failure reasons from the same snapshot used by JSON exports. Missing values remain unavailable; counts repeat across metrics and should not be summed. TTS groups now include local cancellation counts/reasons for active or pending browser playback and provider segments. Future queued provider segments are excluded; these counts do not confirm upstream cancellation or audible stop. Older schema 13 exports without these optional fields have unknown cancellation counts, not zero. Browser progressive speech counts one playback attempt; provider progressive speech counts each active segment separately. This view contains observations only, not preloaded benchmarks or accuracy grades. The empty dashboard and text/quiz flows were verified in headless Chrome; real speech timing runs remain unverified. Schema 13 recorded-STT groups retain language and the requested model from server responses; missing metadata and pre-response failures remain null/unknown rather than being attributed to a model. These IDs are not resolved provider versions, and grouping does not establish paired comparisons. Completed recorded-STT groups separate upload-to-result time from the server transcription-call duration, retaining missing timing counts. The server call includes provider transport, processing, and decoding; it is not provider compute time, speech-end latency, or audible response latency. Software timings do not measure audible latency, and token counts are not cost estimates. Saved request metadata is client-supplied and is not authenticated provenance. Tutor traces distinguish the requested model from provider-reported model IDs for each completed response/tool round; missing IDs remain unavailable. Report groups preserve this ordered list. Returned IDs may still be aliases, not immutable model versions, and speech models are outside these tutor traces.
 
 | Artifact | Purpose |
 | --- | --- |
@@ -111,7 +111,35 @@ Retrieval evaluation commands:
 .\.venv\Scripts\python.exe evals/run_retrieval_eval.py --compare
 ```
 
-Reports include dataset/corpus hashes, retrieval/evaluator source hashes, Python version, scorer, and UTC generation time. Code or input changes invalidate a comparison; archive the actual JSON and repository commit when running an authorized evaluation. These are instructions, not evidence of a fresh run. Older constructed-set results in the archive predate retrieval changes and do not establish learner or voice quality. Current local test and evaluation execution remains pending explicit verification authorization. The existing tools/check-local.ps1 smoke utility now checks Windows TCP listener ownership before health and each later request, and launches its child with --offline. If another process owns port 8000, it stops without requesting that server; Get-NetTCPConnection must be available. Ownership checks are observations before requests, not an atomic guarantee against a process exiting and the port being rebound during a request. This repair has not been runtime verified.
+Reports include dataset/corpus hashes, retrieval/evaluator source hashes, Python version, scorer, and UTC generation time. Code or input changes invalidate a comparison; archive the actual JSON and repository commit when running an authorized evaluation. These are instructions, not evidence of a fresh run. Older constructed-set results in the archive predate retrieval changes and do not establish learner or voice quality. Current measured retrieval reports are archived in [evals/reports](evals/reports/README.md): both scorers match 180/180 authored cases after fixes, versus 175/180 before. This same-set result is not held-out performance or answer/voice quality. Local tests and the offline HTTP smoke run now pass. The existing tools/check-local.ps1 smoke utility now checks Windows TCP listener ownership before health and each later request, and launches its child with --offline. Use -Port to select another local port. Listener ownership accepts the spawned interpreter and its direct Windows venv interpreter child; foreign ownership stops requests. Get-NetTCPConnection and Get-CimInstance must be available. Ownership checks are observations before requests, not an atomic guarantee against a process exiting and the port being rebound during a request. The smoke utility passed on port 18080 with a temporary database after fixing Windows venv child ownership.
+
+## Verification
+
+See [VERIFICATION.md](VERIFICATION.md) for the actual environment, results, fixed defects, and remaining gates.
+
+```powershell
+.\.venv\Scripts\python.exe -m unittest discover -s tests -v
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\check-local.ps1 -Port 18080
+npm ci
+npm run test:voice
+```
+
+The smoke check owns a temporary offline server/database and removes them afterward. The Python suite currently contains 41 passing tests, including loopback HTTP/origin checks. Protocol tests use mocked transcription events; they do not prove microphone or provider behavior.
+
+For headless browser checks, start a separate offline server with a disposable database in one terminal, then run the checks in another:
+
+```powershell
+# Terminal 1: use an otherwise unused port and disposable database.
+$env:BOLPREP_DATABASE_PATH = Join-Path (Get-Location) '.codex\browser-check.sqlite3'
+$env:BOLPREP_ACCESS_PASSWORD = ''
+.\.venv\Scripts\python.exe server.py --offline --port 19087
+
+# Terminal 2: Chrome or Edge must be installed.
+$env:BOLPREP_TEST_BASE_URL = 'http://127.0.0.1:19087'
+npm run test:browser
+```
+
+Browser checks save conversations and quiz scores to the supplied server's database. Use a disposable database; do not target a personal study session. Set BOLPREP_BROWSER_PATH to your browser executable if automatic discovery cannot find it. These checks cover offline UI behavior, not audible speech, real recordings, or provider quality. Stop the server with Ctrl+C after the run. The normal launcher also accepts -Port, and server.py accepts --port; access-origin checks follow the actual bound port.
 
 ## Repository map
 

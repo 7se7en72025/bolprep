@@ -34,9 +34,10 @@ class AgentToolTests(unittest.TestCase):
         fake = FakeResponses(
             [
                 SimpleNamespace(output=[function_call("start_quiz", {
-                    "topic": "fundamental rights", "question_count": 1, "language": "en-IN"
-                })], output_text=""),
-                SimpleNamespace(output=[], output_text="Let's begin with Article 14."),
+                    "topic": "fundamental rights", "question_count": 1, "language": "en-IN",
+                    "difficulty": "standard",
+                })], output_text="", status="completed"),
+                SimpleNamespace(output=[], output_text="Let's begin with Article 14.", status="completed"),
             ]
         )
         with patch.object(agent, "start_quiz", return_value=quiz), patch.object(agent, "create_quiz_run") as create_run:
@@ -58,6 +59,19 @@ class AgentToolTests(unittest.TestCase):
         self.assertFalse(fake.requests[0]["parallel_tool_calls"])
         self.assertEqual(fake.requests[1]["input"][-1]["type"], "function_call_output")
         self.assertEqual(fake.requests[1]["input"][-1]["call_id"], "call-1")
+
+    def test_unfinished_response_does_not_execute_tool(self):
+        fake = FakeResponses([
+            SimpleNamespace(output=[function_call("start_quiz", {
+                "topic": "fundamental rights", "question_count": 1,
+                "language": "en-IN", "difficulty": "standard",
+            })], output_text="", status="incomplete"),
+        ])
+        with patch.object(agent, "start_quiz") as start, patch.object(agent, "create_quiz_run") as create_run:
+            with self.assertRaisesRegex(RuntimeError, "did not finish"):
+                agent.run_agent_turn("Give me a quiz", [], "session-one", "en-IN", fake)
+        start.assert_not_called()
+        create_run.assert_not_called()
 
     def test_invalid_tool_fields_are_reported_without_running_function(self):
         args = json.dumps({

@@ -1,0 +1,109 @@
+// Provider-free regression checks for the browser live-transcription turn state.
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const test = require("node:test");
+const vm = require("node:vm");
+
+function captureHarness(continuous = false) {
+  const scheduled = new Map();
+  let nextTimer = 0;
+  const finals = [];
+  const failures = [];
+  const metrics = [];
+  const sent = [];
+  const track = { enabled: true, stops: 0, stop() { this.stops += 1; } };
+  const channel = { readyState: "open", send(data) { sent.push(JSON.parse(data)); }, close() {} };
+  const window = { crypto: { randomUUID: () => "attempt-id" } };
+  const context = vm.createContext({
+    window, AbortController, performance, Date, JSON, Float32Array,
+    setTimeout(callback, delay) { const id = ++nextTimer; scheduled.set(id, { callback, delay }); return id; },
+    clearTimeout(id) { scheduled.delete(id); },
+  });
+  const source = fs.readFileSync(path.join(__dirname, "..", "web", "live-stt.js"), "utf8");
+  vm.runInContext(source, context, { filename: "live-stt.js" });
+  const capture = new window.BolPrepLiveTranscription({
+    final: (text) => finals.push(text),
+    error: (message) => failures.push(message),
+    metrics: (sample) => metrics.push(sample),
+    status() {}, partial() {}, closed() {},
+  }, { continuous });
+  capture.stream = { getTracks: () => [track], getAudioTracks: () => [track] };
+  capture.channel = channel;
+  capture.peer = { close() {} };
+  capture.startedAt = performance.now();
+  capture.startedAtUtc = new Date().toISOString();
+  capture.language = "hi-IN";
+  capture.state = "listening";
+  // This suite exercises turn protocol; microphone energy analysis is device dependent.
+  capture.autoFinish = false;
+  const flushDelay = (delay) => {
+    for (const [id, timer] of [...scheduled]) {
+      if (timer.delay !== delay) continue;
+      scheduled.delete(id);
+      timer.callback();
+    }
+  };
+  const event = (type, item_id, extra = {}) => capture.event(JSON.stringify({ type, item_id, ...extra }));
+  return { capture, finals, failures, metrics, sent, track, event, flushDelay };
+}
+
+test("manual finish commits once and ignores a late or duplicate final", () => {
+  const h = captureHarness();
+  h.capture.finish();
+  h.flushDelay(250);
+  assert.deepEqual(h.sent, [{ type: "input_audio_buffer.commit" }]);
+  h.event("conversation.item.input_audio_transcription.completed", "item-1", { transcript: "Article 21" });
+  h.event("conversation.item.input_audio_transcription.completed", "item-1", { transcript: "stale" });
+  assert.deepEqual(h.finals, ["Article 21"]);
+  assert.equal(h.capture.closed, true);
+  assert.ok(h.track.stops >= 1);
+  assert.equal(h.metrics.length, 1);
+  assert.equal(h.metrics[0].outcome, "completed");
+});
+
+test("continuous mode clears between turns and ignores the previous item", () => {
+  const h = captureHarness(true);
+  h.capture.finish();
+  h.flushDelay(250);
+  h.event("conversation.item.input_audio_transcription.completed", "item-1", { transcript: "Pehla sawaal" });
+  assert.deepEqual(h.finals, ["Pehla sawaal"]);
+  assert.equal(h.capture.state, "clearing");
+  assert.deepEqual(h.sent.at(-1), { type: "input_audio_buffer.clear" });
+  h.event("input_audio_buffer.cleared");
+  assert.equal(h.capture.state, "listening");
+  h.event("conversation.item.input_audio_transcription.completed", "item-1", { transcript: "old" });
+  h.capture.finish();
+  h.flushDelay(250);
+  assert.equal(h.capture.state, "finalizing");
+  assert.equal(h.capture.itemId, null);
+  h.event("conversation.item.input_audio_transcription.completed", "item-2", { transcript: "Doosra sawaal" });
+  assert.deepEqual(h.finals, ["Pehla sawaal", "Doosra sawaal"]);
+  assert.equal(h.metrics.length, 2);
+  assert.equal(h.metrics[1].turn_number, 2);
+  h.capture.cancel();
+  assert.ok(h.track.stops >= 1);
+});
+
+test("invalid active transcript closes capture without delivering a final", () => {
+  const h = captureHarness();
+  h.event("conversation.item.input_audio_transcription.delta", "item-1", { delta: 42 });
+  assert.equal(h.capture.closed, true);
+  assert.equal(h.failures.length, 1);
+  assert.deepEqual(h.finals, []);
+  h.event("conversation.item.input_audio_transcription.completed", "item-1", { transcript: "late" });
+  assert.deepEqual(h.finals, []);
+  assert.equal(h.metrics[0].outcome, "failed");
+});
+
+test("cancel before commit prevents a late turn from being sent", () => {
+  const h = captureHarness();
+  h.capture.finish();
+  h.capture.cancel();
+  h.flushDelay(250);
+  h.event("conversation.item.input_audio_transcription.completed", "item-1", { transcript: "late" });
+  assert.deepEqual(h.sent, []);
+  assert.deepEqual(h.finals, []);
+  assert.equal(h.metrics.length, 1);
+  assert.equal(h.metrics[0].outcome, "cancelled");
+});

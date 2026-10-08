@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
 .venv/
+node_modules/
 .env
 .env.*
 !.env.example
@@ -19,3 +20,5 @@ evals/local-answer-*.json
 .codex/local-check/
 .codex/*.sqlite3
 .codex/*.sqlite3-*
+
+.codex/setup-verification/

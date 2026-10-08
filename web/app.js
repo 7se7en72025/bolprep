@@ -40,7 +40,7 @@ if (["hi-IN", "en-IN"].includes(speechPreferences.language)) {
 if ([...streamedTtsVoice.options].some((option) => option.value === speechPreferences.streamedTtsVoice)) {
   streamedTtsVoice.value = speechPreferences.streamedTtsVoice;
 }
-if (speechRateControl.options.some((option) => Number(option.value) === speechPreferences.browserSpeechRate)) {
+if ([...speechRateControl.options].some((option) => Number(option.value) === speechPreferences.browserSpeechRate)) {
   speechRateControl.value = String(speechPreferences.browserSpeechRate);
 }
 const savedVoices = speechPreferences.voices && typeof speechPreferences.voices === "object"
