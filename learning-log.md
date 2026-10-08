@@ -1937,3 +1937,9 @@
 - Speech-language changes now invalidate recorded capture/upload delivery and cancel it while keeping the draft. Previously browser/live recognition stopped on language changes but recorded input could continue under its captured old language.
 - Consolidated recorded cancellation for language changes, typing, Stop, and page hiding: invalidate startup generation and controller ownership before abort/release, immediately discard capture tracks, and leave recorder callback cleanup with its owner. Busy controls remain until recorder cleanup.
 - Verification: Node syntax check and git diff whitespace checks with static ownership/late-delivery inspection. No tests, race injections, microphone/recordings, browser/device checks, provider calls, or observed cancellation claims.
+
+## Fail malformed known live transcription payloads promptly - 2026-10-08
+
+- Active committed/transcription events now fail on invalid item identifiers rather than silently waiting. Current delta/completed payloads require text before item adoption or draft updates; malformed values use existing generic provider-failed cleanup.
+- Valid stale/duplicate completed items and mismatched known IDs remain ignored. Empty final transcripts and transcript-length guards retain their own failure paths; unknown valid event types remain ignored. Removed a redundant envelope check already covered by strict parsing.
+- Verification: Node syntax check and git diff whitespace checks, with static state/order inspection. No tests, event injections, recordings, browser/device runs, provider calls, or measured turn-boundary reliability claims.
