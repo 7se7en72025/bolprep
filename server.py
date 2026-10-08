@@ -265,13 +265,14 @@ class BolPrepHandler(BaseHTTPRequestHandler):
 
         try:
             prior_questions = prior_queries(cleaned_history)
-            documents = retrieve(retrieval_query(question, prior_questions))
+            selected_query = retrieval_query(question, prior_questions)
+            documents = retrieve(selected_query)
             if not documents:
-                answer = offline_answer([], language, question)
+                answer = offline_answer([], language, question, retrieval_question=selected_query)
             elif api_is_configured():
                 answer = ask_model(question.strip(), cleaned_history, documents, language)
             else:
-                answer = offline_answer(documents, language, question)
+                answer = offline_answer(documents, language, question, retrieval_question=selected_query)
         except Exception as exc:
             print(f"Tutor request failed: {type(exc).__name__}")
             self._send_json(502, {"error": "Tutor request failed. Check the server terminal and try again."})

@@ -18,7 +18,7 @@ from progress import (
     save_answer,
 )
 from quiz import QUIZ_PRESETS, score_answer, start_quiz
-from retrieval import retrieval_query, retrieve
+from retrieval import is_generic_question, retrieval_query, retrieve
 
 
 MAX_TOOL_CALLS = 6
@@ -107,11 +107,15 @@ def run_agent_turn(
     """Answer a turn, using validated quiz/progress functions in model mode."""
     if not isinstance(quiz_difficulty, str) or quiz_difficulty not in QUIZ_PRESETS:
         raise ValueError("Choose basic, standard, or challenge quiz difficulty.")
-    documents = retrieve(_retrieval_query(question, history))
+    selected_query = _retrieval_query(question, history)
+    documents = retrieve(selected_query)
     if on_sources is not None:
         on_sources([_source(document) for document in documents])
-    if responses_client is None and not api_is_configured():
-        return _offline_turn(question, documents, session_id, language, quiz_difficulty)
+    if (not documents and is_generic_question(selected_query) and not _has_tool_intent(question)) or (
+        responses_client is None and not api_is_configured()
+    ):
+        return _offline_turn(question, documents, session_id, language, quiz_difficulty,
+                             retrieval_question=selected_query)
 
     if responses_client is None:
         try:
@@ -365,6 +369,7 @@ def _offline_turn(
     session_id: str,
     language: str,
     difficulty: str = "standard",
+    *, retrieval_question: str | None = None,
 ) -> dict[str, Any]:
     tool_events: list[dict[str, Any]] = []
     normalized = question.casefold()
@@ -392,7 +397,7 @@ def _offline_turn(
         else:
             answer = "Abhi saved weak topics nahi hain. Ek quiz complete karke progress dekho." if language == "hi-IN" else "There are no saved weak topics yet. Complete a quiz to build your progress history."
     else:
-        answer = offline_answer(documents, language, question)
+        answer = offline_answer(documents, language, question, retrieval_question=retrieval_question)
     return {
         "answer": answer,
         "sources": [_source(document) for document in documents],

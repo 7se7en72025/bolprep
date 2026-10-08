@@ -6,7 +6,7 @@ import os
 import re
 import sys
 
-from retrieval import retrieval_query, retrieve
+from retrieval import is_generic_question, retrieval_query, retrieve
 from conversation_history import model_history, prior_queries
 
 MAX_MODEL_ANSWER_CHARS = 12000
@@ -78,11 +78,19 @@ def checked_evidence(
 
 
 def offline_answer(
-    documents: list[dict[str, object]], language: str = "en-IN", question: str = ""
+    documents: list[dict[str, object]], language: str = "en-IN", question: str = "",
+    *, retrieval_question: str | None = None,
 ) -> str:
     """Return a checked-note summary in English, Hindi, or Hinglish without implying AI was used."""
     style = answer_style(language, question)
     if not documents:
+        selected_query = question if retrieval_question is None else retrieval_question
+        if is_generic_question(selected_query):
+            if style == "hi":
+                return "आप किस अनुच्छेद या विषय के बारे में पूछ रहे हैं? अनुच्छेद संख्या या विषय बताइए।"
+            if style == "hinglish":
+                return "Kis Article ya topic ke baare mein pooch rahe ho? Article number ya topic batao."
+            return "Which article or topic do you mean? Give an article number or a study topic."
         if style == "hi":
             return "जाँचे हुए अध्ययन नोट्स में अभी इस प्रश्न का उत्तर नहीं है।"
         if style == "hinglish":
@@ -192,13 +200,14 @@ def run() -> int:
 
         try:
             prior_questions = prior_queries(history)
-            documents = retrieve(retrieval_query(question, prior_questions))
+            selected_query = retrieval_query(question, prior_questions)
+            documents = retrieve(selected_query)
             if not documents:
-                answer = offline_answer([], language or "en-IN", question)
+                answer = offline_answer([], language or "en-IN", question, retrieval_question=selected_query)
             elif has_api_key:
                 answer = ask_model(question, history, documents, language)
             else:
-                answer = offline_answer(documents, language or "en-IN", question)
+                answer = offline_answer(documents, language or "en-IN", question, retrieval_question=selected_query)
         except Exception as exc:  # Keep the interactive process alive on provider errors.
             print(f"BolPrep: Request failed ({type(exc).__name__}). Try again or use offline mode.", file=sys.stderr)
             continue

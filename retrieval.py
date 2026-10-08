@@ -147,6 +147,13 @@ def _article_references(question: str) -> list[tuple[str, list[str]]]:
     return references
 
 
+def is_generic_question(question: str) -> bool:
+    """Recognize bounded clarification wording with no explicit study subject."""
+    return not ARTICLE_REFERENCE_PATTERN.search(question) and not (
+        _tokens(question) - GENERIC_ARTICLE_QUERY_TOKENS
+    )
+
+
 def retrieval_query(question: str, prior_questions: list[str]) -> str:
     """Prefer current evidence, then the most recent substantive user topic."""
     current_question = question.strip()
@@ -155,7 +162,7 @@ def retrieval_query(question: str, prior_questions: list[str]) -> str:
     # Only generic clarification requests inherit a prior topic. A new subject
     # must stand on its own even when no note matches, or old words can create
     # false evidence for an unsupported question. Both scorers share this rule.
-    if _tokens(current_question) - GENERIC_ARTICLE_QUERY_TOKENS:
+    if not is_generic_question(current_question):
         return current_question
     for previous in reversed(prior_questions[-4:]):
         references = _article_references(previous)

@@ -1955,3 +1955,9 @@
 - JSON routes now require one decimal Content-Length and no transfer encoding. Invalid/empty/oversized lengths close the HTTP connection so unread request bytes cannot be reused as a new request. Truncated uploads are rejected; socket read timeouts produce a generic 408 and close.
 - Complete bodies decode strictly as UTF-8 and reject duplicate fields, non-finite constants, and excessive nesting with generic 400 errors before routing. Conversation role validation was inspected and already uses safe tuple membership; no change was needed there.
 - Verification: Python compilation and git diff whitespace checks with static framing/parser/error-path inspection. No tests, HTTP/parser examples, timeout experiments, browser checks, provider calls, or runtime reliability claims.
+
+## Clarify generic requests without a study topic - 2026-10-08
+
+- Added a shared bounded generic-question predicate and local English/Hindi/Hinglish clarification replies asking for an article/topic when no evidence or topic anchor exists. The selected retrieval query is passed through terminal/legacy/offline-agent replies so unsupported prior article anchors retain abstention.
+- Model-configured agent turns with unanchored generic requests now return the local clarification without a provider call; quiz/revision intent and source callbacks remain. Generic-token vocabulary and lexical scope limitations are explicit.
+- Verification: Python compilation, UTF-8 source inspection, and git diff whitespace checks with static selected-query/branch inspection. No tests, examples, browser/device checks, provider calls, or observed clarification-quality claims.
