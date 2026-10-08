@@ -1,5 +1,5 @@
 // Text is stored only after an explicit Save; this module never starts audio.
-window.BolPrepSavedConversations = ({ apiFetch, snapshot, restore, revision, validStudySources }) => {
+window.BolPrepSavedConversations = ({ apiFetch, snapshot, restore, revision, validStudySources, validRequestTrace }) => {
   const saveButton = document.querySelector("#save-conversation");
   const refreshButton = document.querySelector("#refresh-history");
   const deleteButton = document.querySelector("#clear-history");
@@ -27,6 +27,8 @@ window.BolPrepSavedConversations = ({ apiFetch, snapshot, restore, revision, val
       && value.messages.some((message) => object(message) && message.role === "user")
       && value.messages.every((message) => object(message) && ["user", "assistant"].includes(message.role)
         && text(message.content, message.role === "user" ? 1200 : 3000)
+        && (message.trace === undefined || message.trace === null
+          || message.role === "assistant" && validRequestTrace(message.trace))
         && validStudySources(message.sources) && message.sources.length <= 48
         && message.sources.every((source) => /^article-\d+[a-z]?$/.test(source.id || ""))
         && new Set(message.sources.map((source) => source.id)).size === message.sources.length);

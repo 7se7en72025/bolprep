@@ -216,6 +216,23 @@ function validTutorTrace(trace) {
     && trace.usage.response_count === trace.usage_response_count;
 }
 
+function savedRequestTrace(trace) {
+  if (!validTutorTrace(trace) || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(trace.request_id)
+    || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|\+00:00)$/.test(trace.started_at_utc)
+    || Number(trace.started_at_utc.slice(0, 4)) < 1
+    || new Date(trace.started_at_utc).toISOString().slice(0, 19) !== trace.started_at_utc.slice(0, 19)
+    || trace.server_duration_ms > 86400000
+    || (trace.configured_model !== null && !/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(trace.configured_model))
+    || !trace.tool_outcomes.every((tool) => ["start_quiz", "score_answer", "save_progress", "get_weak_topics"].includes(tool.name))) return null;
+  const fields = ["request_id", "started_at_utc", "outcome", "server_duration_ms", "mode", "configured_model",
+    "source_count", "model_response_count", "usage_response_count"];
+  const selected = Object.fromEntries(fields.map((field) => [field, trace[field]]));
+  selected.tool_outcomes = trace.tool_outcomes.map(({ name, ok }) => ({ name, ok }));
+  selected.usage = trace.usage === null ? null : Object.fromEntries(
+    ["input_tokens", "output_tokens", "total_tokens", "response_count"].map((field) => [field, trace.usage[field]]));
+  return selected;
+}
+
 function validTutorToolEvents(events) {
   const object = (value) => value && typeof value === "object" && !Array.isArray(value);
   const text = (value, limit) => typeof value === "string" && Boolean(value.trim()) && value.length <= limit;
@@ -242,7 +259,7 @@ function validTutorToolEvents(events) {
   });
 }
 
-function addMessage(role, text, sources = [], sourceLabel = "STUDY SOURCE", replay = null) {
+function addMessage(role, text, sources = [], sourceLabel = "STUDY SOURCE", replay = null, trace = null) {
   const article = document.createElement("article");
   article.className = `message ${role === "user" ? "user-message" : "tutor-message"}`;
   const speaker = document.createElement("span");
@@ -288,10 +305,33 @@ function addMessage(role, text, sources = [], sourceLabel = "STUDY SOURCE", repl
     });
     article.append(replayButton);
   }
+  const requestTrace = role === "assistant" ? savedRequestTrace(trace) : null;
+  if (requestTrace) {
+    const details = document.createElement("details");
+    details.className = "request-details";
+    const summary = document.createElement("summary");
+    summary.textContent = "Request details";
+    details.append(summary);
+    const usage = requestTrace.usage;
+    const lines = [
+      "Client snapshot of reported request metadata; excludes speech timings and cost.",
+      `${requestTrace.outcome} · ${requestTrace.mode} · ${requestTrace.configured_model || "model unavailable"}`,
+      `${requestTrace.started_at_utc} · request ${requestTrace.request_id}`,
+      `Reported server duration: ${requestTrace.server_duration_ms} ms · ${requestTrace.source_count} sources`,
+      requestTrace.tool_outcomes.length ? `Reported tools: ${requestTrace.tool_outcomes.map((tool) => `${tool.name}: ${tool.ok ? "succeeded" : "failed"}`).join(", ")}` : "Tool outcomes unavailable or none reported.",
+      usage ? `Reported tokens: ${usage.input_tokens} input, ${usage.output_tokens} output, ${usage.total_tokens} total (${usage.response_count} responses)` : "Token usage unavailable.",
+    ];
+    for (const line of lines) {
+      const paragraph = document.createElement("p");
+      paragraph.textContent = line;
+      details.append(paragraph);
+    }
+    article.append(details);
+  }
   conversation.append(article);
   conversation.scrollTop = conversation.scrollHeight;
   if (text.trim()) {
-    conversationMessages.push({ role, content: text, sources: displaySources, historyEntry: replay?.historyEntry });
+    conversationMessages.push({ role, content: text, sources: displaySources, historyEntry: replay?.historyEntry, trace: requestTrace });
     if (conversationMessages.length > 20) conversationMessages.splice(0, conversationMessages.length - 20);
     conversationRevision += 1;
     savedConversations?.conversationChanged();
@@ -1917,7 +1957,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
     activePartialMessage?.remove();
     activePartialMessage = null;
     const answerHistoryEntry = rememberTurn(question, payload.answer);
-    addMessage("assistant", payload.answer, payload.sources || [], "STUDY SOURCE", { historyEntry: answerHistoryEntry });
+    addMessage("assistant", payload.answer, payload.sources || [], "STUDY SOURCE", { historyEntry: answerHistoryEntry }, payload.trace);
     if (progressiveSpeech?.hasFailed()) markSpeechIncomplete(answerHistoryEntry);
     if (usedProgressiveSpeech && !progressiveSpeech?.hasFailed()) activeSpeechHistoryEntry = answerHistoryEntry;
     pendingQuestion = null;
@@ -1968,7 +2008,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
         : timeoutReason === "total"
           ? "The tutor request reached its five-minute limit. Try again with a shorter question."
           : error.message;
-      addMessage("assistant", message);
+      addMessage("assistant", message, [], "STUDY SOURCE", null, error.trace);
       rememberTurn(question, "The tutor request failed before an answer was produced.");
       statusLine.textContent = timeoutReason
         ? "Tutor request timed out. Your conversation is still open."
@@ -2813,7 +2853,7 @@ function savedConversationSnapshot() {
         return article ? `article-${article[1].toLowerCase()}` : null;
       }).filter(Boolean);
       return { role: message.role, content: [...content].slice(0, message.role === "user" ? 1200 : 3000).join(""),
-        source_ids: [...new Set(sourceIds)] };
+        source_ids: [...new Set(sourceIds)], ...(message.trace ? { trace: message.trace } : {}) };
     }),
   };
 }
@@ -2833,7 +2873,7 @@ function restoreSavedConversation(snapshot) {
     const historyEntry = { role: message.role, content: message.content };
     history.push(historyEntry);
     addMessage(message.role, message.content, message.sources, "SAVED STUDY SOURCE",
-      message.role === "assistant" ? { historyEntry } : null);
+      message.role === "assistant" ? { historyEntry } : null, message.trace);
   }
   statusLine.textContent = "Saved text opened. Ask a follow-up or choose Listen again. Quiz state is not resumed.";
   input.focus();
@@ -2842,6 +2882,7 @@ function restoreSavedConversation(snapshot) {
 input.addEventListener("input", () => { conversationRevision += 1; });
 savedConversations = window.BolPrepSavedConversations({
   apiFetch, snapshot: savedConversationSnapshot, restore: restoreSavedConversation, validStudySources,
+  validRequestTrace: (trace) => savedRequestTrace(trace) !== null,
   revision: () => JSON.stringify([conversationRevision, turn, speechTurn, liveSttRun,
     serverRecordingRun, recognitionRun, input.value, speechLanguage.value]),
 });

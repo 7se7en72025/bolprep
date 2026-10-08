@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import math
+import re
 import sqlite3
 import uuid
 from contextlib import contextmanager
@@ -18,6 +20,62 @@ MAX_SAVED_CONVERSATIONS = 20
 
 class HistoryConflict(ValueError):
     """A save ID was retried with different conversation content."""
+
+
+def _request_trace(value: Any) -> dict[str, Any]:
+    """Copy bounded metadata only; a client snapshot is not an authenticated trace."""
+    def count(number: Any) -> bool:
+        return type(number) is int and 0 <= number <= 9007199254740991
+
+    def invalid() -> None:
+        raise ValueError("Saved request metadata is invalid.")
+
+    if not isinstance(value, dict):
+        invalid()
+    request_id = _save_id(value.get("request_id"))
+    timestamp = value.get("started_at_utc")
+    if (not isinstance(timestamp, str) or len(timestamp) > 64
+            or not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|\+00:00)", timestamp)):
+        invalid()
+    try:
+        datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+    except ValueError:
+        invalid()
+    duration = value.get("server_duration_ms")
+    model = value.get("configured_model")
+    if (value.get("outcome") not in ("completed", "failed")
+            or value.get("mode") not in ("model", "offline")
+            or type(duration) not in (int, float) or not 0 <= duration <= 86400000 or not math.isfinite(duration)
+            or not (model is None or isinstance(model, str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}", model))
+            or not count(value.get("source_count")) or value["source_count"] > 100):
+        invalid()
+    tools = value.get("tool_outcomes")
+    if (not isinstance(tools, list) or len(tools) > 6
+            or any(not isinstance(tool, dict) or tool.get("name") not in (
+                "start_quiz", "score_answer", "save_progress", "get_weak_topics")
+                or type(tool.get("ok")) is not bool for tool in tools)):
+        invalid()
+    response_count = value.get("model_response_count")
+    usage_count = value.get("usage_response_count")
+    if (not (response_count is None or count(response_count))
+            or not (usage_count is None or count(usage_count))
+            or response_count is not None and usage_count is not None and usage_count > response_count):
+        invalid()
+    usage = value.get("usage")
+    fields = ("input_tokens", "output_tokens", "total_tokens", "response_count")
+    if usage is not None:
+        if (not isinstance(usage, dict) or not all(count(usage.get(field)) for field in fields)
+                or usage["response_count"] == 0
+                or usage["response_count"] != response_count or usage["response_count"] != usage_count):
+            invalid()
+        usage = {field: usage[field] for field in fields}
+    return {
+        "request_id": request_id, "started_at_utc": timestamp, "outcome": value["outcome"],
+        "server_duration_ms": duration, "mode": value["mode"], "configured_model": model,
+        "source_count": value["source_count"],
+        "tool_outcomes": [{"name": tool["name"], "ok": tool["ok"]} for tool in tools],
+        "usage": usage, "model_response_count": response_count, "usage_response_count": usage_count,
+    }
 
 
 def _save_id(value: Any) -> str:
@@ -84,6 +142,10 @@ def _snapshot(body: dict[str, Any]) -> dict[str, Any]:
             "role": message["role"], "content": content,
             "sources": [{"id": source_id, **sources[source_id]} for source_id in source_ids],
         })
+        if message.get("trace") is not None:
+            if message["role"] != "assistant":
+                raise ValueError("Saved request metadata belongs on tutor messages only.")
+            cleaned[-1]["trace"] = _request_trace(message["trace"])
     if not any(message["role"] == "user" for message in cleaned):
         raise ValueError("Save a conversation containing at least one learner message.")
     return {"schema_version": 1, "language": language, "messages": cleaned}

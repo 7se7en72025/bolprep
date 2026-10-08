@@ -86,6 +86,9 @@ textarea::placeholder { color: #a3aaa2; }
 .progress-summary { margin: 12px 0 5px; }
 .weak-topics { margin: 5px 0 0; padding-left: 18px; }
 .saved-conversations { padding-left: 20px; font-size: 12px; line-height: 1.55; }
+.request-details { margin-top: 12px; color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+.request-details summary { cursor: pointer; }
+.message .request-details p { font-size: 11px; margin: 5px 0; }
 .saved-conversations li { padding: 8px 0; overflow-wrap: anywhere; }
 .saved-conversations p { margin: 3px 0; color: var(--muted); }
 .saved-conversations button:disabled, .progress-actions button:disabled { opacity: .55; cursor: default; }
