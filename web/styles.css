@@ -74,6 +74,10 @@ textarea::placeholder { color: #a3aaa2; }
 .diagnostics-content p { margin: 0; line-height: 1.5; }
 .diagnostics-actions { display: flex; gap: 8px; flex-shrink: 0; }
 .progress-card { margin-top: 16px; padding: 18px 22px; background: var(--paper); border: 1px solid #ebe9e1; border-radius: 14px; }
+.tutor-traces summary { cursor: pointer; font-weight: 600; color: var(--green); }
+.tutor-trace-list { padding-left: 20px; font-size: 12px; line-height: 1.55; }
+.tutor-trace-list li { padding: 12px 0; border-top: 1px solid var(--line); overflow-wrap: anywhere; }
+.tutor-trace-list p { margin: 4px 0; color: var(--muted); }
 .progress-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
 .progress-head .eyebrow { margin: 0 0 3px; font-size: 9px; }
 .progress-head h2 { margin: 0; font-size: 17px; }

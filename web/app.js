@@ -110,6 +110,34 @@ function speechLanguageLabel(language) {
   return language === "hi-IN" ? "Hindi/Hinglish" : "English";
 }
 
+function renderTutorTraces() {
+  const summary = document.querySelector("#tutor-trace-summary");
+  const list = document.querySelector("#tutor-trace-list");
+  const count = (outcome) => tutorTurnTraces.filter((trace) => trace.outcome === outcome).length;
+  summary.textContent = `${tutorTurnTraces.length} recorded: ${count("completed")} completed, ${count("failed")} failed, ${count("cancelled")} canceled.`;
+  list.replaceChildren();
+  const duration = (value) => Number.isFinite(value) ? `${(value / 1000).toFixed(2)}s` : "unavailable";
+  for (const trace of tutorTurnTraces.slice(-10).reverse()) {
+    const item = document.createElement("li");
+    const title = document.createElement("strong");
+    title.textContent = `${trace.outcome} · ${speechLanguageLabel(trace.language)} · ${trace.mode || "mode unavailable"}`;
+    const details = document.createElement("p");
+    details.textContent = `Started ${trace.started_at_utc} | Client ${duration(trace.client_duration_ms)} | Server ${duration(trace.server_duration_ms)} | Sources ${trace.source_count ?? "unavailable"}`;
+    const identity = document.createElement("p");
+    identity.textContent = `Request ${trace.request_id || "unavailable"} | Model ${trace.configured_model || "unavailable"}`;
+    const tools = document.createElement("p");
+    tools.textContent = trace.tool_outcomes.length
+      ? `Tools: ${trace.tool_outcomes.map((tool) => `${tool.name}: ${tool.ok ? "succeeded" : "failed"}`).join(", ")}`
+      : "No tool outcomes reported.";
+    const usage = document.createElement("p");
+    usage.textContent = trace.usage
+      ? `Reported tokens: ${trace.usage.input_tokens} input, ${trace.usage.output_tokens} output, ${trace.usage.total_tokens} total across ${trace.usage.response_count} responses. Speech usage excluded.`
+      : "Token usage unavailable. Speech usage and monetary cost are not measured.";
+    item.append(title, details, identity, tools, usage);
+    list.append(item);
+  }
+}
+
 function updateMicrophoneButton(listening, disabled = false) {
   const label = listening ? "Stop" : "Speak";
   const unavailable = !recognitionAvailable;
@@ -1400,6 +1428,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
       usage_response_count: trace?.usage_response_count ?? null,
     });
     if (tutorTurnTraces.length > 500) tutorTurnTraces.shift();
+    renderTutorTraces();
   };
   let firstTextMs = null;
   const useProgressiveProviderSpeech = streamedTtsOption.checked && streamingTtsAvailable;

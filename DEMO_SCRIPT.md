@@ -34,3 +34,7 @@ Only include this segment when a server-side API key is configured and usage is 
 ## Optional demo access checks
 
 Before recording a password-gated demo, configure a separate private BOLPREP_ACCESS_PASSWORD in the ignored .env and restart. Do not show the file or password in the recording. In a fresh browser session, confirm the tutor redirects to sign-in and unauthenticated API requests cannot access tutor, speech, quiz, or progress data. Check a wrong password, a successful login, six-attempt login throttling, Sign out, expired/revoked access, and server restart. Confirm the browser stops mic/output before redirect and that signing out preserves browser-scoped progress without sharing it between browser progress cookies. These behaviors remain unverified; the default offline smoke check runs with login disabled. This gate is for localhost and has not been deployed or audited for hosted access.
+
+## Show tutor trace metadata
+
+After a typed or spoken tutor request, open Tutor turn diagnostics. Match its source count and tool outcomes to the visible answer or quiz action; show request ID, model/mode, and text-request durations. A failed or canceled turn should remain separate from completed turns, and missing metadata should read unavailable. Distinguish reported tokens from speech usage and monetary cost. The view retains at most 500 page traces and displays the latest ten, with no transcript/audio. This panel has not yet been visually or operationally verified; use it in a recording only after checking the rendered page and actual trace updates.

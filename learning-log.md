@@ -1320,3 +1320,9 @@
 - Added a 90-second data-idle deadline from request start, refreshed by headers/nonempty stream bytes, and a five-minute total deadline for tutor turns. Both timers clear on response completion and in finally; speech playback retains its own deadlines.
 - A timeout aborts the local fetch, stops pending progressive speech, removes the incomplete message, records a failed trace/model request, preserves the question with a history failure note, and restores send controls. Deliberate cancellation and superseded turns remain cancellations. Failed streams also abort the local controller. Server-side tool effects are not rolled back and provider cancellation remains unverified.
 - Updated README/manual stall cases. Verification: JavaScript syntax and git diff whitespace checks passed. No tests or provider calls were run; stalled headers/body, total deadline, timer isolation, rendered recovery controls, and real-provider behavior remain unverified.
+
+## Display tutor trace metadata in the browser - 2026-10-08
+
+- Added a collapsed Tutor turn diagnostics view for the latest ten requests and completed/failed/canceled counts over retained page-local traces. It shows UTC starts, request IDs, language, model/mode, client/server duration, source counts, actual tool outcomes, and available reported tokens. Missing metadata is explicit; speech timing/usage and monetary cost are excluded.
+- The view reads the existing bounded metadata array and uses textContent for all fields. It does not display transcripts, audio, cookies, credentials, or stored learner identity. It clears on reload and remains across conversation-context resets, matching page diagnostics. It is not persistent session history.
+- Updated README/demo guidance. Verification: JavaScript syntax and git diff whitespace checks passed. No tests or model calls were run; visual/accessibility checks, runtime updates, canceled/failed display, and live-provider metadata remain unverified.
