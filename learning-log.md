@@ -1470,3 +1470,9 @@
 - Inspection found commit acknowledgments could overwrite committedItemId without checking the current transcript ID. Acknowledgments now require a nonempty bounded ID and match any known current/committed identity before assignment; transcription IDs share the 128-unit bound. Matching duplicates remain accepted.
 - Connection-wide errors are processed before completed-item filtering so stale item metadata cannot suppress them. First accepted identity remains ambiguous when no current/committed ID exists. Added README/manual acknowledgment, malformed ID, duplicate, and global-error cases.
 - Verification: live/app JavaScript syntax and git diff whitespace checks passed. No tests, controlled events, browser interactions, recordings, or provider calls were performed; provider ID compatibility, event ordering, final acceptance, and cleanup remain unverified at runtime.
+
+## Recover from pending recorded microphone startup - 2026-10-08
+
+- Live startup already checked closed state after async steps; recorded capture lacked a microphone-start deadline. Added a guarded 45-second timer that invalidates the pending run, releases Record, reports capture-timeout once, and keeps the draft. Late granted tracks use existing stale-run cleanup without capture/upload.
+- Settled startup clears its timer; canceled/new runs invalidate callbacks. Browser prompts and unresolved permission promises cannot be canceled by this timer, and suspended tabs can delay delivery. Added README/manual permission, cancellation, late-grant, and newer-attempt cases.
+- Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, browser interactions, permission prompts, recordings, or provider calls were run; timeout timing, duplicate counts, retry isolation, and actual track release remain unverified at runtime.

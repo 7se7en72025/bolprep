@@ -382,6 +382,16 @@ async function startServerRecording() {
   serverRecordingStartCancelled = false;
   serverRecordingStarting = true;
   const recordingRun = ++serverRecordingRun;
+  const startupTimer = window.setTimeout(() => {
+    if (recordingRun !== serverRecordingRun || !serverRecordingStarting) return;
+    serverRecordingStartCancelled = true;
+    serverRecordingRun += 1;
+    serverRecordingStarting = false;
+    recordedTranscriptionFailures.push({ language: recordingLanguage, reason: "capture-timeout" });
+    if (recordedTranscriptionFailures.length > 500) recordedTranscriptionFailures.shift();
+    updateServerTranscribeButton();
+    statusLine.textContent = "The microphone did not start within 45 seconds. Check permission and record again, or type your question.";
+  }, 45_000);
   updateServerTranscribeButton("starting");
   statusLine.textContent = "Allow microphone access, then ask a short question. Audio is sent for transcription when you stop.";
   let stream;
@@ -492,6 +502,7 @@ async function startServerRecording() {
     updateServerTranscribeButton();
     statusLine.textContent = message;
   } finally {
+    window.clearTimeout(startupTimer);
     if (recordingRun === serverRecordingRun) serverRecordingStarting = false;
   }
 }
