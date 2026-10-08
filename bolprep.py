@@ -7,6 +7,7 @@ import re
 import sys
 
 from retrieval import retrieval_query, retrieve
+from conversation_history import model_history, prior_queries
 
 try:
     from dotenv import load_dotenv
@@ -120,7 +121,7 @@ def ask_model(
         model=model,
         instructions=response_instructions(language),
         input=[
-            *history,
+            *model_history(history),
             {
                 "role": "user",
                 "content": f"Question: {question}\n\nChecked study notes:\n{evidence}",
@@ -158,7 +159,7 @@ def run() -> int:
             return 0
 
         try:
-            prior_questions = [item["content"] for item in history if item["role"] == "user"][-4:]
+            prior_questions = prior_queries(history)
             documents = retrieve(retrieval_query(question, prior_questions))
             if not documents:
                 answer = offline_answer([], question=question)

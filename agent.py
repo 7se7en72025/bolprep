@@ -9,6 +9,7 @@ import uuid
 from typing import Any, Callable
 
 from bolprep import api_is_configured, checked_evidence, offline_answer, response_instructions
+from conversation_history import model_history, prior_queries
 from progress import (
     ProgressConflict,
     create_quiz_run,
@@ -127,7 +128,7 @@ def run_agent_turn(
             "Never claim a tool succeeded unless its result says ok."
         )
     input_items: list[Any] = [
-        *history,
+        *model_history(history),
         {"role": "user", "content": f"{question.strip()}\n\nChecked study notes:\n{evidence}"},
     ]
     response_usages: list[dict[str, int] | None] = []
@@ -324,7 +325,7 @@ def _has_tool_intent(question: str) -> bool:
 
 
 def _retrieval_query(question: str, history: list[dict[str, str]]) -> str:
-    prior_questions = [item["content"] for item in history if item["role"] == "user"][-4:]
+    prior_questions = prior_queries(history)
     return retrieval_query(question, prior_questions)
 
 

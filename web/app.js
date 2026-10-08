@@ -404,14 +404,26 @@ async function readAgentStream(response, onTextDelta, onSpeechMode, onActivity, 
   }
 }
 
-function rememberTurn(userMessage, assistantMessage) {
-  const assistantEntry = { role: "assistant", content: [...assistantMessage].slice(0, 3000).join("") };
-  history.push(
-    { role: "user", content: userMessage },
-    assistantEntry,
-  );
+function articleContextFromSources(sources) {
+  if (!Array.isArray(sources) || sources.length !== 1 || !validStudySource(sources[0])) return null;
+  const source = sources[0];
+  if (/^article-\d+[a-z]?$/.test(source.id || "")) return source.id;
+  const article = /\bArticle\s+(\d+[a-z]?)(?![a-z\d])/i.exec(source.section);
+  return article ? `article-${article[1].toLowerCase()}` : null;
+}
+
+function rememberMessage(role, content, sources = []) {
+  const entry = { role, content: [...content].slice(0, role === "user" ? 1200 : 3000).join("") };
+  const context = articleContextFromSources(sources);
+  if (context) entry.article_context = context;
+  history.push(entry);
   history.splice(0, Math.max(0, history.length - 20));
-  return assistantEntry;
+  return entry;
+}
+
+function rememberTurn(userMessage, assistantMessage) {
+  rememberMessage("user", userMessage);
+  return rememberMessage("assistant", assistantMessage);
 }
 
 function updateLiveSttButton(state = "idle") {
@@ -2127,12 +2139,14 @@ function showQuizQuestion(speakPrompt = true) {
   inputLabel.textContent = "Your quiz answer";
   input.maxLength = 1000;
   input.placeholder = "Speak or type your answer…";
-  addMessage("assistant", `Question ${quizSession.index + 1} of ${quizSession.questions.length}: ${current.prompt}`, [current.source], "STUDY SOURCE", {});
+  const prompt = `Question ${quizSession.index + 1} of ${quizSession.questions.length}: ${current.prompt}`;
+  const promptHistoryEntry = rememberMessage("assistant", prompt, [current.source]);
+  addMessage("assistant", prompt, [current.source], "QUIZ QUESTION SOURCE", { historyEntry: promptHistoryEntry });
   const readyText = activeLiveTranscription?.continuous
     ? "Speak your answer. After feedback, say next question or agla sawal. Say end quiz or quiz band karo to return to tutoring."
     : "Your answer is ready when you are.";
   statusLine.textContent = readyText;
-  if (speakPrompt) speak(current.prompt, readyText);
+  if (speakPrompt) speak(current.prompt, readyText, "tutor", promptHistoryEntry);
 }
 
 async function submitQuizAnswer(answer, { preserveLive = false } = {}) {
@@ -2159,7 +2173,8 @@ async function submitQuizAnswer(answer, { preserveLive = false } = {}) {
   sendButton.disabled = true;
   micButton.disabled = true;
   statusLine.textContent = "Checking your answer against the rubric…";
-  addMessage("user", answer);
+  const answerHistoryEntry = rememberMessage("user", answer, [current.source]);
+  addMessage("user", answer, [current.source], "QUIZ QUESTION SOURCE", { historyEntry: answerHistoryEntry });
   try {
     const response = await apiFetch("/api/quiz/score", {
       method: "POST",
@@ -2178,7 +2193,8 @@ async function submitQuizAnswer(answer, { preserveLive = false } = {}) {
     quizSession.results.push(result);
     loadProgress();
     const feedback = `${result.feedback} Score: ${result.score}%.`;
-    addMessage("assistant", feedback, [result.source], "STUDY SOURCE", {});
+    const feedbackHistoryEntry = rememberMessage("assistant", feedback, [result.source]);
+    addMessage("assistant", feedback, [result.source], "STUDY SOURCE", { historyEntry: feedbackHistoryEntry });
     quizSession.index += 1;
     const isLast = quizSession.index >= quizSession.questions.length;
     const completeCount = quizSession.results.filter((item) => item.complete).length;
@@ -2187,14 +2203,14 @@ async function submitQuizAnswer(answer, { preserveLive = false } = {}) {
       quizSession = null;
       resetTutorComposer();
       statusLine.textContent = `Quiz complete: ${completeCount} of ${totalQuestions} answers covered the rubric. Results are saved for this browser.`;
-      speak(feedback, statusLine.textContent);
+      speak(feedback, statusLine.textContent, "tutor", feedbackHistoryEntry);
     } else {
       const nextStep = activeLiveTranscription?.continuous
         ? "say next question or agla sawal, or tap Next question"
         : "tap Next question";
       statusLine.textContent = `Answer checked. ${quizSession.index} of ${quizSession.questions.length} complete; ${nextStep} when ready.`;
       nextQuestionButton.hidden = false;
-      speak(feedback, statusLine.textContent);
+      speak(feedback, statusLine.textContent, "tutor", feedbackHistoryEntry);
     }
   } catch (error) {
     if (requestTurn === turn) {
@@ -2204,6 +2220,7 @@ async function submitQuizAnswer(answer, { preserveLive = false } = {}) {
       const message = timedOut
         ? "Scoring timed out after 30 seconds. The score may already be saved. Retry the same answer to check it."
         : error.message;
+      rememberMessage("assistant", message, [current.source]);
       addMessage("assistant", message);
       statusLine.textContent = message.toLowerCase().includes("already saved")
         ? "This quiz question already has a saved score. Start a new quiz to try a revised answer."
@@ -2870,9 +2887,9 @@ function restoreSavedConversation(snapshot) {
   refreshSpeechVoices();
   saveSpeechPreferences();
   for (const message of snapshot.messages) {
-    const historyEntry = { role: message.role, content: message.content };
-    history.push(historyEntry);
-    addMessage(message.role, message.content, message.sources, "SAVED STUDY SOURCE",
+    const historyEntry = rememberMessage(message.role, message.content, message.sources);
+    addMessage(message.role, message.content, message.sources,
+      message.role === "user" ? "SAVED QUESTION SOURCE" : "SAVED STUDY SOURCE",
       message.role === "assistant" ? { historyEntry } : null, message.trace);
   }
   statusLine.textContent = "Saved text opened. Ask a follow-up or choose Listen again. Quiz state is not resumed.";

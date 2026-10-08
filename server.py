@@ -16,6 +16,7 @@ from threading import BoundedSemaphore
 from typing import Any
 
 from bolprep import api_is_configured, ask_model, offline_answer
+from conversation_history import clean_history, prior_queries
 from agent import run_agent_turn
 from progress import ProgressConflict, clear_progress, create_quiz_run, ensure_session, get_progress, save_answer
 from quiz import score_answer, start_quiz
@@ -217,23 +218,14 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         if not isinstance(language, str) or language not in {"hi-IN", "en-IN"}:
             self._send_json(400, {"error": "Choose Hindi/Hinglish or English."})
             return
-        if not isinstance(history, list) or len(history) > 20:
+        try:
+            cleaned_history = clean_history(history)
+        except ValueError:
             self._send_json(400, {"error": "Conversation history is invalid."})
             return
-        cleaned_history: list[dict[str, str]] = []
-        for item in history:
-            if (
-                not isinstance(item, dict)
-                or item.get("role") not in {"user", "assistant"}
-                or not isinstance(item.get("content"), str)
-                or len(item["content"]) > 3000
-            ):
-                self._send_json(400, {"error": "Conversation history is invalid."})
-                return
-            cleaned_history.append({"role": item["role"], "content": item["content"]})
 
         try:
-            prior_questions = [item["content"] for item in cleaned_history if item["role"] == "user"][-4:]
+            prior_questions = prior_queries(cleaned_history)
             documents = retrieve(retrieval_query(question, prior_questions))
             if not documents:
                 answer = offline_answer([], language, question)
@@ -268,17 +260,11 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         if not isinstance(language, str) or language not in {"hi-IN", "en-IN"}:
             self._send_json(400, {"error": "Choose Hindi/Hinglish or English."})
             return
-        cleaned_history: list[dict[str, str]] = []
-        for item in history:
-            if (
-                not isinstance(item, dict)
-                or item.get("role") not in {"user", "assistant"}
-                or not isinstance(item.get("content"), str)
-                or len(item["content"]) > 3000
-            ):
-                self._send_json(400, {"error": "Conversation history is invalid."})
-                return
-            cleaned_history.append({"role": item["role"], "content": item["content"]})
+        try:
+            cleaned_history = clean_history(history)
+        except ValueError:
+            self._send_json(400, {"error": "Conversation history is invalid."})
+            return
         request_id = str(uuid.uuid4())
         started_at = datetime.now(timezone.utc).isoformat()
         started = time.perf_counter()
