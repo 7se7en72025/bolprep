@@ -1542,3 +1542,9 @@
 - Call-site review found Stop, edits, follow-ups, and page lifecycle cancellation advance serverRecordingRun before asking the recorder to stop. The previous stop-deadline guards therefore rejected legitimate cleanup and could leave the capture busy. Corrected stop/completion/deadline guards to use recorder ownership, while stale run IDs independently force audio discard and suppress new failure/status reporting.
 - Data delivery still requires a current run, and a replaced recorder cannot be cleaned up by an old callback. Added README and manual checks for all invalidating controls, ordinary/missing stop events, exceptions, and fresh-capture isolation.
 - Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, controlled events, browser interactions, recordings, or provider calls were performed; cancellation timing, actual microphone release, and restart isolation remain unverified at runtime.
+
+## Reject malformed server diagnostics without breaking a turn - 2026-10-08
+
+- Trace recording previously called map on unchecked tool_outcomes and marked the trace recorded before that could throw. Added server trace validation for containers, bounded metadata, timestamps, durations, safe counts, tool outcomes, and reported usage coverage. Invalid trace metadata is omitted before projection, preserving client outcome/timing and existing answer/error handling.
+- Exported turns distinguish valid/invalid/unavailable server metadata, and the panel explains rejected diagnostics. Validation cannot authenticate a trace or establish quality/cost. Added README/manual malformed, missing, error-path, and compatible server cases.
+- Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, controlled streams, browser interactions, recordings, or provider calls were performed; metadata compatibility, rendering, and recovery remain unverified at runtime.

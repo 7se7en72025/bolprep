@@ -138,6 +138,9 @@ function renderTutorTraces() {
     usage.textContent = trace.usage
       ? `Reported tokens: ${trace.usage.input_tokens} input, ${trace.usage.output_tokens} output, ${trace.usage.total_tokens} total across ${trace.usage.response_count} responses. Speech usage excluded.`
       : "Token usage unavailable. Speech usage and monetary cost are not measured.";
+    if (trace.server_metadata_status === "invalid") {
+      usage.textContent += " Server diagnostics were invalid and omitted.";
+    }
     item.append(title, details, identity, tools, usage);
     list.append(item);
   }
@@ -172,6 +175,38 @@ function validStudySource(source) {
 
 function validStudySources(sources) {
   return Array.isArray(sources) && sources.length <= 100 && sources.every(validStudySource);
+}
+
+function validTutorTrace(trace) {
+  const object = (value) => value && typeof value === "object" && !Array.isArray(value);
+  const count = (value) => Number.isSafeInteger(value) && value >= 0;
+  if (!object(trace)
+    || typeof trace.request_id !== "string"
+    || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trace.request_id)
+    || typeof trace.started_at_utc !== "string" || trace.started_at_utc.length > 64
+    || !/(?:Z|\+00:00)$/.test(trace.started_at_utc)
+    || !Number.isFinite(Date.parse(trace.started_at_utc))
+    || !["completed", "failed"].includes(trace.outcome)
+    || typeof trace.server_duration_ms !== "number"
+    || !Number.isFinite(trace.server_duration_ms) || trace.server_duration_ms < 0
+    || !["offline", "model"].includes(trace.mode)
+    || !(trace.configured_model === null || (typeof trace.configured_model === "string"
+      && trace.configured_model.trim() && trace.configured_model.length <= 256))
+    || !count(trace.source_count) || trace.source_count > 100
+    || !Array.isArray(trace.tool_outcomes) || trace.tool_outcomes.length > 6
+    || !trace.tool_outcomes.every((tool) => object(tool) && typeof tool.name === "string"
+      && tool.name.trim() && tool.name.length <= 64 && typeof tool.ok === "boolean")
+    || !(trace.model_response_count === null || count(trace.model_response_count))
+    || !(trace.usage_response_count === null || count(trace.usage_response_count))) return false;
+  if (trace.model_response_count !== null && trace.usage_response_count !== null
+    && trace.usage_response_count > trace.model_response_count) return false;
+  if (trace.usage === null) return true;
+  return object(trace.usage)
+    && ["input_tokens", "output_tokens", "total_tokens", "response_count"]
+      .every((field) => count(trace.usage[field]))
+    && trace.usage.response_count > 0
+    && trace.usage.response_count === trace.model_response_count
+    && trace.usage.response_count === trace.usage_response_count;
 }
 
 function validTutorToolEvents(events) {
@@ -1684,8 +1719,11 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
   let traceRecorded = false;
   const recordTrace = (outcome, trace = null) => {
     if (traceRecorded) return;
+    const serverMetadataStatus = trace == null ? "unavailable" : validTutorTrace(trace) ? "valid" : "invalid";
+    if (serverMetadataStatus !== "valid") trace = null;
     traceRecorded = true;
     tutorTurnTraces.push({
+      server_metadata_status: serverMetadataStatus,
       request_id: trace?.request_id || requestId,
       started_at_utc: trace?.started_at_utc || clientStartedAtUtc,
       outcome,
