@@ -1,6 +1,6 @@
 # Answer support review - version 1
 
-This procedure reviews actual tutor answers against the exact study notes supplied to that turn. It complements retrieval evaluation: finding a relevant note does not prove that an answer uses it correctly. **No answers have been collected or reviewed under this procedure, and no report runner or measured results are claimed.**
+This procedure reviews actual tutor answers against the exact study notes supplied to that turn. It complements retrieval evaluation: finding a relevant note does not prove that an answer uses it correctly. **No answers have been collected or reviewed under this procedure, and no measured results are claimed. A local label summarizer is implemented; report computation remains unverified.**
 
 ## Prepare a collection
 
@@ -79,3 +79,44 @@ Publish only authorized, anonymized aggregates with the collection/configuration
 For configuration comparisons, match prompt, exact context, language, note snapshot, and reviewer coverage. Show the matched subset plus all collected attempts. Count failed/cancelled attempts in completion rates rather than silently dropping them; do not assign them invented factual-support labels. Different output claim counts make raw claim-level percentages descriptive, not a controlled significance result.
 
 Keep missing evidence explicit. This protocol, a retrieval score, or a syntax check cannot establish answer quality. Actual collection, independent reviews, and reproducible report computation remain necessary.
+
+## Label-only report format
+
+`summarize_answer_reviews.py` aggregates initial human ratings from a separate private label file. It accepts no questions, answers, evidence text, or rationales and does not open the raw evidence snapshot. Keep that snapshot, segmentation, evidence mappings, exclusions, and reviewer rationales separately. `record_sha256` identifies its exact UTF-8 bytes; the runner checks hash formatting only, not evidence authenticity or consistency.
+
+The input must have exactly these top-level fields:
+
+| Field | Value |
+| --- | --- |
+| `schema_version`, `rubric_version` | Integer `1`. |
+| `expected_reviewer_count` | Integer 2-20, frozen for this collection. |
+| `attempts` | Up to 2,000 attempt objects; an empty collection yields unavailable fractions. |
+
+Each attempt has exactly `attempt_id`, `record_sha256`, `prompt_id`, `configuration_id`, `language`, `outcome`, `expected_disposition`, `claim_ids`, `displayed_note_ids`, and `reviews`.
+
+- IDs are anonymous ASCII strings of 1-80 characters, starting with a letter or digit, followed by letters, digits, `.`, `_`, `:`, or `-`. Attempt IDs are unique in the collection. Hashes are 64 lowercase hexadecimal characters.
+- Language is `English`, `Hindi`, or `Hinglish`. Outcome is `completed`, `failed`, or `cancelled`; expected disposition uses the four preassigned labels above.
+- Claim IDs are unique within an attempt, maximum 1,000; displayed-note IDs are unique, maximum 100. They refer to frozen units in the separate evidence record. Failed/cancelled attempts have empty unit and review lists; completed answers may have zero claims.
+- `reviews` contains zero to the declared reviewer count. An absent reviewer counts as missing. Each present review must label every frozen claim and displayed note; incomplete reviews are rejected.
+
+Each review has exactly these fields:
+
+| Field | Value |
+| --- | --- |
+| `reviewer_id` | Anonymous ID, unique within the attempt. |
+| `claim_labels` | Object mapping every claim ID to `supported`, `contradicted`, `unbacked`, or `inconclusive`. |
+| `displayed_note_labels` | Object mapping every displayed-note ID to `supporting`, `irrelevant`, or `inconclusive`. |
+| `disposition` | `answered`, `clarified`, `abstained`, `mixed`, or `inconclusive`. |
+| `relevant` | JSON `true`, `false`, or `null` for inconclusive. |
+
+After collecting and independently reviewing authorized attempts, the local command is:
+
+```powershell
+.\.venv\Scripts\python.exe evals/summarize_answer_reviews.py evals/local-answer-labels.json
+```
+
+The UTF-8 input is bounded to 16 MiB; duplicate keys and unexpected fields are rejected. JSON output contains overall and configuration/language groups, outcome counts, missing reviews, claim support, displayed-note relevance, disposition counts, answer relevance, and exact support-label agreement. A valid report exits zero regardless of quality; invalid input exits two with a generic error and no input content. Safe configuration IDs still require review before publishing.
+
+Counts are **review observations**, not unique claims or unique answers: two reviewers contribute two ratings per unit. Fully supported answer-review counts require at least one claim; contradicted/unbacked/inconclusive categories overlap. Fractions retain inconclusive labels in denominators except the explicitly conclusive support fraction. Zero denominators are null. Pair agreement uses every unordered reviewer pair on shared claim IDs; with more than two reviewers, pair observations are dependent. Missing reviews contribute no invented labels.
+
+The summarizer does not compute claim-to-note evidence coverage, supported claims lacking displayed evidence, segmentation agreement, disposition agreement, adjudicated ratings, or matched configuration comparisons. Retain those evidence-based analyses separately. Group percentages alone do not establish comparability, significance, or answer correctness. No label collection or report computation has been performed here.

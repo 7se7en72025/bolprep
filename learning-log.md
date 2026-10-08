@@ -1865,3 +1865,9 @@
 - Added ANSWER_SUPPORT_RUBRIC.md version 1 for actual generated answers: frozen input/note provenance, shared atomic claim segmentation, independent support/contradiction/unbacked/inconclusive labels, displayed-note relevance, disposition/relevance, and reviewer disagreements. It explicitly distinguishes retrieval from answer support and repository-note support from legal correctness.
 - Defined denominators, zero-claim handling, failure/missing coverage, and matched comparison boundaries without inventing observations. Linked the procedure from README/dataset/audit and ignored private local-answer JSON collection files. Current exports/saved snapshots alone are documented as insufficient evidence.
 - Verification: inspected existing document paths and git diff whitespace checks. No tests, report computation, answer collection, human ratings, recordings, browser/device checks, or provider calls were performed. A report runner and actual reviews remain pending.
+
+## Summarize independent answer labels - 2026-10-08
+
+- Added a stdlib label-only runner with strict schema, duplicate-key rejection, bounded UTF-8 input, anonymous IDs, complete per-review unit labels, and frozen evidence-hash references. It does not read or echo raw questions, answers, notes, or rationales.
+- Reports outcome/missing-review coverage, claim and displayed-note counts, disposition/relevance ratings, and paired claim-label agreement overall and by configuration/language. Repeated reviewer observations, overlapping answer categories, zero denominators, and unsupported comparison/evidence checks are explicit.
+- Verification: Python compilation, CLI help, and git diff whitespace checks only. No tests, label collection, human ratings, report computation, browser/device checks, recordings, or provider calls were performed. Actual data and computation remain pending.
