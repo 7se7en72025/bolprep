@@ -268,6 +268,8 @@ Use controlled local NDJSON streams split across network chunks, including split
 
 ### Recorded transcript review checks (not yet performed)
 
+Return a successful transcription response containing null/array metadata, missing/nonstring transcript, whitespace-only words, and invalid JSON. Expect invalid-transcript or empty-transcript failures without changing the previous draft or adding successful STT timing samples. Bypass the server guard with controlled responses above 6,000 code points: expect transcript-too-long before composer replacement. Repeat at exactly 6,000 code points with supplementary characters (up to 12,000 UTF-16 units), then one beyond it. Accepted long text remains editable with the composer shortening warning and no automatic submission. Null or overlong HTTP errors should show a generic message; malformed JSON must not echo a raw parser excerpt. Cancel/edit/hide and begin a newer request before old responses arrive to inspect stale-result isolation.
+
 Use controlled recorded-transcription responses below/at/above the active composer limit, then at/above 6,000 Unicode code points. Returned bounded text should remain editable without truncation or automatic submission; oversized composer text should show a shortening warning and fail submission until edited. Repeat in quiz mode with its 1,000-character limit. Above the hard server cap, expect a 422 error and the prior draft to remain available. Include supplementary Unicode characters to document browser UTF-16 versus server code-point length differences. Check edited/canceled attempts still ignore late responses.
 
 ### Recorded clip size checks (not yet performed)

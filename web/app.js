@@ -620,6 +620,7 @@ async function transcribeRecordedAudio(audio, language) {
   const startedAt = performance.now();
   const controller = new AbortController();
   let timedOut = false;
+  let failureReason = "transcription-failed";
   activeTranscriptionController = controller;
   updateServerTranscribeButton("transcribing");
   statusLine.textContent = `Transcribing in ${speechLanguageLabel(language)}. Review the text before asking.`;
@@ -638,14 +639,32 @@ async function transcribeRecordedAudio(audio, language) {
       body: audio,
       signal: controller.signal,
     });
-    const payload = await response.json();
+    const payload = await response.json().catch(() => {
+      failureReason = "invalid-transcript";
+      throw new Error("The server returned an invalid transcription response.");
+    });
     if (timedOut) throw new Error("Transcription timed out after 90 seconds.");
-    if (!response.ok) throw new Error(payload.error || "Transcription failed.");
+    if (!response.ok) {
+      throw new Error(typeof payload?.error === "string" && payload.error.trim() && payload.error.length <= 2048
+        ? payload.error : "Transcription failed.");
+    }
     if (activeTranscriptionController !== controller) return;
-    if (typeof payload.transcript !== "string" || !payload.transcript.trim()) {
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)
+      || typeof payload.transcript !== "string") {
+      failureReason = "invalid-transcript";
+      throw new Error("The server returned an invalid transcription response.");
+    }
+    const transcript = payload.transcript.trim();
+    if (!transcript) {
+      failureReason = "empty-transcript";
       throw new Error("The transcription provider returned an empty transcript.");
     }
-    input.value = payload.transcript.trim();
+    // Avoid constructing a code-point array for an already oversized UTF-16 string.
+    if (transcript.length > 12_000 || [...transcript].length > 6000) {
+      failureReason = "transcript-too-long";
+      throw new Error("The transcript exceeded the 6,000-character review limit. Record a shorter clip.");
+    }
+    input.value = transcript;
     input.focus();
     recordedTranscriptionSamples.push({ language, elapsedMs: performance.now() - startedAt });
     if (recordedTranscriptionSamples.length > 500) recordedTranscriptionSamples.shift();
@@ -654,7 +673,7 @@ async function transcribeRecordedAudio(audio, language) {
       : `Transcript ready. Review it, then ask. ${recordedTranscriptionTimingSummary(language)}`;
   } catch (error) {
     if ((error.name !== "AbortError" || timedOut) && activeTranscriptionController === controller) {
-      recordedTranscriptionFailures.push({ language, reason: timedOut ? "transcription-timeout" : "transcription-failed" });
+      recordedTranscriptionFailures.push({ language, reason: timedOut ? "transcription-timeout" : failureReason });
       if (recordedTranscriptionFailures.length > 500) recordedTranscriptionFailures.shift();
       const message = timedOut ? "Transcription timed out after 90 seconds." : error.message;
       statusLine.textContent = `${message} You can record again or type your question. ${recordedTranscriptionTimingSummary(language)}`;
