@@ -33,14 +33,52 @@ INSTRUCTIONS = (
 )
 
 
+def answer_style(language: str, question: str) -> str:
+    """Select the checked-note translation used by the browser response preference."""
+    if language == "hi-IN":
+        return "hi" if re.search(r"[\u0900-\u097F]", question) else "hinglish"
+    return "en"
+
+
+def response_instructions(language: str | None = None) -> str:
+    """Keep terminal language inference, or add the browser's current preference."""
+    if language is None:
+        return INSTRUCTIONS
+    if language not in {"hi-IN", "en-IN"}:
+        raise ValueError("Choose Hindi/Hinglish or English.")
+    preference = "English" if language == "en-IN" else (
+        "Hindi or natural Hindi-English Hinglish; use Devanagari Hindi when the current "
+        "question uses Devanagari, otherwise use conversational Roman Hinglish"
+    )
+    return (
+        f"{INSTRUCTIONS} The current browser response preference is {preference}. "
+        "For this turn, use that preference unless the learner explicitly requests another "
+        "language in the current question. Earlier turns and the language of the study notes "
+        "must not override this current preference. Keep the relevant conversation context "
+        "when changing language; do not start the explanation over solely because the language changed."
+    )
+
+
+def checked_evidence(
+    documents: list[dict[str, object]], question: str = "", language: str | None = None
+) -> str:
+    """Use checked translations without changing retrieval or source metadata."""
+    style = answer_style(language, question) if language is not None else None
+    notes = []
+    for document in documents:
+        title = document.get(f"title_{style}", document["title"]) if style else document["title"]
+        summary = document.get(f"summary_{style}", document["summary"]) if style else document["summary"]
+        notes.append(f"{title} ({document['source']['section']}): {summary}")
+    return "\n\n".join(notes) or (
+        "No checked study note matched this turn. Do not answer factual study questions from memory."
+    )
+
+
 def offline_answer(
     documents: list[dict[str, object]], language: str = "en-IN", question: str = ""
 ) -> str:
     """Return a checked-note summary in English, Hindi, or Hinglish without implying AI was used."""
-    if language == "hi-IN":
-        style = "hi" if re.search(r"[\u0900-\u097F]", question) else "hinglish"
-    else:
-        style = "en"
+    style = answer_style(language, question)
     if not documents:
         if style == "hi":
             return "जाँचे हुए अध्ययन नोट्स में अभी इस प्रश्न का उत्तर नहीं है।"
@@ -65,6 +103,7 @@ def ask_model(
     question: str,
     history: list[dict[str, str]],
     documents: list[dict[str, object]],
+    language: str | None = None,
 ) -> str:
     """Answer one turn using recent context and retrieved local study notes."""
     try:
@@ -76,13 +115,10 @@ def ask_model(
 
     model = os.getenv("OPENAI_MODEL", "gpt-6-astra")
     client = OpenAI(timeout=45.0, max_retries=1)
-    evidence = "\n\n".join(
-        f"{document['title']} ({document['source']['section']}): {document['summary']}"
-        for document in documents
-    )
+    evidence = checked_evidence(documents, question, language)
     response = client.responses.create(
         model=model,
-        instructions=INSTRUCTIONS,
+        instructions=response_instructions(language),
         input=[
             *history,
             {

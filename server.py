@@ -238,7 +238,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             if not documents:
                 answer = offline_answer([], language, question)
             elif api_is_configured():
-                answer = ask_model(question.strip(), cleaned_history, documents)
+                answer = ask_model(question.strip(), cleaned_history, documents, language)
             else:
                 answer = offline_answer(documents, language, question)
         except Exception as exc:

@@ -8,7 +8,7 @@ import re
 import uuid
 from typing import Any, Callable
 
-from bolprep import INSTRUCTIONS, api_is_configured, offline_answer
+from bolprep import api_is_configured, checked_evidence, offline_answer, response_instructions
 from progress import (
     ProgressConflict,
     create_quiz_run,
@@ -115,13 +115,8 @@ def run_agent_turn(
             ) from exc
         responses_client = OpenAI(timeout=45.0, max_retries=1).responses
 
-    evidence = "\n\n".join(
-        f"{document['title']} ({document['source']['section']}): {document['summary']}"
-        for document in documents
-    ) or "No checked study note matched this turn. Do not answer factual study questions from memory."
-    instructions = (
-        INSTRUCTIONS
-    )
+    evidence = checked_evidence(documents, question, language)
+    instructions = response_instructions(language)
     tools_requested = _has_tool_intent(question)
     if on_speech_mode is not None:
         on_speech_mode(not tools_requested and on_text_delta is not None)
