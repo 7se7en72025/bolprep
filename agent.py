@@ -70,7 +70,15 @@ TOOLS: list[dict[str, Any]] = [
     },
 ]
 
-QUIZ_INTENT = re.compile(r"\b(quiz|test|viva)\b|\u0915\u094d\u0935\u093f\u091c")
+QUIZ_INTENT = re.compile(
+    r"\b(?:quiz\s+me|test\s+me|viva\s+me|"
+    r"(?:give|start|take|do)\s+(?:me\s+)?(?:a\s+)?(?:quiz|test|viva)|"
+    r"(?:my|mera|meri)\s+(?:quiz|test|viva)\s+lo|"
+    r"(?:quiz|test|viva)\s+(?:lo|karao|karwao|dijiye))\b"
+    r"|\u0915\u094d\u0935\u093f\u091c\u093c?\s*"
+    r"(?:\u0915\u0930\u093e\u0913|\u0915\u0930\u0935\u093e\u0913|\u0932\u094b|"
+    r"\u0936\u0941\u0930\u0942\s+\u0915\u0930\u094b)"
+)
 REVISION_INTENT = re.compile(
     r"\b(?:revis(?:e|ion)|practice more|what should i study|"
     r"weak\s+(?:topics?|areas?)|where am i weak(?:\s+at)?|my weak points|"
