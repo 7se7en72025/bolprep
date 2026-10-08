@@ -8,6 +8,7 @@ recordings/
 evals/local-stt-*.json
 evals/local-live-*.json
 evals/local-tts-*.json
+evals/local-tutor-*.json
 *.wav
 *.mp3
 *.m4a

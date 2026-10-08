@@ -312,6 +312,18 @@ When a completed tutor answer still has active or pending speech and playback is
 
 Assistant history entries are capped at 3,000 Unicode code points to match server validation; adding a playback note preserves that limit and can shorten the stored answer. The visible answer remains complete. History is still bounded to 20 messages in the tab and cleared by New session. Real-browser playback/queued-state detection, natural-completion distinction, multilingual follow-up behavior, and model use of this note remain unverified.
 
+## Tutor-turn reports
+
+Keep downloaded diagnostics private as `evals/local-tutor-run1.json`, `evals/local-tutor-run2.json`, and so on. Summarize schema 12 exports locally:
+
+```powershell
+node evals/summarize_tutor_turns.js evals/local-tutor-run1.json evals/local-tutor-run2.json | Out-File -Encoding utf8 evals/local-tutor-report.json
+```
+
+The report accepts 1–100 files (4 MiB each, at most 500 turns per export), validates selected metadata, and groups language, mode, configured model, and server-metadata status. Completed/failed/canceled turns each have separate nearest-rank p50/p95 client/server durations with sample counts; absent server timings are excluded. It counts reported tool outcomes and completed turns with/without retrieved notes, without claiming answer correctness, citation support, or rubric quality. Direct quiz/progress requests, speech, token usage, and cost are outside this report.
+
+Identical selected metadata under the same request ID is deduplicated; conflicts are rejected. Null-ID records use identical selected metadata and can collapse distinct turns; changed snapshots remain separate. Missing server-metadata status is labeled legacy, and mixing legacy/current snapshots under one ID conflicts. Output omits IDs, per-turn timestamps, paths, raw records, transcript text, and audio. These are self-reported timings without controlled prompts or verified environment/authenticity. Client/server time excludes subsequent speech and is not acoustic voice latency. Local exports/reports matching `evals/local-tutor-*.json` are ignored by Git. Aggregation, malformed inputs, deduplication, and real-session results remain unverified at runtime.
+
 ## Speech-stop diagnostics
 
 Summarize saved exports locally with `node evals/summarize_speech_stops.js evals/local-live-session.json`. The schema 11-12 report groups stops by reason and pre-stop playback flags, including whether PCM sources were scheduled. It reports nearest-rank p50/p95 command-dispatch durations with sample counts and separate source-stop exception counts. It validates bounded input and deduplicates identical selected metadata across exports; without event IDs, distinct identical events can collapse and changed snapshots can remain separate. Output omits raw records, timestamps, turn counters, paths, text, and audio. Empty inputs produce no groups. Aggregation and malformed-input handling remain unverified at runtime.
