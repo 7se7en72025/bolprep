@@ -581,6 +581,14 @@ function preserveInterruptedTurn() {
   pendingQuestion = null;
 }
 
+function markSpeechIncomplete(entry = activeSpeechHistoryEntry) {
+  if (!entry || !history.includes(entry)) return;
+  const note = "\n[Speech playback stopped before completion; the learner may not have heard the full answer.]";
+  if (!entry.content.endsWith(note)) {
+    entry.content = [...entry.content].slice(0, 3000 - [...note].length).join("") + note;
+  }
+}
+
 function stopSpeechOutput(reason = "other-control") {
   const startedAt = performance.now();
   const snapshot = {
@@ -595,13 +603,7 @@ function stopSpeechOutput(reason = "other-control") {
   };
   const speechPending = activeSpeechController || scheduledSpeechSources.size
     || activeProgressiveSpeech?.isSpeaking() || window.speechSynthesis?.speaking || window.speechSynthesis?.pending;
-  if (activeSpeechHistoryEntry && history.includes(activeSpeechHistoryEntry) && speechPending) {
-    const note = "\n[Speech playback stopped before completion; the learner may not have heard the full answer.]";
-    if (!activeSpeechHistoryEntry.content.endsWith(note)) {
-      activeSpeechHistoryEntry.content = [...activeSpeechHistoryEntry.content]
-        .slice(0, 3000 - [...note].length).join("") + note;
-    }
-  }
+  if (speechPending) markSpeechIncomplete();
   activeSpeechHistoryEntry = null;
   speechTurn += 1;
   activeProgressiveSpeech?.cancel();
@@ -1291,6 +1293,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
       statusLine.textContent = `${message} Falling back to the browser voice.`;
       speakWithBrowser(text, completionText, kind);
     } else {
+      markSpeechIncomplete();
       statusLine.textContent = `${message} Streamed speech stopped.`;
     }
     return false;
@@ -1331,6 +1334,7 @@ function createProgressiveStreamedSpeech(completionText = "Answer ready.") {
         if (!current()) return;
         if (!ok) {
           failed = true;
+          markSpeechIncomplete();
           queue.length = 0;
           buffer = "";
           statusLine.textContent += " Read the answer above; pending speech was cleared.";
@@ -1391,6 +1395,7 @@ function createProgressiveStreamedSpeech(completionText = "Answer ready.") {
 
 function speakWithBrowser(text, completionText = "Ready when you are.", kind = "tutor") {
   if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
+    markSpeechIncomplete();
     statusLine.textContent = "Speech playback is not available in this browser. Read the answer above.";
     return;
   }
@@ -1448,6 +1453,7 @@ function speakWithBrowser(text, completionText = "Ready when you are.", kind = "
     utterance.onerror = (event) => {
       if (requestSpeechTurn !== speechTurn || failed) return;
       failed = true;
+      markSpeechIncomplete();
       speechFailures.push({ ...sample, reason: event.error || "unknown" });
       if (speechFailures.length > 500) speechFailures.shift();
       statusLine.textContent = `${speechErrorMessage(event.error)} ${speechTimingSummary(sample)}`;
@@ -1520,6 +1526,7 @@ function createProgressiveBrowserSpeech(completionText = "Answer ready.") {
       utterance.onerror = (event) => {
         if (requestSpeechTurn !== speechTurn || failed) return;
         failed = true;
+        markSpeechIncomplete();
         speechFailures.push({ ...sample, reason: event.error || "unknown" });
         if (speechFailures.length > 500) speechFailures.shift();
         statusLine.textContent = `${speechErrorMessage(event.error)} ${speechTimingSummary(sample)}`;
@@ -1694,6 +1701,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
     activePartialMessage = null;
     addMessage("assistant", payload.answer, payload.sources || []);
     const answerHistoryEntry = rememberTurn(question, payload.answer);
+    if (progressiveSpeech?.hasFailed()) markSpeechIncomplete(answerHistoryEntry);
     if (usedProgressiveSpeech && !progressiveSpeech?.hasFailed()) activeSpeechHistoryEntry = answerHistoryEntry;
     pendingQuestion = null;
     if (!progressiveSpeech?.hasFailed()) {

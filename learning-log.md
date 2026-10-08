@@ -1506,3 +1506,9 @@
 - Both progressive speech paths previously waited for punctuation or final model completion before queuing an unpunctuated reply. Added a shared residual-buffer flush that emits prefixes beyond 1,000 code points for provider speech or 500 for browser speech, preferring whitespace and preserving the remaining suffix.
 - Hard splits preserve code points/surrogate pairs but may split words or grapheme clusters. Existing sentence parsing, serial provider playback, and cancellation remain. Added README/manual repeated-delta, suffix, multilingual, Unicode, and stop cases without measured latency claims.
 - Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, controlled streams, browser interactions, recordings, or provider calls were performed; early playback, continuity, suffix retention, cancellation, and acoustic timing remain unverified at runtime.
+
+## Preserve incomplete-playback context after speech errors - 2026-10-08
+
+- Extracted the existing bounded, deduplicated history-note helper and reused it for terminal provider/browser failures, unavailable browser playback, and failed segments. Progressive failure before model text completion marks the answer when it is remembered. Explicit Stop retains the same note behavior.
+- Early provider failure followed by browser fallback does not mark the answer unless fallback fails. Displayed text/sources remain unchanged; the note does not identify audible words. Added README/manual failure timing, fallback, stale callback, preview, eviction, and duplicate cases.
+- Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, browser interactions, controlled playback, recordings, or provider calls were run; history association, recovery, duplicate suppression, and follow-up context remain unverified at runtime.
