@@ -62,7 +62,7 @@ Model language following, microphone behavior, and spoken playback require obser
 | Path | Behavior | Current boundaries |
 | --- | --- | --- |
 | Browser recognition | Browser-managed transcription for a text turn | Availability and accuracy depend on the browser/service. |
-| Recorded clip | Capture a clip, then send it for provider transcription | Maximum 20 seconds and 5 MiB; transcription begins after recording. |
+| Recorded clip | Capture a clip, then send it for provider transcription | Maximum 20 seconds and 5 MiB; transcription begins after recording. Discarding requests immediate microphone-track release. |
 | Live microphone | WebRTC partial/final transcription, manual or quiet-pause submission | Experimental; explicit activation, bounded sessions, no automatic reconnect. |
 | Spoken answer | Browser synthesis or progressive provider speech | Replay and cancellation controls exist; acoustic latency and stop behavior remain unmeasured. |
 

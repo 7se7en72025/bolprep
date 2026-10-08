@@ -522,6 +522,9 @@ function stopServerRecording(discard = false) {
   discardServerRecording ||= discard;
   updateServerTranscribeButton("busy");
   activeRecordingStop?.();
+  // Discarded capture needs no final audio. Release the microphone even if
+  // the recorder delays onstop; its owner still handles buffers and callbacks.
+  if (discard) activeMediaStream?.getTracks().forEach((track) => track.stop());
 }
 
 function recordingCaptureFailure(error) {

@@ -1711,3 +1711,10 @@
 - Static lifecycle review found pagehide released input capture but did not cancel active tutor requests or output queues. Added normal Stop handling after immediate input cleanup so tutor/speech identities advance, requests abort, interrupted context is retained, and queued/browser/provider playback is canceled before cached-page suspension. Returning shows an explicit stopped status; no automatic restart was added.
 - Kept visibilitychange limited to input cancellation so hiding a tab does not cancel intended answer playback. Extended the manual lifecycle review instructions with generation/quiz/playback/navigation/cache scenarios.
 - Verification: inspected existing Stop and interruption-context paths, ran JavaScript syntax and git diff whitespace checks. No tests, browser/device/navigation checks, provider calls, or recordings were performed; audible stop and upstream cancellation remain unverified.
+
+
+## Release discarded recording tracks immediately - 2026-10-08
+
+- Static recorder review found ordinary cancellation waited for onstop or the 10-second watchdog to release tracks. Discarding now sets its flag, requests recorder stop, and immediately stops owned microphone tracks. Late onstop/watchdog cleanup still owns buffers and callbacks, and normal non-discarding final audio collection is unchanged.
+- Added manual checks for delayed stop, stop exceptions, cancellation/device failures, late callbacks, microphone indicators, and normal final-chunk preservation.
+- Verification: JavaScript syntax and git diff whitespace checks only. No tests, device/browser checks, recordings, uploads, or provider calls were performed. Immediate hardware release and normal recording behavior remain unverified.
