@@ -719,24 +719,28 @@ async function startServerRecording() {
   }
 }
 
-async function readRecordedTranscriptResponse(response, signal) {
-  if (!response.body) throw new Error("Transcription response body is unavailable.");
+async function readBoundedJson(response, signal, maxBytes = 128 * 1024) {
+  if (!response.body) throw new Error("The server response body is unavailable.");
   const reader = response.body.getReader();
   const decoder = new TextDecoder("utf-8", { fatal: true });
   let bytes = 0;
   let text = "";
   try {
     while (true) {
-      if (signal.aborted) throw new DOMException("Transcription canceled.", "AbortError");
+      if (signal.aborted) throw new DOMException("Request canceled.", "AbortError");
       const { value, done } = await reader.read();
       if (done) break;
       bytes += value.byteLength;
-      if (bytes > 128 * 1024) throw new Error("Transcription response exceeded its size limit.");
+      if (bytes > maxBytes) throw new Error("The server response exceeded its size limit.");
       text += decoder.decode(value, { stream: true });
     }
     text += decoder.decode();
-    if (signal.aborted) throw new DOMException("Transcription canceled.", "AbortError");
+    if (signal.aborted) throw new DOMException("Request canceled.", "AbortError");
     return JSON.parse(text);
+  } catch (error) {
+    if (error.name === "AbortError") throw error;
+    // Parser errors can contain response text. Keep learner data out of UI errors.
+    throw new Error("The server returned invalid JSON or exceeded the response size limit.");
   } finally {
     // Do not delay recovery on an unresponsive stream cancellation promise.
     void reader.cancel().catch(() => {});
@@ -767,7 +771,7 @@ async function transcribeRecordedAudio(audio, language) {
       body: audio,
       signal: controller.signal,
     });
-    const payload = await readRecordedTranscriptResponse(response, controller.signal).catch((error) => {
+    const payload = await readBoundedJson(response, controller.signal).catch((error) => {
       if (error.name === "AbortError") throw error;
       failureReason = "invalid-transcript";
       throw new Error("The server returned an invalid transcription response.");
@@ -2118,7 +2122,7 @@ async function startQuiz() {
         language: speechLanguage.value, difficulty }),
       signal: controller.signal,
     });
-    const payload = await response.json();
+    const payload = await readBoundedJson(response, controller.signal, 1024 * 1024);
     if (timedOut) throw new Error("Quiz preparation timed out after 30 seconds. Try again.");
     if (!response.ok) throw new Error(payload?.error || "Could not start the quiz.");
     if (requestTurn !== turn) return;
@@ -2244,7 +2248,7 @@ async function submitQuizAnswer(answer, { preserveLive = false } = {}) {
       body: JSON.stringify({ quiz_id: quizSession.quizId, question_id: current.id, idempotency_key: current.idempotencyKey, answer, language: speechLanguage.value }),
       signal: controller.signal,
     });
-    const result = await response.json();
+    const result = await readBoundedJson(response, controller.signal, 1024 * 1024);
     if (timedOut) throw new Error("Scoring timed out after 30 seconds.");
     if (!response.ok) throw new Error(result?.error || "Could not score the answer.");
     if (requestTurn !== turn) return;
@@ -2444,7 +2448,7 @@ async function loadProgress() {
   try {
     const response = await apiFetch("/api/progress", { signal: controller.signal });
     if (requestId !== progressRequestId) return;
-    const progress = await response.json();
+    const progress = await readBoundedJson(response, controller.signal, 1024 * 1024);
     if (requestId !== progressRequestId) return;
     if (timedOut) throw new Error("Progress request timed out.");
     if (!response.ok) throw new Error(progress?.error || "Could not load saved results.");

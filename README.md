@@ -84,7 +84,7 @@ Quiz results and explicitly saved conversations use local SQLite storage, scoped
 
 Snapshots contain up to 20 recent messages, bounded text, citations, and supported request metadata. Audio, unsent drafts, and partial transcription deltas are not saved. Opening a snapshot cancels active work and restores context without automatically resuming a quiz or playing speech. Conversation deletion and quiz-progress deletion are separate actions.
 
-The server has request-size limits, shared in-memory rate limits, and four concurrent slots for expensive requests. These controls are not per-account budgets or billing caps. The optional password gate does not provide hosted authentication, TLS, or production access controls.
+Browser quiz-start, scoring, and progress-load responses are capped at 1 MiB before JSON parsing, with generic errors for invalid bodies. The server has request-size limits, shared in-memory rate limits, and four concurrent slots for expensive requests. These controls are not per-account budgets or billing caps. The optional password gate does not provide hosted authentication, TLS, or production access controls.
 
 ## Evaluation and diagnostics
 

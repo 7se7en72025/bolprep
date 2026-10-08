@@ -1739,3 +1739,10 @@
 - Static event review found parsed null could throw before normal capture recovery, and serialized messages had no pre-parse bound. Added a 65,536 UTF-16-unit text-message cap and require a JSON object with a bounded nonempty string type before field access. Malformed messages now use existing provider-failed cleanup; unknown well-formed event types remain ignored.
 - Documented malformed/oversized data, late events, single failure recording, cleanup, and explicit restart scenarios. Existing transcript limits and failure-report categories are unchanged.
 - Verification: JavaScript syntax and git diff whitespace checks only. No tests, event injection, browser/device checks, recordings, or provider requests were performed.
+
+
+## Bound quiz and progress responses before parsing - 2026-10-08
+
+- Generalized the recorded-transcription reader into a shared bounded JSON helper. Quiz start, scoring, and progress loading now use a 1 MiB byte limit, strict UTF-8, reader cleanup, and generic parse errors that do not expose response fragments. Recorded transcription retains its 128 KiB limit and existing error category.
+- Preserved cancellation/deadline handling, quiz score retry identities, result validators, and control recovery. Added manual boundary/privacy/timeout/retry scenarios without claiming a runtime result.
+- Verification: JavaScript syntax and git diff whitespace checks only. No tests, browser interactions, response injection, storage writes, evaluations, or provider calls were performed.
