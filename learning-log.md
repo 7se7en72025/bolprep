@@ -1416,3 +1416,9 @@
 - Recorded capture requests one-second chunks and checks accumulated bytes against the server's 5 MiB limit before retaining each chunk. Oversized capture clears retained chunks, marks discard, records recording-too-large once, and stops capture without upload. Discarded/stale chunks are ignored, and canceled clips skip final Blob construction.
 - This bounds retained encoded data only; browser encoder buffers, event delays, and the delivered chunk itself are outside that bound. Normal recording duration and server checks remain in place. Added README and manual boundary/format/recovery cases.
 - Verification: JavaScript syntax and git diff whitespace checks passed. No tests, recordings, browser interactions, or provider calls were run; chunk concatenation, limit boundaries, memory use, cancellation, and restart behavior remain unverified.
+
+## Keep bounded long recorded transcripts for editing - 2026-10-08
+
+- Replaced the recorded-transcription 1,200-character response rejection with a 6,000-code-point review cap. Longer responses fail explicitly without replacing the draft; bounded longer text can be edited rather than discarded. Question/quiz submission limits remain in place.
+- The recorded transcript status now warns against the active composer limit, including quiz mode. Recorded transcripts remain review-only. Documented browser UTF-16 versus server code-point counting and manual boundary/late-response cases.
+- Verification: server Python compilation, browser JavaScript syntax, and git diff whitespace checks passed. No tests, browser interactions, recordings, or provider calls were run; response boundaries, editable review, quiz limits, Unicode behavior, and stale-result isolation remain unverified.

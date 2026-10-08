@@ -240,6 +240,10 @@ Let a tutor finish generating text while its browser/provider voice continues. S
 
 Repeat with a long Unicode answer: history must stay within 3,000 code points per assistant message while the displayed answer remains complete. Start New session and confirm earlier annotations do not enter new follow-ups. Do not infer exact heard words or provider cancellation from the note.
 
+### Recorded transcript review checks (not yet performed)
+
+Use controlled recorded-transcription responses below/at/above the active composer limit, then at/above 6,000 Unicode code points. Returned bounded text should remain editable without truncation or automatic submission; oversized composer text should show a shortening warning and fail submission until edited. Repeat in quiz mode with its 1,000-character limit. Above the hard server cap, expect a 422 error and the prior draft to remain available. Include supplementary Unicode characters to document browser UTF-16 versus server code-point length differences. Check edited/canceled attempts still ignore late responses.
+
 ### Recorded clip size checks (not yet performed)
 
 Inspect retained chunk bytes with local instrumentation at the exact 5 MiB boundary and above it. At the boundary, normal Stop should keep the upload path; above it, expect one recording-too-large failure, cleared retained chunks, track stop commands, and no upload. Deliver delayed/final chunks after discard and inspect whether they are ignored. Verify ordinary WebM/MP4 capture still creates a usable full clip across one-second chunks. Measure browser encoder memory separately; this cap covers retained chunks, not all browser buffers. Check explicit restart and normal 20-second capture afterward.

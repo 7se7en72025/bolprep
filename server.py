@@ -29,6 +29,7 @@ HOST = "127.0.0.1"
 PORT = 8000
 MAX_BODY_BYTES = 256 * 1024
 MAX_AUDIO_BYTES = 5 * 1024 * 1024
+MAX_RECORDED_TRANSCRIPT_CHARS = 6000
 POST_QUOTAS = {
     "/api/login": "login",
     "/api/logout": "logout",
@@ -480,8 +481,8 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 self._send_json(502, {"error": "The transcription provider returned no text. Try again or type your question."})
                 return
             transcript = transcript.strip()
-            if len(transcript) > 1200:
-                self._send_json(422, {"error": "The transcript is over 1,200 characters. Please shorten it or type a shorter question."})
+            if len(transcript) > MAX_RECORDED_TRANSCRIPT_CHARS:
+                self._send_json(422, {"error": "The transcript is over 6,000 characters and cannot be shown. Record a shorter clip or type your question."})
                 return
             self._send_json(200, {"transcript": transcript})
         except Exception as exc:

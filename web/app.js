@@ -470,7 +470,9 @@ async function transcribeRecordedAudio(audio, language) {
     input.focus();
     recordedTranscriptionSamples.push({ language, elapsedMs: performance.now() - startedAt });
     if (recordedTranscriptionSamples.length > 500) recordedTranscriptionSamples.shift();
-    statusLine.textContent = `Transcript ready. Review it, then ask. ${recordedTranscriptionTimingSummary(language)}`;
+    statusLine.textContent = input.value.length > input.maxLength
+      ? `Transcript ready. Shorten it to ${input.maxLength} characters before sending. ${recordedTranscriptionTimingSummary(language)}`
+      : `Transcript ready. Review it, then ask. ${recordedTranscriptionTimingSummary(language)}`;
   } catch (error) {
     if ((error.name !== "AbortError" || timedOut) && activeTranscriptionController === controller) {
       recordedTranscriptionFailures.push({ language, reason: timedOut ? "transcription-timeout" : "transcription-failed" });
