@@ -95,7 +95,7 @@ The page exposes request diagnostics and exports for local review. Software timi
 | [Voice run sheet](evals/voice-run-sheet.md) | Manual browser/device scenarios and observations to collect. |
 | [TTS rubric](evals/TTS_RUBRIC.md) | Listener ratings for spoken output. |
 | [Quiz review rubric](evals/QUIZ_REVIEW_RUBRIC.md) | Compare fixed scores with human judgments. |
-| [Answer support rubric](evals/ANSWER_SUPPORT_RUBRIC.md) | Review claims, provided notes, sources, and abstentions; includes a local label summarizer. No reviews collected or reports computed. |
+| [Answer support rubric](evals/ANSWER_SUPPORT_RUBRIC.md) | Review claims, provided notes, sources, and abstentions; includes a local label summarizer with input/rubric/code fingerprints. No reviews collected or reports computed. |
 | [Demo outline](DEMO_SCRIPT.md) | Reproducible demonstration plan; no completed video is claimed. |
 
 Retrieval evaluation commands:

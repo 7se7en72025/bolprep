@@ -115,8 +115,15 @@ After collecting and independently reviewing authorized attempts, the local comm
 .\.venv\Scripts\python.exe evals/summarize_answer_reviews.py evals/local-answer-labels.json
 ```
 
-The UTF-8 input is bounded to 16 MiB; duplicate keys and unexpected fields are rejected. JSON output contains overall and configuration/language groups, outcome counts, missing reviews, claim support, displayed-note relevance, disposition counts, answer relevance, and exact support-label agreement. A valid report exits zero regardless of quality; invalid input exits two with a generic error and no input content. Safe configuration IDs still require review before publishing.
+The UTF-8 input is bounded to 16 MiB; duplicate keys and unexpected fields are rejected. Report schema 2 (input schema remains 1) includes the declared reviewer count and overall and configuration/language groups, outcome counts, missing reviews, claim support, displayed-note relevance, disposition counts, answer relevance, and exact support-label agreement. A valid report exits zero regardless of quality; invalid input exits two with a generic error and no input content. Safe configuration IDs still require review before publishing.
 
 Counts are **review observations**, not unique claims or unique answers: two reviewers contribute two ratings per unit. Fully supported answer-review counts require at least one claim; contradicted/unbacked/inconclusive categories overlap. Fractions retain inconclusive labels in denominators except the explicitly conclusive support fraction. Zero denominators are null. Pair agreement uses every unordered reviewer pair on shared claim IDs; with more than two reviewers, pair observations are dependent. Missing reviews contribute no invented labels.
 
 The summarizer does not compute claim-to-note evidence coverage, supported claims lacking displayed evidence, segmentation agreement, disposition agreement, adjudicated ratings, or matched configuration comparisons. Retain those evidence-based analyses separately. Group percentages alone do not establish comparability, significance, or answer correctness. No label collection or report computation has been performed here.
+
+
+### Report fingerprints and reproduction
+
+The CLI adds `provenance` with SHA-256 of exact label-file bytes, rubric bytes, and runner bytes; label byte count; Python version/implementation; and UTC generation time. It captures runner bytes at module load and rejects detected runner, rubric, or label changes during computation before printing a report. File bytes are not normalized: whitespace and line-ending changes produce different fingerprints. Calls to the internal `summarize` function alone do not provide CLI file provenance.
+
+Archive the authorized private input, full evidence snapshots, raw review annotations, exact runner/rubric, environment, repository revision, and actual JSON report. Reproduction requires matching input/rubric/runner hashes and interpreter metadata; generation time naturally differs. Hashes identify files and do not authenticate human labels, verify evidence snapshots, record provider behavior, or establish that comparisons use matched prompts/context/reviewers. Before/after checks cannot detect a file changed and restored between checks. No reports have been computed or reproducibility demonstrated.

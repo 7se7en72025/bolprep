@@ -25,7 +25,7 @@ The exporter parses and validates the same byte snapshot it hashes. It inventori
 | `local-tts-*.json` | `TTS_RUBRIC.md` / `score_tts.js` | Anonymous independent human ratings and matched listener/prompt coverage; no actual ratings collected here. |
 | `local-tutor-*.json` | Browser diagnostics / tutor/stop summarizers | Turn outcomes and software timings; missing metadata and collisions require inspection. |
 | `local-quiz-*.json` | `QUIZ_REVIEW_RUBRIC.md` / `score_quiz_reviews.js` | Independent human concept counts versus actual automated scores; bank hash and paired review coverage required. |
-| `local-answer-*.json` | `ANSWER_SUPPORT_RUBRIC.md` | Actual answers, exact supplied notes/context, independent claim/support/disposition labels; label summarizer implemented, actual collection and report computation pending. |
+| `local-answer-*.json` | `ANSWER_SUPPORT_RUBRIC.md` | Actual answers, exact supplied notes/context, independent claim/support/disposition labels; label summarizer with input/rubric/code hashes implemented, actual collection and report computation pending. |
 
 These local JSON patterns and audio recordings are ignored by Git. Keep configuration and observation notes private and use self-authored material; any real learner data needs consent. Example schemas in the procedures are illustrative, not measured results. IDs and labels are supplied metadata, not verified provenance. Do not publish real benchmark numbers until observations have actually been collected and the appropriate runner has processed them.
 

@@ -1901,3 +1901,9 @@
 - Retrieval query selection now uses current subject terms independently even when the current question has no lexical matches. Previously a failed current lookup could append prior topic words and retrieve old evidence for an unrelated unsupported question.
 - Generic clarification requests retain the bounded recent-topic fallback; explicit current article references still take precedence. Removed the extra baseline retrieval lookup from query selection. The generic-token vocabulary remains heuristic and may abstain conservatively on unrecognized follow-up wording.
 - Verification: Python compilation and git diff whitespace checks, with static branch inspection. No tests, retrieval cases/evaluation reports, browser turns, provider calls, or measured quality claims.
+
+## Fingerprint answer-review report inputs and code - 2026-10-08
+
+- Answer-review CLI reports now use output schema 2 while retaining input schema 1. They include declared reviewer count, exact label/rubric/runner SHA-256 fingerprints, input byte count, Python version/implementation, and UTC generation time.
+- Captures runner bytes before reporting functions are defined and rejects detected file changes before output. Documented raw-byte/line-ending sensitivity, CLI versus internal aggregation, reproduction archives, and hash/stability-check limitations.
+- Verification: Python compilation, CLI help, and git diff whitespace checks with static metadata/guard inspection. No tests, reports, human labels, provider calls, or reproducibility experiments were performed.

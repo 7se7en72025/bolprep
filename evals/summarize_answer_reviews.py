@@ -2,9 +2,12 @@
 
 import argparse
 from collections import Counter
+from datetime import datetime, timezone
+import hashlib
 from itertools import combinations
 import json
 from pathlib import Path
+import platform
 import re
 import sys
 
@@ -14,6 +17,10 @@ DISPOSITIONS = ("answered", "clarified", "abstained", "mixed", "inconclusive")
 ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:-]{0,79}\Z")
 SHA = re.compile(r"[0-9a-f]{64}\Z")
 MAX_BYTES = 16 * 1024 * 1024
+RUNNER_PATH = Path(__file__).resolve()
+RUBRIC_PATH = RUNNER_PATH.with_name("ANSWER_SUPPORT_RUBRIC.md")
+# Capture before the reporting functions are defined; recheck before emitting.
+RUNNER_BYTES = RUNNER_PATH.read_bytes()
 
 
 def require(condition, location):
@@ -133,8 +140,9 @@ def summarize(data):
         key = (attempt["configuration_id"], attempt["language"])
         groups.setdefault(key, []).append(attempt)
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "rubric_version": 1,
+        "expected_reviewer_count": data["expected_reviewer_count"],
         "units": "Human review observations; repeated reviewer votes are not unique claims or answers.",
         "limitations": "No evidence verification, automatic grading, adjudication, citation mapping, or matched configuration comparison. Zero denominators are null. Agreement is not correctness.",
         "overall": aggregate(data["attempts"], data["expected_reviewer_count"]),
@@ -151,16 +159,39 @@ def reject_duplicates(pairs):
     return result
 
 
+def read_labels(path):
+    with path.open("rb") as source:
+        raw = source.read(MAX_BYTES + 1)
+    require(len(raw) <= MAX_BYTES, "file size")
+    return raw
+
+
+def digest(raw):
+    return hashlib.sha256(raw).hexdigest()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("labels", type=Path, help="Private schema-1 label file; raw evidence is not loaded")
     args = parser.parse_args()
     try:
-        with args.labels.open("rb") as source:
-            raw = source.read(MAX_BYTES + 1)
-        require(len(raw) <= MAX_BYTES, "file size")
+        require(RUNNER_PATH.read_bytes() == RUNNER_BYTES, "runner stability")
+        rubric_bytes = RUBRIC_PATH.read_bytes()
+        raw = read_labels(args.labels)
         data = json.loads(raw.decode("utf-8"), object_pairs_hook=reject_duplicates)
         report = summarize(data)
+        require(read_labels(args.labels) == raw, "label stability")
+        require(RUBRIC_PATH.read_bytes() == rubric_bytes, "rubric stability")
+        require(RUNNER_PATH.read_bytes() == RUNNER_BYTES, "runner stability")
+        report["provenance"] = {
+            "labels_sha256": digest(raw),
+            "labels_bytes": len(raw),
+            "rubric_sha256": digest(rubric_bytes),
+            "runner_sha256": digest(RUNNER_BYTES),
+            "python_version": platform.python_version(),
+            "python_implementation": platform.python_implementation(),
+            "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        }
     except (OSError, UnicodeError, ValueError, TypeError, RecursionError):
         print("Cannot summarize: unreadable file or invalid label schema. No input content is echoed.", file=sys.stderr)
         return 2
