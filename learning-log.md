@@ -1440,3 +1440,9 @@
 - Inspection found the interactive terminal path still pooled the last four questions, allowing an earlier article to override current evidence. It now delegates query selection to the same helper used by browser turns and retrieval evaluation. Unsupported terminal questions also use the shared offline insufficient-evidence response.
 - Added README and manual offline terminal/browser context cases. This does not add terminal speech input or change its default English offline summaries; current lexical retrieval limitations remain.
 - Verification: terminal/retrieval/agent/server Python compilation and git diff whitespace checks passed. No tests, interactive sessions, evaluation dataset runs, or provider calls were performed; terminal topic switching, multilingual clarification, unsupported handling, and historical metrics remain unverified at runtime.
+
+## Bound stalled browser recognition sessions - 2026-10-08
+
+- Added a 45-second browser-recognition startup deadline and 60-second listening limit. Timeout uses existing abort/draft restoration, releases Speak, records one phase-specific failure, and blocks late completion auto-submit. Confirmed final words remain for review; interim-only words restore the previous draft.
+- Stop, errors, normal end, synchronous startup failure, edit/lifecycle cleanup, and new attempts clear the timer. Run guards prevent old timers from affecting a newer capture. Final-transcript timing samples and later session timeout failures remain distinct; timer suspension and upstream cancellation are limitations.
+- Updated README/manual deadline, draft, late-event, and restart cases. Verification: JavaScript syntax and git diff whitespace checks passed. No tests, controlled recognition runs, browser interactions, recordings, or provider calls were run; deadline timing, duplicate suppression, stale events, and restart behavior remain unverified at runtime.

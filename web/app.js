@@ -63,6 +63,7 @@ let recognition = null;
 let recognitionAvailable = false;
 let recognitionListening = false;
 let recognitionRun = 0;
+let recognitionDeadlineTimer = null;
 let serverTranscriptionAvailable = false;
 let liveTranscriptionAvailable = false;
 let activeLiveTranscription = null;
@@ -310,7 +311,13 @@ function stopLiveTranscription(restoreUnconfirmed = true) {
   updateLiveSttButton();
 }
 
+function clearRecognitionDeadline() {
+  if (recognitionDeadlineTimer !== null) window.clearTimeout(recognitionDeadlineTimer);
+  recognitionDeadlineTimer = null;
+}
+
 function stopRecognition(restoreUnconfirmed = false, preserveLive = false) {
+  clearRecognitionDeadline();
   if (!preserveLive) stopLiveTranscription(restoreUnconfirmed);
   if (restoreUnconfirmed && recognitionListening && !recognitionHadFinalResult) {
     input.value = recognitionOriginalInput;
@@ -2085,6 +2092,22 @@ micButton.addEventListener("click", () => {
   capture.lang = speechLanguage.value;
   capture.interimResults = true;
   capture.continuous = false;
+  const armDeadline = (duration, reason) => {
+    clearRecognitionDeadline();
+    recognitionDeadlineTimer = window.setTimeout(() => {
+      if (run !== recognitionRun || !recognitionListening) return;
+      const hadFinalResult = recognitionHadFinalResult;
+      stopRecognition(true);
+      recognitionFailures.push({ language: capture.lang, reason });
+      if (recognitionFailures.length > 500) recognitionFailures.shift();
+      const message = reason === "start-timeout"
+        ? "Voice input did not start within 45 seconds. Try again or type instead."
+        : hadFinalResult
+          ? "Voice input reached its 60-second limit. Review the final words, then send."
+          : "Voice input reached its 60-second limit without final words. Your previous draft was restored. Try again or type instead.";
+      statusLine.textContent = `${message} ${recognitionTimingSummary(capture.lang)}`;
+    }, duration);
+  };
   capture.onstart = () => {
     if (run !== recognitionRun || !recognitionListening) {
       capture.abort();
@@ -2093,6 +2116,7 @@ micButton.addEventListener("click", () => {
     updateMicrophoneButton(true);
     recognitionStartedAt = performance.now();
     recognitionHadFinalResult = false;
+    armDeadline(60_000, "listening-timeout");
     statusLine.textContent = "Listening… speak now.";
   };
   capture.onresult = (event) => {
@@ -2130,6 +2154,7 @@ micButton.addEventListener("click", () => {
   };
   capture.onend = () => {
     if (run !== recognitionRun) return;
+    clearRecognitionDeadline();
     const wasListening = recognitionListening;
     recognitionListening = false;
     updateMicrophoneButton(false);
@@ -2150,8 +2175,10 @@ micButton.addEventListener("click", () => {
   recognitionListening = true;
   updateMicrophoneButton(false, true);
   try {
+    armDeadline(45_000, "start-timeout");
     capture.start();
   } catch (error) {
+    clearRecognitionDeadline();
     recognitionListening = false;
     recognitionRun += 1;
     updateMicrophoneButton(false);
