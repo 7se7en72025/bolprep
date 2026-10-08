@@ -300,7 +300,8 @@ function validTutorToolEvents(events) {
         && Number.isFinite(result.score) && result.score >= 0 && result.score <= 100
         && validStudySource(result.source);
     }
-    return true;
+    if (event.name === "get_weak_topics") return validSavedProgress(result);
+    return false;
   });
 }
 

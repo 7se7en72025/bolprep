@@ -1844,3 +1844,10 @@
 - Static draft review confirmed edit cancellation already protects recorded transcripts; no edit was made to that path. Article parsing review then found numeric leading zeros survived normalization and prevented otherwise canonical note lookup.
 - Numeric IDs now normalize Unicode decimal digits and strip leading zeros as text, retaining Latin suffixes and avoiding large integer conversion. Unknown/all-zero IDs and existing range guards remain; no corpus records or evaluation labels changed.
 - Verification: Python compilation and git diff whitespace checks only. No tests, parser executions, retrieval evaluations, browser checks, database writes, or provider calls were performed. Added unperformed reference-boundary scenarios to the run sheet.
+
+
+## Validate revision tool results as saved progress - 2026-10-08
+
+- Static tool-result review found successful get_weak_topics data bypassed the saved-progress validator, and arbitrary successful tool names were accepted. Revision results now use the existing count/question/weak-topic consistency checks; unsupported successful names fail validation.
+- Existing quiz start/score validators and bounded failed-tool reporting remain. Added unperformed empty/populated/malformed revision and unsupported-tool scenarios; no semantic quality or provenance guarantee is claimed.
+- Verification: JavaScript syntax and git diff whitespace checks only. No tests, result injection, browser sessions, database writes, scoring/retrieval evaluation, or provider calls were performed.
