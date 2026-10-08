@@ -352,7 +352,9 @@ class BolPrepLiveTranscription {
       if (tokenResponse.status === 429) {
         const wait = Number.isInteger(token.retry_after_seconds) && token.retry_after_seconds > 0
           && token.retry_after_seconds <= 60 ? token.retry_after_seconds : 60;
-        this.fail(`Live session limit reached. Wait ${wait} seconds, then start Live mic again.`, "rate-limited");
+        const busy = token.code === "server-busy";
+        this.fail(`${busy ? "The tutor is busy" : "Live session limit reached"}. Wait ${wait} seconds, then start Live mic again.`,
+          busy ? "server-busy" : "rate-limited");
         return;
       }
       if (!tokenResponse.ok || typeof token.client_secret !== "string"

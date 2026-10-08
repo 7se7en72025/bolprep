@@ -135,7 +135,11 @@ The server applies rolling 60-second quotas shared by all local browsers. Admitt
 
 The limiter is thread-safe, uses monotonic time, and retains only bounded timestamp queues in server memory. Throttled attempts do not extend the retry interval, create a browser session, read an upload, or call a provider. The server closes their HTTP connection because the request body remains unread. Restarting the server resets quotas; changing cookies does not. Static files and `/health` remain available.
 
-These are local development defaults, not a billing cap or a hosted-service abuse defense. Direct WebRTC media traffic and token reuse happen at the provider, outside these HTTP quotas. Hosted authentication, per-account budgets, proxy controls, concurrency limits, and deployment hardening remain pending.
+These are local development defaults, not a billing cap or a hosted-service abuse defense. Direct WebRTC media traffic and token reuse happen at the provider, outside these HTTP quotas. Hosted authentication, per-account budgets, proxy controls, and deployment hardening remain pending.
+
+Tutor answers, streamed speech, recorded transcription, and live-session creation also share **four simultaneous server request slots**. Busy requests return 429 with `code: "server-busy"` and a two-second retry suggestion; quota rejection uses `code: "rate-limited"`. The server does not queue or automatically retry them. The rolling quota counts busy attempts too. Slots cover body processing through response completion and are released when the handler exits, including validation failures and disconnects. Quiz writes, progress, health, and static files do not use these slots. Live mic distinguishes busy and rate-limit failures in diagnostics.
+
+Socket reads/writes have a 30-second timeout, preventing an idle upload or blocked response write from holding a slot indefinitely. This is an I/O wait timeout, not an overall generation deadline; provider requests retain their existing SDK timeouts. Direct WebRTC media sessions are outside the four-slot gate. Concurrent saturation, timeout recovery, and real provider cleanup remain unverified.
 
 ## Roadmap
 

@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from threading import BoundedSemaphore
 from typing import Any
 
 from bolprep import api_is_configured, ask_model, offline_answer
@@ -41,10 +42,18 @@ REQUEST_LIMITER = RequestLimiter({
     "tutor": 30, "speech": 60, "recorded-stt": 10, "live-session": 6,
     "quiz-write": 60, "progress-read": 60, "progress-delete": 6,
 })
+MAX_ACTIVE_TUTOR_OR_SPEECH_REQUESTS = 4
+ACTIVE_TUTOR_OR_SPEECH_SLOTS = BoundedSemaphore(MAX_ACTIVE_TUTOR_OR_SPEECH_REQUESTS)
+LONG_REQUEST_QUOTAS = {"tutor", "speech", "recorded-stt", "live-session"}
+HTTP_IO_TIMEOUT_SECONDS = 30
 
 
 class BolPrepHandler(BaseHTTPRequestHandler):
     protocol_version = "HTTP/1.1"
+
+    def setup(self) -> None:
+        super().setup()
+        self.connection.settimeout(HTTP_IO_TIMEOUT_SECONDS)
 
     def handle(self) -> None:
         try:
@@ -121,6 +130,17 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             return
         if not self._permit_api_request(quota):
             return
+        needs_slot = quota in LONG_REQUEST_QUOTAS
+        if needs_slot and not ACTIVE_TUTOR_OR_SPEECH_SLOTS.acquire(blocking=False):
+            self._reject_api_request("The tutor is busy. Wait 2 seconds, then try again.", 2, "server-busy")
+            return
+        try:
+            self._dispatch_post()
+        finally:
+            if needs_slot:
+                ACTIVE_TUTOR_OR_SPEECH_SLOTS.release()
+
+    def _dispatch_post(self) -> None:
         self._ensure_browser_session()
         if self.path == "/api/transcribe":
             self._handle_transcription()
@@ -537,17 +557,22 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         retry_after = REQUEST_LIMITER.acquire(bucket)
         if not retry_after:
             return True
+        self._reject_api_request(
+            f"Too many requests. Wait {retry_after} seconds, then try again.", retry_after, "rate-limited"
+        )
+        return False
+
+    def _reject_api_request(self, message: str, retry_after: int, code: str) -> None:
         # The body has not been consumed. Close this HTTP connection rather than
         # accidentally parsing leftover JSON/audio as another request.
         self.close_connection = True
         self._send_json(
             429,
-            {"error": f"Too many requests. Wait {retry_after} seconds, then try again.",
+            {"error": message, "code": code,
              "retry_after_seconds": retry_after},
             include_session_cookie=False,
             retry_after_seconds=retry_after,
         )
-        return False
 
     def _send_json(
         self, status: int, payload: dict[str, Any], include_session_cookie: bool = True,
