@@ -62,7 +62,14 @@
           </div>
         </form>
         <label class="speech-input-setting" for="auto-submit-speech"><input id="auto-submit-speech" type="checkbox" disabled> Automatically submit a final browser transcript (skip review)</label>
-        <label class="speech-input-setting" for="live-auto-finish"><input id="live-auto-finish" type="checkbox" disabled> Finish Live mic after a 3-second quiet pause (experimental; review before sending)</label>
+        <label class="speech-input-setting" for="live-auto-finish"><input id="live-auto-finish" type="checkbox" disabled> Finish Live mic after a quiet pause (experimental; review before sending)</label>
+        <label class="speech-input-setting" for="live-quiet-pause">Quiet pause before finishing
+          <select id="live-quiet-pause" class="language-select" disabled>
+            <option value="3000">3 seconds</option>
+            <option value="5000">5 seconds</option>
+            <option value="8000">8 seconds</option>
+          </select>
+        </label>
         <label class="speech-input-setting" for="live-conversation"><input id="live-conversation" type="checkbox" disabled> Conversation mode: automatically send final transcripts and keep listening (experimental; use headphones; 5-minute limit)</label>
         <label class="speech-setting" for="speech-rate">Browser speech rate
           <select id="speech-rate" class="language-select">

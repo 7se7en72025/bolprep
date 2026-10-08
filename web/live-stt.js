@@ -1,10 +1,11 @@
 // The server mints a short-lived credential;
 // media goes directly to the provider over WebRTC and is never saved by BolPrep.
 class BolPrepLiveTranscription {
-  constructor(callbacks, { autoFinish = false, continuous = false } = {}) {
+  constructor(callbacks, { autoFinish = false, continuous = false, quietPauseMs = 3000 } = {}) {
     this.callbacks = callbacks;
     this.continuous = continuous;
     this.autoFinish = autoFinish || continuous;
+    this.quietPauseMs = [3000, 5000, 8000].includes(quietPauseMs) ? quietPauseMs : 3000;
     this.completedItems = new Set();
     this.turnNumber = 1;
     this.controller = new AbortController();
@@ -56,6 +57,7 @@ class BolPrepLiveTranscription {
       language: this.language ?? null,
       model: "gpt-live-transcribe",
       auto_finish_requested: this.autoFinish,
+      quiet_pause_ms: this.quietPauseMs,
       continuous: this.continuous,
       turn_number: this.turnNumber,
       connection_reused: this.turnNumber > 1,
@@ -268,7 +270,7 @@ class BolPrepLiveTranscription {
               }
             }
             quietMs = heardSpeech && rms < 0.008 ? quietMs + observedMs : 0;
-            if (quietMs >= 3000) {
+            if (quietMs >= this.quietPauseMs) {
               this.finish("quiet-pause");
               return;
             }
@@ -279,8 +281,8 @@ class BolPrepLiveTranscription {
         }
       };
       this.callbacks.status(this.continuous
-        ? "Conversation mic is listening. Speak to interrupt; pause for 3 seconds to send. Stop ends the session."
-        : "Live listening. A 3-second quiet pause finishes your transcript; Done also works (20-second limit).", this.state);
+        ? `Conversation mic is listening. Speak to interrupt; pause for ${this.quietPauseMs / 1000} seconds to send. Stop ends the session.`
+        : `Live listening. A ${this.quietPauseMs / 1000}-second quiet pause finishes your transcript; Done also works (20-second limit).`, this.state);
       this.detectionTimer = this.later(poll, 50);
     } catch {
       manual("analysis-failed");

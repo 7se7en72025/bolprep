@@ -208,3 +208,11 @@ With an approved model/provider session and streamed speech selected, ask for a 
 - Block audio-context startup, then use Stop/Escape or let the 90-second data-idle deadline expire: the local speech request should release, with intentional cancellation excluded from failure counts. Resume the context later; canceled speech must not restart.
 - Suspend the audio context after download completes, or prevent the final playback-ended event. Wait the remaining scheduled duration plus ten seconds: playback should stop with playback-timeout in diagnostics, and a progressive sentence queue should clear without replay. Browser timer delays must be recorded separately.
 - Play a long, normally functioning buffer: it should get its full scheduled duration plus the ten-second margin. Complete playback and start another turn; the old watchdog must not abort the new turn. These are manual cases, not verified results.
+
+### Adjustable quiet-pause checks (not yet performed)
+
+Repeat the same self-authored utterance with 3-, 5-, and 8-second settings, first in standard automatic completion and then Conversation mode. Pause for less than the selected duration and continue: the transcript should stay open. Pause beyond the selected duration after detected activity: completion should begin, subject to the unchanged 20-second limit. Record premature completion, missed quiet speech, noise, and timer-delay cases.
+
+- The pause selector should be unavailable during connecting/listening/finalizing/clearing, then re-enable at session end. Reused conversation turns should retain the connection?s selected duration.
+- Manual Done and Stop should work at each setting. Standard mode should retain the final transcript for review; Conversation mode should auto-submit once.
+- Export schema 9 diagnostics: each attempt should carry quiet_pause_ms, and summaries should separate settings with the correct configuration.quiet_pause_s. Do not combine their timing distributions or claim a setting is better without comparable measured samples.
