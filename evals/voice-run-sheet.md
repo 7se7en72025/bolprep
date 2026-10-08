@@ -193,3 +193,12 @@ Enable Conversation mode before Live mic, with headphones. Ask a question and pa
 - With analysis blocked/suspended, conversation mode should close and suggest restarting in manual mode. With no detected activity, it should end after sixty seconds; the overall session should end at five minutes. Foreground browser timer timing is approximate.
 - In a quiz, confirm an awaited answer submits automatically; After feedback, say next question, agla sawal, or अगला सवाल: it should speak the next prompt without closing capture. Say the same command before answering: it should request the current answer without scoring or advancing. An overlong transcript or speech between quiz questions should end conversation capture while leaving the text for review.
 - Compare speaker playback separately; do not count headphone-only results as echo validation. Provider generation cancellation and real-device behavior remain unverified until these checks are performed.
+
+### Progressive provider speech checks (not yet performed)
+
+With an approved model/provider session and streamed speech selected, ask for a multi-sentence explanation in Hindi, English, and Hinglish. Confirm the first complete sentence starts before the model finishes when timing permits, later segments play once in order, and the final unpunctuated fragment is spoken. Observe request count, pauses between segments, and pronunciation; no latency improvement is claimed.
+
+- Stop or press Escape before first audio, during a segment, between segments, and after text completion while speech is queued. No pending or late audio should restart. Repeat with a follow-up, language/voice change, and continuous-mic interruption.
+- Stall or fail a segment, including quota rejection: queued speech should clear, the error should stay visible while the model text finishes, and the text should remain readable without an automatic whole-answer replay.
+- Check offline answers, previews, quiz and revision tool turns still use the complete-answer speech path.
+- Export diagnostics: progressive requests should appear as tutor-segment, separate from whole-answer tutor timings. Segment start timings exclude model generation and queue wait. Automatic browser-voice turn timing should still use the first segment start event, once per turn. Record audible latency separately.

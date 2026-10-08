@@ -19,7 +19,7 @@ Start BolPrep with `tools/run-local.ps1` and open `http://127.0.0.1:8000`. Keep 
 Only include this segment when a server-side API key is configured and usage is approved. Keep the key out of the recording and repository, and mention any provider usage that may be billed.
 
 1. Show that the page is in model mode and submit a self-authored Hindi or Hinglish study question.
-2. With browser speech selected, show text arriving as the model streams and complete sentences entering the browser speech queue.
+2. With browser speech selected, show text arriving as the model streams and complete sentences entering the browser speech queue. Optionally repeat with provider speech selected: confirm the first sentence plays before text completion, later segments stay ordered, and Stop still clears the queue after the text is complete. Report gaps and unavailable playback honestly.
 3. Press **Escape** before the first queued sentence starts, then ask a follow-up. Show that the interrupted client turn stays stopped and the new turn works. Describe provider-side cancellation as unverified unless it has been independently measured.
 4. If demonstrating quiz or revision tools, label the exact live model session and inspect its tool result. The local deterministic quiz button is a separate flow and does not prove model tool selection.
 

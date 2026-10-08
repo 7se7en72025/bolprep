@@ -569,7 +569,7 @@ function recognitionTimingSummary(language) {
 
 function recordAutomaticVoiceTurnStart(sample, startedAt) {
   if (!activeAutomaticVoiceTurn) return;
-  if (sample.kind !== "tutor") {
+  if (sample.kind !== "tutor" && sample.kind !== "tutor-segment") {
     activeAutomaticVoiceTurn = null;
     return;
   }
@@ -906,18 +906,19 @@ function speak(text, completionText = "Ready when you are.", kind = "tutor") {
   speakWithBrowser(text, completionText, kind);
 }
 
-async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
+async function speakStreamed(text, completionText, kind, requestSpeechTurn, options = {}) {
+  const { language = speechLanguage.value, voice = streamedTtsVoice.value,
+    allowFallback = true, onStart = null } = options;
   const context = prepareStreamingAudio();
   if (!context) {
-    statusLine.textContent = "This browser cannot play streamed audio here. Using the browser voice.";
-    speakWithBrowser(text, completionText, kind);
-    return;
+    statusLine.textContent = "This browser cannot play streamed audio here.";
+    if (allowFallback) speakWithBrowser(text, completionText, kind);
+    return false;
   }
   const controller = new AbortController();
   activeSpeechController = controller;
-  const voice = streamedTtsVoice.value;
   const sample = {
-    language: speechLanguage.value,
+    language,
     voice: `OpenAI ${voice}`,
     kind,
     startEvent: "first_pcm_buffer_scheduled",
@@ -945,7 +946,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
     const response = await apiFetch("/api/speech", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, language: speechLanguage.value, voice }),
+      body: JSON.stringify({ text, language, voice }),
       signal: controller.signal,
     });
     if (!response.ok) {
@@ -984,6 +985,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
       if (firstAudioAt === null) {
         firstAudioAt = performance.now() + Math.max(0, startAt - context.currentTime) * 1000;
         recordAutomaticVoiceTurnStart(sample, firstAudioAt);
+        onStart?.();
         statusLine.textContent = "Tutor is speaking with streamed audio. Tap Stop audio or Speak to interrupt.";
       }
       nextStartAt = startAt + buffer.duration;
@@ -1023,6 +1025,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
     if (speechSamples.length > 500) speechSamples.shift();
     statusLine.textContent = `${completionText} Stream start ${startDelay}s, playback ${playbackDuration}s. `
       + speechTimingSummary(sample);
+    return true;
   } catch (error) {
     if ((error.name === "AbortError" && !timedOut) || requestSpeechTurn !== speechTurn) return;
     controller.abort();
@@ -1034,17 +1037,104 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
     speechFailures.push({ ...sample, reason: timedOut ? "stream-timeout" : "stream-failed" });
     if (speechFailures.length > 500) speechFailures.shift();
     const message = timedOut ? "No streamed speech data arrived for 90 seconds." : error.message;
-    if (firstAudioAt === null) {
+    if (firstAudioAt === null && allowFallback) {
       statusLine.textContent = `${message} Falling back to the browser voice.`;
       speakWithBrowser(text, completionText, kind);
     } else {
       statusLine.textContent = `${message} Streamed speech stopped.`;
     }
+    return false;
   } finally {
     window.clearTimeout(idleTimer);
     controller.signal.removeEventListener("abort", onAbort);
     if (activeSpeechController === controller) activeSpeechController = null;
   }
+}
+
+function createProgressiveStreamedSpeech(completionText = "Answer ready.") {
+  if (!prepareStreamingAudio()) return null;
+  const requestSpeechTurn = speechTurn;
+  const language = speechLanguage.value;
+  const voice = streamedTtsVoice.value;
+  const queue = [];
+  let buffer = "";
+  let running = false;
+  let speaking = false;
+  let finished = false;
+  let failed = false;
+  let cancelled = false;
+  let hadQueuedSpeech = false;
+  const current = () => requestSpeechTurn === speechTurn && !cancelled && !failed;
+
+  const drain = async () => {
+    if (running || !current()) return;
+    running = true;
+    try {
+      while (queue.length && current()) {
+        const text = queue.shift();
+        const ok = await speakStreamed(text, "Speech segment finished.", "tutor-segment", requestSpeechTurn, {
+          language, voice, allowFallback: false,
+          onStart: () => { if (current()) speaking = true; },
+        });
+        speaking = false;
+        if (!current()) return;
+        if (!ok) {
+          failed = true;
+          queue.length = 0;
+          buffer = "";
+          statusLine.textContent += " Read the answer above; pending speech was cleared.";
+          return;
+        }
+      }
+      if (current()) statusLine.textContent = finished ? completionText : "Tutor is answering…";
+    } finally {
+      running = false;
+      // Stop after text completion must still reach a queued speech segment.
+      if ((finished || failed || cancelled) && activeProgressiveSpeech === session) activeProgressiveSpeech = null;
+    }
+  };
+
+  const enqueue = (text) => {
+    if (!current()) return;
+    for (const chunk of splitSpeechText(text, 1000)) {
+      // Coalesce waiting sentences to reduce requests while the current segment plays.
+      const last = queue.length - 1;
+      if (last >= 0 && [...queue[last], ...chunk].length + 1 <= 1000) queue[last] += ` ${chunk}`;
+      else queue.push(chunk);
+      hadQueuedSpeech = true;
+    }
+    void drain();
+  };
+
+  const consume = (delta) => {
+    if (!current() || finished) return;
+    buffer += delta;
+    const sentenceEnd = /[.!?\u0964\u0965]["'\u2019\u201d)\]]*\s+/u;
+    let match = sentenceEnd.exec(buffer);
+    while (match) {
+      const end = match.index + match[0].length;
+      enqueue(buffer.slice(0, end).trim());
+      buffer = buffer.slice(end);
+      match = sentenceEnd.exec(buffer);
+    }
+  };
+
+  const session = {
+    consume,
+    finish: () => {
+      if (!current() || finished) return cancelled || failed || hadQueuedSpeech;
+      if (buffer.trim()) enqueue(buffer.trim());
+      buffer = "";
+      finished = true;
+      if (!running && activeProgressiveSpeech === session) activeProgressiveSpeech = null;
+      return hadQueuedSpeech;
+    },
+    cancel: () => { cancelled = true; buffer = ""; queue.length = 0; },
+    isSpeaking: () => speaking || queue.length > 0 || running,
+    hasFailed: () => failed,
+    keepUntilPlaybackEnds: true,
+  };
+  return session;
 }
 
 function speakWithBrowser(text, completionText = "Ready when you are.", kind = "tutor") {
@@ -1274,7 +1364,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
     if (tutorTurnTraces.length > 500) tutorTurnTraces.shift();
   };
   let firstTextMs = null;
-  const progressiveSpeechAllowed = !streamedTtsOption.checked;
+  const useProgressiveProviderSpeech = streamedTtsOption.checked && streamingTtsAvailable;
   let progressiveSpeech = null;
   pendingQuestion = question;
   sendButton.disabled = true;
@@ -1301,8 +1391,10 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
           : "Tutor is answering…";
       }
     }, (progressive) => {
-      if (requestTurn !== turn || !progressive || !progressiveSpeechAllowed) return;
-      progressiveSpeech = createProgressiveBrowserSpeech();
+      if (requestTurn !== turn || !progressive || progressiveSpeech) return;
+      progressiveSpeech = useProgressiveProviderSpeech
+        ? createProgressiveStreamedSpeech()
+        : createProgressiveBrowserSpeech();
       activeProgressiveSpeech = progressiveSpeech;
     });
     if (requestTurn !== turn) {
@@ -1315,7 +1407,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
     }
     recordTrace("completed", payload.trace);
     const usedProgressiveSpeech = progressiveSpeech?.finish() || false;
-    if (activeProgressiveSpeech === progressiveSpeech) activeProgressiveSpeech = null;
+    if (activeProgressiveSpeech === progressiveSpeech && !progressiveSpeech?.keepUntilPlaybackEnds) activeProgressiveSpeech = null;
     if (payload.mode === "model") {
       modelStreamSamples.push({
         language: requestLanguage,
