@@ -1883,3 +1883,9 @@
 - Agent model execution now has an internal workflow helper called inside the owned OpenAI client context. All tool rounds and stream handling share that client; completion and raised errors exit the context. Caller-injected response clients are not closed. Retrieval, offline handling, and source callbacks remain in the public entry point.
 - Terminal/legacy ask_model also consumes its response within an owned client context. Documented ownership and pending resource/failure scenarios.
 - Verification: Python compilation and git diff whitespace checks, with static call/scope inspection. No tests, provider calls, model/tool runs, browser/device checks, resource measurements, or cancellation/rollback claims.
+
+## Enforce model stream completion order - 2026-10-08
+
+- Reject duplicate completion events, missing completion response data, and text deltas after completion. Error/failed/incomplete events now raise generic failures instead of forwarding provider messages. Existing stream-finally cleanup and owned-client closure still apply.
+- Server/terminal tutor failure logs now show exception types rather than raw exception content. Documented pending malformed-stream checks and the lack of rollback for already emitted speech/text or persisted tools.
+- Verification: Python compilation and git diff whitespace checks, with static event/cleanup inspection. No tests, stream injections, provider calls, browser/device checks, or observed interruption measurements.

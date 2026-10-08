@@ -507,3 +507,8 @@ During authorized provider checks, repeat recorded transcription and streamed sp
 ### Tutor model client ownership (not yet verified)
 
 In authorized model checks, inspect terminal and legacy tutor requests plus agent turns with zero, one, and multiple tool rounds. Confirm one owned client spans the complete agent workflow and closes after a successful answer, rejected tool arguments, tool-round exhaustion, provider failure, or an interrupted streaming callback. Caller-injected response clients must remain open for their owner to reuse. Offline turns should create no provider client; note retrieval and source callbacks should still occur once. Inspect completed response/usage/source metadata and fixed-progress idempotency after cleanup. Closing local connections is not evidence of provider cancellation or rollback of tools already executed. No runtime/provider/resource observations were collected.
+
+
+### Model stream completion order (not yet verified)
+
+During authorized stream checks, inspect normal deltas followed by one completion; missing response data; duplicate completion; text after completion; and error, failed, or incomplete events both before and after completion. Malformed streams must fail the turn and close their reader/client scope rather than generating a completed answer or continuing tool rounds. Unknown ancillary events remain ignored. Include callback interruption and premature end. Server and terminal tutor error output should show exception types without raw provider messages; browser errors remain generic. Already displayed/spoken deltas and prior successful tool writes cannot be rolled back by this guard. No stream injection, provider, browser, speech, or runtime checks were performed.

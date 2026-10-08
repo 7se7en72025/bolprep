@@ -250,7 +250,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             else:
                 answer = offline_answer(documents, language, question)
         except Exception as exc:
-            print(f"Tutor request failed: {exc}")
+            print(f"Tutor request failed: {type(exc).__name__}")
             self._send_json(502, {"error": "Tutor request failed. Check the server terminal and try again."})
             return
         sources = [
@@ -335,7 +335,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
             self.close_connection = True
         except Exception as exc:
-            print(f"Tutor agent request {request_id} failed: {exc}")
+            print(f"Tutor agent request {request_id} failed: {type(exc).__name__}")
             try:
                 self._write_ndjson({"type": "error", "error": "Tutor request failed. Check the server terminal and try again.",
                                    "trace": turn_trace("failed")})

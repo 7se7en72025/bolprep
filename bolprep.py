@@ -192,7 +192,7 @@ def run() -> int:
             else:
                 answer = offline_answer(documents, language or "en-IN", question)
         except Exception as exc:  # Keep the interactive process alive on provider errors.
-            print(f"BolPrep: Request failed: {exc}", file=sys.stderr)
+            print(f"BolPrep: Request failed ({type(exc).__name__}). Try again or use offline mode.", file=sys.stderr)
             continue
 
         print(f"BolPrep: {answer}")

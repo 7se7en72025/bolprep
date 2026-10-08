@@ -261,6 +261,8 @@ def _stream_response(client: Any, request: dict[str, Any], on_text_delta: Callab
         for event in stream:
             event_type = _field(event, "type", "")
             if event_type == "response.output_text.delta":
+                if completed is not None:
+                    raise RuntimeError("The model stream returned text after completion.")
                 delta = _field(event, "delta", "")
                 if isinstance(delta, str) and delta:
                     text_characters += len(delta)
@@ -268,10 +270,14 @@ def _stream_response(client: Any, request: dict[str, Any], on_text_delta: Callab
                         raise RuntimeError("The model stream exceeded 12,000 characters. Ask a narrower question.")
                     on_text_delta(delta)
             elif event_type == "response.completed":
+                if completed is not None:
+                    raise RuntimeError("The model stream returned duplicate completion events.")
                 completed = _field(event, "response")
-            elif event_type in {"error", "response.failed"}:
-                message = _field(event, "message", "The model response failed.")
-                raise RuntimeError(str(message))
+                if completed is None:
+                    raise RuntimeError("The model stream returned no completed response.")
+            elif event_type in {"error", "response.failed", "response.incomplete"}:
+                # Provider messages may contain response/input details; keep failures local.
+                raise RuntimeError("The model response failed or did not finish. Please try again.")
     finally:
         close = getattr(stream, "close", None)
         if callable(close):
