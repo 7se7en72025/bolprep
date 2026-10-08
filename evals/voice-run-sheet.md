@@ -251,3 +251,7 @@ Observe whether sound actually stops and whether late playback resumes; record t
 Use a long approved provider speech answer and observe that the player schedules no more than about five and a half seconds ahead while reading pauses/resumes. Listen for new gaps or ordering errors; record browser/network buffering separately from Web Audio scheduling. Stop, Escape, or interrupt while the reader is waiting for capacity: pending waits and sources must end without restarting audio.
 
 Suspend the audio context while capacity is exhausted: no clock progress should eventually trigger the 90-second liveness deadline. Normally progressing long playback should refresh that deadline while waiting; after download completes, the remaining-duration playback watchdog should still apply. Record actual resource measurements before claiming a memory improvement.
+
+### TTS listener comparison
+
+Follow [rubric version 1](TTS_RUBRIC.md) for matched prompts and anonymous fluent listeners. Document configuration settings, playback environment, order, and sample size. Score actual private observations with `node evals/score_tts.js evals/local-tts-ratings.json`. Inspect failures and both all-attempt/completed prompt-listener coverage flags before comparing distributions. Do not convert unavailable playback into a low pronunciation score, invent observations, or claim significance from descriptive medians. Scorer runtime and listener collection remain unverified.

@@ -1344,3 +1344,9 @@
 - Added backpressure before PCM scheduling: wait when audio is more than five seconds ahead, with at most half-second buffers. Scheduled lookahead is approximately capped at five and a half seconds; browser/network buffers and the current incoming chunk are not bounded by this change.
 - Capacity waits observe the local abort signal. Clock progress refreshes the existing 90-second liveness deadline while waiting; a suspended/stalled context still expires. Normal download and post-download watchdog behavior remain in place.
 - Updated README/manual resource and cancellation cases. Verification: JavaScript syntax and git diff whitespace checks passed. No tests or provider calls were run; audio continuity, practical resource use, large chunks, long playback, waiting cancellation, and suspended-context behavior remain unverified.
+
+## Add a reproducible TTS listener-rating report - 2026-10-08
+
+- Added rubric version 1 with pronunciation/intelligibility/naturalness anchors and a private observation schema. The local score_tts.js command validates 1-5 integer ratings, separate failed-playback records, supported languages/reasons, bounded labels/files, and duplicate configuration/language/prompt/listener combinations.
+- Reports completed-only histograms/nearest-rank medians, separate failure counts/reasons, sample/prompt/listener counts, and all/completed prompt-listener coverage equality by language. It does not verify ratings or prompt/audio identity, choose a best voice, or claim significance. IDs/text/audio are not printed; configuration labels appear. Local TTS JSON files are ignored.
+- Updated README/run-sheet reproduction instructions. Verification: Node syntax, --help output, ignore-rule inspection, and git diff whitespace checks passed. No tests, listener observations, recordings, or provider calls were used; scoring/input rejection at runtime and actual TTS quality remain unverified.
