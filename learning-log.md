@@ -1536,3 +1536,9 @@
 - Record could stay busy forever if the browser omitted its stop event. Added a per-recorder 10-second completion deadline and immediate recovery for stop exceptions. Timeout discards audio, closes tracks, and releases controls; canceled/already-failed capture does not count an additional failure.
 - Cleanup and error callbacks now check recording identity, callbacks are detached after completion, and repeated Stop cannot reverse discard. Ordinary completion keeps transcription/review. Added README and manual stalled-stop, late-callback, duplicate-failure, exception, and normal-completion cases.
 - Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, controlled recorder events, browser interactions, recordings, or provider calls were performed; stop timing, actual device release, retry isolation, and normal upload remain unverified at runtime.
+
+## Keep recorder cleanup available after cancellation - 2026-10-08
+
+- Call-site review found Stop, edits, follow-ups, and page lifecycle cancellation advance serverRecordingRun before asking the recorder to stop. The previous stop-deadline guards therefore rejected legitimate cleanup and could leave the capture busy. Corrected stop/completion/deadline guards to use recorder ownership, while stale run IDs independently force audio discard and suppress new failure/status reporting.
+- Data delivery still requires a current run, and a replaced recorder cannot be cleaned up by an old callback. Added README and manual checks for all invalidating controls, ordinary/missing stop events, exceptions, and fresh-capture isolation.
+- Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, controlled events, browser interactions, recordings, or provider calls were performed; cancellation timing, actual microphone release, and restart isolation remain unverified at runtime.

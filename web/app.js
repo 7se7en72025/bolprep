@@ -493,7 +493,8 @@ async function startServerRecording() {
       stopDeadline = null;
     };
     const finishRecording = () => {
-      if (recordingRun !== serverRecordingRun || activeMediaRecorder !== recorder) return;
+      // Cancellation invalidates transcript delivery, but this recorder still owns cleanup.
+      if (activeMediaRecorder !== recorder) return;
       clearStopDeadline();
       // Some browsers stop the recorder before delivering the track's ended event.
       if (audioTracks.some((track) => track.readyState === "ended")) captureEnded();
@@ -503,7 +504,7 @@ async function startServerRecording() {
         window.clearTimeout(serverRecordingTimer);
         serverRecordingTimer = null;
       }
-      const discard = discardServerRecording;
+      const discard = discardServerRecording || recordingRun !== serverRecordingRun;
       const audio = discard ? null : new Blob(serverRecordingChunks, { type: recorder.mimeType });
       serverRecordingChunks = [];
       activeMediaRecorder = null;
@@ -526,11 +527,10 @@ async function startServerRecording() {
     };
     recorder.onstop = finishRecording;
     activeRecordingStop = () => {
-      if (recordingRun !== serverRecordingRun || activeMediaRecorder !== recorder
-        || stopDeadline !== null) return;
+      if (activeMediaRecorder !== recorder || stopDeadline !== null) return;
       stopDeadline = window.setTimeout(() => {
-        if (recordingRun !== serverRecordingRun || activeMediaRecorder !== recorder) return;
-        const unexpected = !discardServerRecording;
+        if (activeMediaRecorder !== recorder) return;
+        const unexpected = recordingRun === serverRecordingRun && !discardServerRecording;
         discardServerRecording = true;
         if (unexpected) {
           recordedTranscriptionFailures.push({ language: recordingLanguage, reason: "recording-stop-timeout" });
@@ -542,7 +542,7 @@ async function startServerRecording() {
       try {
         if (recorder.state !== "inactive") recorder.stop();
       } catch {
-        const unexpected = !discardServerRecording;
+        const unexpected = recordingRun === serverRecordingRun && !discardServerRecording;
         discardServerRecording = true;
         if (unexpected) {
           recordedTranscriptionFailures.push({ language: recordingLanguage, reason: "recording-failed" });
