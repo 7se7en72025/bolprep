@@ -276,6 +276,8 @@ Export schema 12: attempts should carry capture_limit_ms, summary capture_limit_
 
 ### Recent-topic follow-up checks (not yet performed)
 
+After asking about Article 14, ask "personal liberty kya hai?" without an article number. Inspect whether Article 21 evidence is selected from the current question instead of inheriting Article 14. Then ask for an example and check the new topic remains the anchor. Repeat with Hindi and English wording, and record weak lexical matches or false topic switches.
+
 Ask about Article 14, then Article 21, then ask for an example without naming an article. Retrieval should anchor Article 21. Repeat with another generic clarification, Hindi/Roman Hinglish wording, and an explicit current Article 19 request; the current explicit article must win. Switch to a newer substantive topic without an article, and inspect whether its note is supported or clarification is needed.
 
 Try an unsupported recent article and an unrelated substantive question: do not use an older note merely to force evidence. Check full model history separately from the retrieval query, and record false context carryover/abstention cases before claiming multi-turn accuracy.

@@ -56,9 +56,13 @@ def _tokens(text: str) -> set[str]:
 
 
 def retrieval_query(question: str, prior_questions: list[str]) -> str:
-    """Keep current article priority and the most recent substantive user topic."""
+    """Prefer current evidence, then the most recent substantive user topic."""
     current_question = question.strip()
     if ARTICLE_REFERENCE_PATTERN.search(current_question):
+        return current_question
+    # Generic clarifications need context; a supported standalone topic does not.
+    # Use the baseline scorer here so evaluation candidates share query selection.
+    if _tokens(current_question) - GENERIC_ARTICLE_QUERY_TOKENS and retrieve(current_question):
         return current_question
     for previous in reversed(prior_questions[-4:]):
         reference = ARTICLE_REFERENCE_PATTERN.search(previous)
