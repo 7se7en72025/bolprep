@@ -1338,3 +1338,9 @@
 - Added schema 11 speech_stops metadata for active/pending stops, capped at 500 page records: reason, UTC time, speech-turn counter, browser/provider/progressive state, queued PCM source count, local command-dispatch duration, and source-stop exception count. Tagged detected speech, follow-up, Stop, Escape, and request failures; other control stops keep a generic label. Idle calls do not count.
 - These timings include local stop/history work and exclude detection/acoustic stop time. Exceptions may come from already-ended sources, and records do not prove interruption success or provider cancellation. No text/audio or credentials are retained. The live-STT report accepts schema 11 without interpreting speech-stop data.
 - Updated README/run-sheet scope. Verification: affected JavaScript syntax, report --help, and git diff whitespace checks passed. No tests or provider calls were run; diagnostic capture, reason/state correctness, acoustic stops, and late-event recovery remain unverified in a browser.
+
+## Bound PCM playback lookahead - 2026-10-08
+
+- Added backpressure before PCM scheduling: wait when audio is more than five seconds ahead, with at most half-second buffers. Scheduled lookahead is approximately capped at five and a half seconds; browser/network buffers and the current incoming chunk are not bounded by this change.
+- Capacity waits observe the local abort signal. Clock progress refreshes the existing 90-second liveness deadline while waiting; a suspended/stalled context still expires. Normal download and post-download watchdog behavior remain in place.
+- Updated README/manual resource and cancellation cases. Verification: JavaScript syntax and git diff whitespace checks passed. No tests or provider calls were run; audio continuity, practical resource use, large chunks, long playback, waiting cancellation, and suspended-context behavior remain unverified.

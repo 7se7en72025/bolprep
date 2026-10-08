@@ -1047,6 +1047,19 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
     const reader = response.body.getReader();
     let pending = new Uint8Array(0);
     let audioChunks = 0;
+    const waitForPlayback = () => new Promise((resolve, reject) => {
+      const onAbort = () => {
+        window.clearTimeout(timer);
+        controller.signal.removeEventListener("abort", onAbort);
+        reject(new DOMException("Speech stopped.", "AbortError"));
+      };
+      const timer = window.setTimeout(() => {
+        controller.signal.removeEventListener("abort", onAbort);
+        resolve();
+      }, 50);
+      controller.signal.addEventListener("abort", onAbort, { once: true });
+      if (controller.signal.aborted) onAbort();
+    });
     const queuePcm = (bytes) => {
       if (requestSpeechTurn !== speechTurn || controller.signal.aborted) return;
       const sampleCount = Math.floor(bytes.byteLength / 2);
@@ -1088,7 +1101,21 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
       combined.set(pending);
       combined.set(value, pending.length);
       const usableLength = combined.length - (combined.length % 2);
-      if (usableLength) queuePcm(combined.subarray(0, usableLength));
+      // Schedule at most five seconds ahead, in buffers no longer than half a second.
+      // Pausing reads here limits Web Audio allocation, not browser/network buffering.
+      const maxBufferBytes = Math.floor(sampleRate * 0.5) * 2;
+      for (let offset = 0; offset < usableLength; offset += maxBufferBytes) {
+        let previousPlaybackTime = context.currentTime;
+        while (nextStartAt - context.currentTime > 5) {
+          await waitForPlayback();
+          if (context.currentTime > previousPlaybackTime) resetIdleDeadline();
+          previousPlaybackTime = context.currentTime;
+        }
+        if (controller.signal.aborted || requestSpeechTurn !== speechTurn) {
+          throw new DOMException("Speech stopped.", "AbortError");
+        }
+        queuePcm(combined.subarray(offset, Math.min(usableLength, offset + maxBufferBytes)));
+      }
       pending = combined.slice(usableLength);
     }
     if (pending.length) throw new Error("The speech stream ended on an incomplete audio sample.");
@@ -1124,7 +1151,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
     speechFailures.push({ ...sample, reason: playbackTimedOut ? "playback-timeout" : timedOut ? "stream-timeout" : "stream-failed" });
     if (speechFailures.length > 500) speechFailures.shift();
     const message = playbackTimedOut ? "Audio playback stalled. Try again or reload the page."
-      : timedOut ? "No streamed speech data arrived for 90 seconds." : error.message;
+      : timedOut ? "Streamed speech stopped progressing for 90 seconds." : error.message;
     if (firstAudioAt === null && allowFallback) {
       statusLine.textContent = `${message} Falling back to the browser voice.`;
       speakWithBrowser(text, completionText, kind);
