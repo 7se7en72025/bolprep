@@ -107,6 +107,8 @@ Check that each question prompt is audible and readable, the transcript remains 
 
 ## Turn-taking and interruption checks
 
+Use Listen again on a completed answer after ordinary completion, Stop, speech failure, and changing browser voice/rate or provider voice. The displayed text should replay using the current settings without new tutor/retrieval/score requests. Provider TTS can incur usage. Repeat for quiz prompts/feedback, including an old quiz message after End quiz: it must not start or advance a quiz. Click during pending tutoring/scoring and each capture path; existing cancellation must retain the draft/quiz retry state and suppress late output. Retained tutor history should receive its own incomplete-playback note if replay is interrupted; an evicted answer or quiz prompt must not annotate another answer. New session removes old controls. Inspect keyboard access/narrow layout, long segmented playback, and repeat speech diagnostics; the timing samples include replays and do not establish improved accuracy/latency. These replay checks have not been performed.
+
 Run these checks in a browser with speech playback available. Use the same browser, device, language, and answer for each repetition. Repeat each case at least five times; record each attempt as pass, fail, or not available. Do not use real learner recordings.
 
 1. Start a tutor answer and press **Stop** while it is speaking. Record whether audio stops promptly and whether the status remains stopped.

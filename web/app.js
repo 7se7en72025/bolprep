@@ -239,7 +239,7 @@ function validTutorToolEvents(events) {
   });
 }
 
-function addMessage(role, text, sources = [], sourceLabel = "STUDY SOURCE") {
+function addMessage(role, text, sources = [], sourceLabel = "STUDY SOURCE", replay = null) {
   const article = document.createElement("article");
   article.className = `message ${role === "user" ? "user-message" : "tutor-message"}`;
   const speaker = document.createElement("span");
@@ -271,6 +271,19 @@ function addMessage(role, text, sources = [], sourceLabel = "STUDY SOURCE") {
     const warning = document.createElement("p");
     warning.textContent = "Some source references could not be displayed.";
     article.append(warning);
+  }
+  if (role === "assistant" && replay && text.trim()) {
+    const replayButton = document.createElement("button");
+    replayButton.type = "button";
+    replayButton.className = "text-button";
+    replayButton.textContent = "Listen again";
+    replayButton.title = "Replay this text with current speech settings; streamed speech may incur API usage";
+    replayButton.addEventListener("click", () => {
+      if (!article.isConnected) return;
+      stopTutor();
+      speak(text, "Replay finished. Ready when you are.", "tutor", replay.historyEntry || null);
+    });
+    article.append(replayButton);
   }
   conversation.append(article);
   conversation.scrollTop = conversation.scrollHeight;
@@ -1894,8 +1907,8 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
     }
     activePartialMessage?.remove();
     activePartialMessage = null;
-    addMessage("assistant", payload.answer, payload.sources || []);
     const answerHistoryEntry = rememberTurn(question, payload.answer);
+    addMessage("assistant", payload.answer, payload.sources || [], "STUDY SOURCE", { historyEntry: answerHistoryEntry });
     if (progressiveSpeech?.hasFailed()) markSpeechIncomplete(answerHistoryEntry);
     if (usedProgressiveSpeech && !progressiveSpeech?.hasFailed()) activeSpeechHistoryEntry = answerHistoryEntry;
     pendingQuestion = null;
@@ -1918,7 +1931,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
       speak(`${payload.answer} ${quizSession.questions[0].prompt}`, "Your answer is ready when you are.", "tutor", answerHistoryEntry);
     } else if (scoredAnswer) {
       const score = scoredAnswer.result;
-      addMessage("assistant", `${score.feedback} Score: ${score.score}%.`, [score.source]);
+      addMessage("assistant", `${score.feedback} Score: ${score.score}%.`, [score.source], "STUDY SOURCE", {});
       speak(`${payload.answer} ${score.feedback}`, "Answer ready.", "tutor", answerHistoryEntry);
       loadProgress();
     } else if (!usedProgressiveSpeech) {
@@ -2065,7 +2078,7 @@ function showQuizQuestion(speakPrompt = true) {
   inputLabel.textContent = "Your quiz answer";
   input.maxLength = 1000;
   input.placeholder = "Speak or type your answer…";
-  addMessage("assistant", `Question ${quizSession.index + 1} of ${quizSession.questions.length}: ${current.prompt}`, [current.source]);
+  addMessage("assistant", `Question ${quizSession.index + 1} of ${quizSession.questions.length}: ${current.prompt}`, [current.source], "STUDY SOURCE", {});
   const readyText = activeLiveTranscription?.continuous
     ? "Speak your answer. After feedback, say next question or agla sawal. Say end quiz or quiz band karo to return to tutoring."
     : "Your answer is ready when you are.";
@@ -2116,7 +2129,7 @@ async function submitQuizAnswer(answer, { preserveLive = false } = {}) {
     quizSession.results.push(result);
     loadProgress();
     const feedback = `${result.feedback} Score: ${result.score}%.`;
-    addMessage("assistant", feedback, [result.source]);
+    addMessage("assistant", feedback, [result.source], "STUDY SOURCE", {});
     quizSession.index += 1;
     const isLast = quizSession.index >= quizSession.questions.length;
     const completeCount = quizSession.results.filter((item) => item.complete).length;
