@@ -855,6 +855,7 @@ async function transcribeRecordedAudio(audio, language) {
     serverCallMs = payload.server_transcription_call_ms ?? null;
     if (timedOut) throw new Error("Transcription timed out after 90 seconds.");
     if (!response.ok) {
+      if (response.status === 408 && payload.code === "audio-upload-timeout") failureReason = "upload-timeout";
       throw new Error(typeof payload?.error === "string" && payload.error.trim() && payload.error.length <= 2048
         ? payload.error : "Transcription failed.");
     }

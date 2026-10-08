@@ -484,20 +484,34 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             self._send_json(502, {"error": "Live transcription could not connect. Try Record or type your question."})
 
     def _handle_transcription(self) -> None:
+        lengths = self.headers.get_all("Content-Length", [])
+        if len(lengths) != 1 or self.headers.get("Transfer-Encoding") is not None:
+            self.close_connection = True
+            self._send_json(400, {"error": "Audio uploads need one Content-Length and no transfer encoding."})
+            return
         try:
-            length = int(self.headers.get("Content-Length", "0"))
+            if not re.fullmatch(r"[0-9]+", lengths[0].strip()):
+                raise ValueError("Invalid length")
+            length = int(lengths[0])
         except ValueError:
             self.close_connection = True
             self._send_json(400, {"error": "Invalid audio request length."})
             return
         if length <= 0:
+            self.close_connection = True
             self._send_json(400, {"error": "Record a short question before requesting a transcript."})
             return
         if length > MAX_AUDIO_BYTES:
             self.close_connection = True
             self._send_json(413, {"error": "The recording is too large. Keep it under 5 MB."})
             return
-        audio = self.rfile.read(length)
+        try:
+            audio = self.rfile.read(length)
+        except TimeoutError:
+            self.close_connection = True
+            self._send_json(408, {"error": "Audio upload timed out. Record again or type your question.",
+                                  "code": "audio-upload-timeout"})
+            return
         if len(audio) != length:
             self.close_connection = True
             self._send_json(400, {"error": "The audio upload was incomplete. Try recording again."})

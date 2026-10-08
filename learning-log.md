@@ -1973,3 +1973,9 @@
 - Non-success agent/speech responses now use the shared strict UTF-8 bounded JSON reader (128 KiB) rather than response.json without a size bound. A shared error-message helper accepts only nonempty text up to 2,048 UTF-16 characters and otherwise returns generic recovery text.
 - Passed the active tutor signal into its stream reader so error-body reads preserve cancellation. Parser failures do not surface raw details; existing reader cancellation/release and speech/tutor ownership handling remain.
 - Verification: Node syntax check and git diff whitespace checks with static call/signal inspection. No tests, injected responses, browser runs, provider calls, or runtime recovery measurements.
+
+## Validate recorded-audio framing and upload timeout - 2026-10-08
+
+- Recorded-audio uploads now require one decimal Content-Length and no transfer encoding. Invalid/empty/oversized/truncated uploads close the connection before provider transcription. Existing WebM/MP4 and 5 MiB controls remain.
+- Socket upload timeouts return generic 408/audio-upload-timeout where the connection can deliver it; browser diagnostics distinguish upload-timeout from its overall transcription timeout and retain unknown model attribution.
+- Verification: Python compilation, Node syntax check, and git diff whitespace checks with static pre-provider/error-path inspection. No tests, HTTP injections, timeout/upload experiments, recordings, browser/device checks, or provider calls.
