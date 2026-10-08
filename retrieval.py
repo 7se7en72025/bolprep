@@ -22,6 +22,11 @@ ARTICLE_LIST_CONTINUATION_PATTERN = re.compile(
     r"(?:and|aur|\u0914\u0930|vs\.?|versus)\s+)(?P<article_id>\d+[a-z]?)\b",
     re.IGNORECASE,
 )
+ARTICLE_RANGE_CONTINUATION_PATTERN = re.compile(
+    r"\s*(?:[-\u2013\u2014]\s*|(?:to|through|se|\u0938\u0947)\s+)"
+    r"(?P<article_id>\d+[a-z]?)\b",
+    re.IGNORECASE,
+)
 HINDI_STOPWORDS = {
     "\u0905\u0927\u093f\u0915\u093e\u0930",
     "\u0905\u0928\u0941\u091a\u094d\u091b\u0947\u0926",
@@ -34,6 +39,7 @@ STOPWORDS = {
     *HINDI_STOPWORDS,
 }
 GENERIC_ARTICLE_QUERY_TOKENS = {
+    "tak", "\u0924\u0915",
     "compare", "comparison", "difference", "differences", "different", "between", "vs", "versus",
     "antar", "farq", "fark", "tulna",
     "\u0905\u0902\u0924\u0930", "\u0924\u0941\u0932\u0928\u093e", "\u0914\u0930",
@@ -67,17 +73,43 @@ def _tokens(text: str) -> set[str]:
     return {token for token in tokens if token not in STOPWORDS and len(token) > 1}
 
 
+def _normalize_article_id(raw_id: str) -> str:
+    return "".join(
+        str(unicodedata.decimal(character)) if character.isdecimal() else character
+        for character in raw_id.casefold()
+    )
+
+
+def _range_article_ids(start: str, end: str) -> list[str]:
+    """Expand bounded ascending integer ranges; reject suffix/ambiguous bounds."""
+    start, end = _normalize_article_id(start), _normalize_article_id(end)
+    if not start.isdecimal() or not end.isdecimal() or len(start) > 3 or len(end) > 3:
+        return ["unsupported-range"]
+    first, last = int(start), int(end)
+    if first < 1 or last < first or last - first + 1 > 64:
+        return ["unsupported-range"]
+    return [str(number) for number in range(first, last + 1)]
+
+
 def _article_references(question: str) -> list[tuple[str, list[str]]]:
-    """Keep an explicit prefix and any immediately connected numeric list."""
+    """Keep explicit prefixes, immediately connected lists, and numeric ranges."""
     references: list[tuple[str, list[str]]] = []
     for reference in ARTICLE_REFERENCE_PATTERN.finditer(question):
-        article_ids = [reference.group("article_id") or reference.group("hindi_id")]
+        article_ids: list[str] = []
+        current_id = reference.group("article_id") or reference.group("hindi_id")
         end = reference.end()
-        continuation = ARTICLE_LIST_CONTINUATION_PATTERN.match(question, end)
-        while continuation:
-            article_ids.append(continuation.group("article_id"))
-            end = continuation.end()
+        while True:
+            range_end = ARTICLE_RANGE_CONTINUATION_PATTERN.match(question, end)
+            if range_end:
+                article_ids.extend(_range_article_ids(current_id, range_end.group("article_id")))
+                end = range_end.end()
+            else:
+                article_ids.append(current_id)
             continuation = ARTICLE_LIST_CONTINUATION_PATTERN.match(question, end)
+            if not continuation:
+                break
+            current_id = continuation.group("article_id")
+            end = continuation.end()
         references.append((question[reference.start():end], article_ids))
     return references
 
@@ -190,11 +222,7 @@ def retrieve(question: str, limit: int | None = None, *, scoring: str = "overlap
         by_id = {document["id"]: document for document in documents}
         selected: dict[str, dict[str, Any]] = {}
         for raw_id in (article_id for _, article_ids in article_references for article_id in article_ids):
-            raw_id = raw_id.casefold()
-            article_id = "".join(
-                str(unicodedata.decimal(character)) if character.isdecimal() else character
-                for character in raw_id
-            )
+            article_id = _normalize_article_id(raw_id)
             document = by_id.get(f"article-{article_id}")
             if document is None:
                 return []
