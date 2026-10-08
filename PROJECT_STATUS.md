@@ -24,7 +24,7 @@ Audit date: 2026-10-08. This is an implementation/evidence inventory, not a rele
 | Accessible working demo and setup | Local startup scripts, README, `.env.example` | Fresh local/browser run; any hosted demo needs a separate concrete deployment decision. |
 | README architecture, limits, actual benchmarks, reproduction | Architecture/setup/limits and historical constructed retrieval figures | Archive and identify current benchmark configurations/hashes; real voice results missing. |
 | Short recorded demo demonstrates full flow | `DEMO_SCRIPT.md` outline | Actual video showing observed Hinglish speech, interruption, sources, tools, diagnostics. |
-| Technical walkthrough explains tradeoffs and a failure-led improvement | README and learning log describe choices and static fixes | Walkthrough artifact tied to an observed failure and current verified behavior. |
+| Technical walkthrough explains tradeoffs and a failure-led improvement | ARCHITECTURE.md maps current paths/tradeoffs and the reviewed Article 14 alias defect | Written implementation artifact exists; the defect is static reasoning, and current runtime/video evidence is still missing. |
 
 ## Other first-release gaps
 
@@ -42,7 +42,7 @@ Audit date: 2026-10-08. This is an implementation/evidence inventory, not a rele
 | Curated corpus manifest and dataset documentation | `data/corpus_manifest.json` and `evals/DATASETS.md`; inventory generation validates local records, not source accuracy/rights. |
 | Automated interruption/tool/retrieval/persistence checks | Existing Python tests cover portions of tools, retrieval, quiz, and progress. No tracked browser interruption suite or newer history/report coverage was found in this audit. No tests were run. |
 | Benchmark report with measured results/configuration/failures | Historical constructed-text results are recorded in README; no tracked current voice benchmark report was found. |
-| Demo video and architecture walkthrough | Outline and architecture prose exist; no completed demo-video artifact was found. |
+| Demo video and architecture walkthrough | DEMO_SCRIPT.md outline and ARCHITECTURE.md walkthrough exist; no completed demo-video artifact was found. |
 
 ## Next evidence to collect
 

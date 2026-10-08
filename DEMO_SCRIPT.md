@@ -2,6 +2,10 @@
 
 This is a recording plan, not a demo video or a claim that every step has been verified. Use the [voice run sheet](evals/voice-run-sheet.md) to check each browser and device interaction before recording. Show actual behavior and results from that session.
 
+## Technical explanation
+
+Use [ARCHITECTURE.md](ARCHITECTURE.md) to trace the observed turn through code and explain browser/recorded/live input, provider/browser playback, ownership guards, and explicit persistence. The Article 14 alias defect is a static review finding; do not present it as a measured learner failure or a verified new scoring result. Keep actual device/provider observations and benchmark evidence separate from implementation reasoning.
+
 ## Reproducible local walkthrough
 
 Start BolPrep with `tools/run-local.ps1` and open `http://127.0.0.1:8000`. Keep the app in offline mode so the walkthrough does not need a model credential or incur provider usage.
