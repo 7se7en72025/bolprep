@@ -110,6 +110,8 @@ let activeSpeechHistoryEntry = null;
 let activeBrowserSpeechDeadline = null;
 const speechStopSamples = [];
 let progressRequestId = 0;
+let activeProgressController = null;
+let clearingProgress = false;
 let quizSession = null;
 
 function speechLanguageLabel(language) {
@@ -2185,15 +2187,26 @@ quizButton.addEventListener("click", startQuiz);
 nextQuestionButton.addEventListener("click", showQuizQuestion);
 
 async function loadProgress() {
+  if (clearingProgress) return;
   const requestId = ++progressRequestId;
+  activeProgressController?.abort();
+  const controller = new AbortController();
+  activeProgressController = controller;
+  let timedOut = false;
+  const deadline = window.setTimeout(() => {
+    if (requestId !== progressRequestId || activeProgressController !== controller) return;
+    timedOut = true;
+    controller.abort();
+  }, 20_000);
   weakTopics.replaceChildren();
   progressSummary.textContent = "Loading saved results…";
   try {
-    const response = await apiFetch("/api/progress");
+    const response = await apiFetch("/api/progress", { signal: controller.signal });
     if (requestId !== progressRequestId) return;
     const progress = await response.json();
     if (requestId !== progressRequestId) return;
-    if (!response.ok) throw new Error(progress.error || "Could not load saved results.");
+    if (timedOut) throw new Error("Progress request timed out.");
+    if (!response.ok) throw new Error(progress?.error || "Could not load saved results.");
     if (!progress.attempt_count) {
       progressSummary.textContent = "No saved quiz answers yet. Complete a quiz to build your revision list.";
       return;
@@ -2212,30 +2225,49 @@ async function loadProgress() {
   } catch {
     if (requestId !== progressRequestId) return;
     weakTopics.replaceChildren();
-    progressSummary.textContent = "Saved progress could not load. Check that the local server is running.";
+    progressSummary.textContent = timedOut
+      ? "Saved progress did not load within 20 seconds. Check the local server and refresh results."
+      : "Saved progress could not load. Check that the local server is running.";
+  } finally {
+    window.clearTimeout(deadline);
+    if (activeProgressController === controller) activeProgressController = null;
   }
 }
 
 progressRefreshButton.addEventListener("click", loadProgress);
 clearProgressButton.addEventListener("click", async () => {
+  if (clearingProgress) return;
   if (!window.confirm("Delete saved quiz scores for this browser?")) return;
+  clearingProgress = true;
   ++progressRequestId;
+  activeProgressController?.abort();
+  activeProgressController = null;
+  const controller = new AbortController();
+  let timedOut = false;
+  const deadline = window.setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, 20_000);
   weakTopics.replaceChildren();
   progressSummary.textContent = "Clearing saved results…";
   progressRefreshButton.disabled = true;
   clearProgressButton.disabled = true;
   try {
-    const response = await apiFetch("/api/progress", { method: "DELETE" });
+    const response = await apiFetch("/api/progress", { method: "DELETE", signal: controller.signal });
+    if (timedOut) throw new Error("Progress deletion timed out.");
     if (!response.ok) throw new Error("Could not clear saved results.");
-    await loadProgress();
     statusLine.textContent = "Saved quiz progress cleared.";
   } catch (error) {
-    statusLine.textContent = error.message;
-    await loadProgress();
+    statusLine.textContent = timedOut
+      ? "Clearing progress timed out after 20 seconds. Scores may already be deleted; checking saved results."
+      : error.message;
   } finally {
+    window.clearTimeout(deadline);
+    clearingProgress = false;
     progressRefreshButton.disabled = false;
     clearProgressButton.disabled = false;
   }
+  await loadProgress();
 });
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;

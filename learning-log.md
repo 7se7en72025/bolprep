@@ -1554,3 +1554,9 @@
 - Browser speech had no recovery deadline for missing start/end events. Added a shared 30-second first/next-chunk start deadline and 120-second active-chunk deadline to completed/progressive playback. Timeout cancels speech, records a failure, and preserves incomplete-playback history; Stop/errors/completion clear timers.
 - Empty progressive queues do not time generation gaps. Duplicate chunk callbacks are ignored and synchronous speak failures recover through the same failure path. Slow voices/suspended timers may exceed these bounds, with no acoustic latency claim. Added README and manual missing-event, fallback, preview, cancellation, duplicate, and normal-playback cases.
 - Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, controlled playback, browser interactions, recordings, or provider calls were performed; event ordering, voice compatibility, deadline recovery, and audible stopping remain unverified at runtime.
+
+## Recover stalled saved-progress requests - 2026-10-08
+
+- Progress reads and confirmed deletion lacked client deadlines, leaving loading text or disabled controls indefinitely. Added 20-second deadlines, read-controller cancellation on replacement/deletion, and stale-result guards. Reads include JSON parsing; deletion waits for response headers and then reloads state.
+- Refreshes are suppressed while deletion is pending. Timeout restores controls and explains uncertain saved state without repeating deletion or claiming rollback. Added README/manual stalls, overlapping refreshes, concurrent score writes, post-write timeout, and late-response cases.
+- Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, controlled requests, browser interactions, recordings, or provider calls were performed; deadline timing, restored controls, concurrency, and saved-state recovery remain unverified at runtime.

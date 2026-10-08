@@ -231,6 +231,8 @@ For report review, check that conflicting selected metadata under one ID is reje
 
 ### Tutor stream deadline checks (not yet performed)
 
+For saved progress, stall read headers/body beyond 20 seconds: expect a refreshable timeout message. Start a newer refresh while an old read is pending; the old request/timer must not replace or abort the newer one. Confirm deletion while reading, then stall its headers: both progress controls should recover at 20 seconds and a fresh read should check state, with an explicit message that scores may already be deleted. Do not automatically retry DELETE. Refreshes triggered by quiz completion while deletion is pending should wait for the subsequent state read. Inspect successful deletion, rejected deletion, post-write timeout, and delayed old responses separately; the client cannot roll back server writes or guarantee the ordering of concurrent score writes.
+
 - Stall a tutor request before response headers, then after one text segment: after 90 seconds without data, verify a timeout message, restored send control, removed incomplete answer, and no pending speech restart. The question should remain in history as a failed turn.
 - Keep response chunks arriving less than 90 seconds apart but hold the turn open for five minutes: verify the total deadline ends it. Completed tool effects may remain; inspect actual progress before retrying.
 - Stop/Escape or start a follow-up before expiry: the old turn should count as canceled and old timers must not affect the new request. Complete a normal answer then leave playback running: tutor timers should not stop it.
