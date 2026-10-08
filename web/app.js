@@ -324,9 +324,15 @@ async function startServerRecording() {
 async function transcribeRecordedAudio(audio, language) {
   const startedAt = performance.now();
   const controller = new AbortController();
+  let timedOut = false;
   activeTranscriptionController = controller;
   updateServerTranscribeButton("transcribing");
   statusLine.textContent = `Transcribing in ${speechLanguageLabel(language)}. Review the text before asking.`;
+  const timeoutId = window.setTimeout(() => {
+    if (activeTranscriptionController !== controller) return;
+    timedOut = true;
+    controller.abort();
+  }, 90_000);
   try {
     const response = await fetch("/api/transcribe", {
       method: "POST",
@@ -338,6 +344,7 @@ async function transcribeRecordedAudio(audio, language) {
       signal: controller.signal,
     });
     const payload = await response.json();
+    if (timedOut) throw new Error("Transcription timed out after 90 seconds.");
     if (!response.ok) throw new Error(payload.error || "Transcription failed.");
     if (activeTranscriptionController !== controller) return;
     if (typeof payload.transcript !== "string" || !payload.transcript.trim()) {
@@ -349,12 +356,14 @@ async function transcribeRecordedAudio(audio, language) {
     if (recordedTranscriptionSamples.length > 500) recordedTranscriptionSamples.shift();
     statusLine.textContent = `Transcript ready. Review it, then ask. ${recordedTranscriptionTimingSummary(language)}`;
   } catch (error) {
-    if (error.name !== "AbortError" && activeTranscriptionController === controller) {
-      recordedTranscriptionFailures.push({ language, reason: "transcription-failed" });
+    if ((error.name !== "AbortError" || timedOut) && activeTranscriptionController === controller) {
+      recordedTranscriptionFailures.push({ language, reason: timedOut ? "transcription-timeout" : "transcription-failed" });
       if (recordedTranscriptionFailures.length > 500) recordedTranscriptionFailures.shift();
-      statusLine.textContent = `${error.message} You can record again or type your question. ${recordedTranscriptionTimingSummary(language)}`;
+      const message = timedOut ? "Transcription timed out after 90 seconds." : error.message;
+      statusLine.textContent = `${message} You can record again or type your question. ${recordedTranscriptionTimingSummary(language)}`;
     }
   } finally {
+    window.clearTimeout(timeoutId);
     if (activeTranscriptionController === controller) {
       activeTranscriptionController = null;
       updateServerTranscribeButton();

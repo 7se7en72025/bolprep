@@ -1196,3 +1196,9 @@
 
 - The local progress database can now be selected with `BOLPREP_DATABASE_PATH`. The offline smoke check uses a unique temporary database to start a one-question quiz, score an answer, retry the same idempotency key, and verify only one saved progress entry appears, then removes its temporary database files.
 - This checks the local quiz and persistence path without changing a learner's saved progress or contacting a model provider. Verification: the offline smoke command reported quiz start, score, idempotent retry, and progress passed; the isolated database directory was removed, and nothing remained listening on port 8000.
+
+## Bound stalled recorded transcription requests - 2026-10-08
+
+- Added a 90-second client deadline for recorded-file upload and transcription. A timeout aborts the local request, restores the Record control, preserves composer text, and records a distinct `transcription-timeout` failure. Deliberate cancellation remains excluded from failures; the deadline timer is cleared when the request settles.
+- Browser timers may be delayed in suspended tabs. The manual run sheet now includes stalled-request recovery; provider cancellation and real device behavior remain unverified.
+- Verification: JavaScript syntax and diff checks passed. A temporary actual-source simulation confirmed one timeout failure, unchanged draft, released controller, no failure for deliberate cancellation, and timer cleanup on successful completion. No microphone or provider was used.

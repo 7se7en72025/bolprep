@@ -69,6 +69,8 @@ For the optional recorded-file path, use `recorded_stt` entries. `upload_to_resu
 | --- | ---: | ---: | ---: | --- |
 | | | | | |
 
+For recorded transcription recovery, use a controlled stalled connection and check that the 90-second client deadline restores the Record control, keeps the previous composer text, and adds one `transcription-timeout` failure. Cancel a separate pending attempt and confirm it adds no failure. Keep the tab active during the deadline check; suspended tabs may delay timers. Mark unavailable when a stalled request cannot be reproduced. This checks client recovery, not provider cancellation.
+
 ## End-to-end voice trial record
 
 Use a fixed, self-authored practice question for each language. For every attempt, compare the recognized transcript with what you said, then check the answer against the displayed study source. When a spoken answer is produced, use a stopwatch to time from the end of your spoken question to the first audible tutor sound; record seconds to one decimal place. Start timing when you finish speaking, not when the final transcript appears. Mark unavailable if either endpoint cannot be observed, and do not infer success from a later stage.
