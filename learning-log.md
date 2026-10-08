@@ -1967,3 +1967,9 @@
 - Successful recorded transcription responses now include server SDK-call duration measured with perf_counter around create. Browser metadata validates optional timing and retains it only for successful transcript observations; absent/null timing stays unavailable.
 - Page summaries now use language/requested-model groups and show separate server-call p50/p95/sample coverage. Schema 13 export groups add server-call distributions and missing timing counts; upload-to-result timing remains independent. Documented transport/decoding and acoustic/compute limitations.
 - Verification: Python compilation, Node syntax check, and git diff whitespace checks with static timing-span/group/denominator inspection. No tests, actual timing samples, recordings, browser/device checks, provider calls, or benchmark reports.
+
+## Bound tutor and speech error response parsing - 2026-10-08
+
+- Non-success agent/speech responses now use the shared strict UTF-8 bounded JSON reader (128 KiB) rather than response.json without a size bound. A shared error-message helper accepts only nonempty text up to 2,048 UTF-16 characters and otherwise returns generic recovery text.
+- Passed the active tutor signal into its stream reader so error-body reads preserve cancellation. Parser failures do not surface raw details; existing reader cancellation/release and speech/tutor ownership handling remain.
+- Verification: Node syntax check and git diff whitespace checks with static call/signal inspection. No tests, injected responses, browser runs, provider calls, or runtime recovery measurements.

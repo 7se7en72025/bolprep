@@ -388,10 +388,9 @@ function addMessage(role, text, sources = [], sourceLabel = "STUDY SOURCE", repl
   return article;
 }
 
-async function readAgentStream(response, onTextDelta, onSpeechMode, onActivity, onSources) {
+async function readAgentStream(response, onTextDelta, onSpeechMode, onActivity, onSources, signal) {
   if (!response.ok) {
-    const error = await response.json().catch(() => ({}));
-    throw new Error(error.error || "Tutor request failed.");
+    throw new Error(await readBoundedErrorMessage(response, signal, "Tutor request failed."));
   }
   if (!response.body) throw new Error("This browser cannot receive the tutor response stream.");
   const reader = response.body.getReader();
@@ -793,6 +792,20 @@ async function readBoundedJson(response, signal, maxBytes = 128 * 1024) {
     void reader.cancel().catch(() => {});
     reader.releaseLock();
   }
+}
+
+async function readBoundedErrorMessage(response, signal, fallback) {
+  try {
+    const payload = await readBoundedJson(response, signal);
+    if (payload && typeof payload === "object" && !Array.isArray(payload)
+      && typeof payload.error === "string" && payload.error.trim() && payload.error.length <= 2048) {
+      return payload.error;
+    }
+  } catch (error) {
+    if (error.name === "AbortError") throw error;
+    // Damaged/oversized error bodies use recovery text without parser details.
+  }
+  return fallback;
 }
 
 async function transcribeRecordedAudio(audio, language) {
@@ -1500,8 +1513,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
       signal: controller.signal,
     });
     if (!response.ok) {
-      const payload = await response.json().catch(() => ({}));
-      throw new Error(payload.error || "Streamed speech is unavailable.");
+      throw new Error(await readBoundedErrorMessage(response, controller.signal, "Streamed speech is unavailable."));
     }
     const contentType = (response.headers.get("Content-Type") || "").split(";", 1)[0].trim().toLowerCase();
     const sampleRate = Number(response.headers.get("X-Audio-Sample-Rate"));
@@ -2094,7 +2106,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
     }, resetIdleDeadline, (sources) => {
       if (requestTurn !== turn || controller.signal.aborted || !sources.length) return;
       if (!activePartialMessage) activePartialMessage = addMessage("assistant", "", sources, "RETRIEVED NOTES");
-    });
+    }, controller.signal);
     window.clearTimeout(idleTimer);
     window.clearTimeout(totalTimer);
     if (requestTurn !== turn) {
