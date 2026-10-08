@@ -239,3 +239,9 @@ For report review, check that conflicting selected metadata under one ID is reje
 Let a tutor finish generating text while its browser/provider voice continues. Stop or interrupt the playback, then ask for an example or explanation of the last topic: the next history payload should keep that answer with one playback-stopped note and the original user question. Repeat before first audio with queued speech, after natural completion, and with a voice preview; only stopped pending tutor speech should annotate its associated answer. A pending model answer still uses its separate interruption note.
 
 Repeat with a long Unicode answer: history must stay within 3,000 code points per assistant message while the displayed answer remains complete. Start New session and confirm earlier annotations do not enter new follow-ups. Do not infer exact heard words or provider cancellation from the note.
+
+### Speech-stop diagnostics checks (not yet performed)
+
+During browser speech and streamed PCM playback, try Stop, Escape, a typed follow-up, and continuous-mic detected speech. Export schema 11 diagnostics and match each active/pending stop to its speech_stops reason and pre-stop state. Repeat while idle: no new stop sample should appear. Check queued segments and provider-request startup separately from playing audio. More than 500 samples should retain only the newest records.
+
+Observe whether sound actually stops and whether late playback resumes; record these outcomes separately. stop_dispatch_ms measures local command execution and excludes detection, audio hardware/buffering, and provider cleanup. source_stop_exceptions may include already-ended sources. Neither a small dispatch duration nor zero exceptions proves a successful acoustic interruption.

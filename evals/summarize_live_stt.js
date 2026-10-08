@@ -20,9 +20,9 @@ function record(attempt, schema, label) {
   const invalid = () => { throw new Error(`${label} has unsupported or missing metadata.`); };
   if (!attempt || typeof attempt !== "object" || Array.isArray(attempt)) invalid();
   const result = {};
-  if (schema === 10 && attempt.attempt_id !== null && (typeof attempt.attempt_id !== "string"
+  if (schema >= 10 && attempt.attempt_id !== null && (typeof attempt.attempt_id !== "string"
     || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(attempt.attempt_id))) invalid();
-  result.attempt_id = schema === 10 ? attempt.attempt_id : null;
+  result.attempt_id = schema >= 10 ? attempt.attempt_id : null;
   if (!["hi-IN", "en-IN"].includes(attempt.language) || attempt.model !== "gpt-live-transcribe") invalid();
   result.language = attempt.language;
   result.model = attempt.model;
@@ -89,9 +89,9 @@ function summarize(paths) {
     } catch {
       throw new Error(`${label} must be a readable JSON file no larger than 4 MiB.`);
     }
-    if (!document || ![8, 9, 10].includes(document.schema_version)
+    if (!document || ![8, 9, 10, 11].includes(document.schema_version)
       || !Array.isArray(document.live_stt_attempts) || document.live_stt_attempts.length > 500) {
-      throw new Error(`${label} must be a schema 8, 9, or 10 diagnostics export with at most 500 live attempts.`);
+      throw new Error(`${label} must be a schema 8-11 diagnostics export with at most 500 live attempts.`);
     }
     schemas.add(document.schema_version);
     document.live_stt_attempts.forEach((raw, index) => {
@@ -160,7 +160,7 @@ function summarize(paths) {
 
 const paths = process.argv.slice(2);
 if (paths.length === 1 && paths[0] === "--help") {
-  console.log("Usage: node evals/summarize_live_stt.js export1.json [export2.json ...]\nLocal schema 8/9/10 live-STT diagnostics summary; JSON report on stdout, no provider calls.");
+  console.log("Usage: node evals/summarize_live_stt.js export1.json [export2.json ...]\nLocal schema 8-11 live-STT diagnostics summary; JSON report on stdout, no provider calls.");
 } else if (!paths.length || paths.length > 100) {
   console.error("Provide 1-100 diagnostics exports. Use --help for usage.");
   process.exitCode = 1;

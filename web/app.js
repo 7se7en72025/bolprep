@@ -104,6 +104,7 @@ let activeAutomaticVoiceTurn = null;
 let speechTurn = 0;
 let activeProgressiveSpeech = null;
 let activeSpeechHistoryEntry = null;
+const speechStopSamples = [];
 let progressRequestId = 0;
 let quizSession = null;
 
@@ -467,7 +468,18 @@ function preserveInterruptedTurn() {
   pendingQuestion = null;
 }
 
-function stopSpeechOutput() {
+function stopSpeechOutput(reason = "other-control") {
+  const startedAt = performance.now();
+  const snapshot = {
+    started_at_utc: new Date().toISOString(),
+    reason,
+    speech_turn: speechTurn,
+    browser_speaking: window.speechSynthesis?.speaking === true,
+    browser_pending: window.speechSynthesis?.pending === true,
+    provider_request_active: Boolean(activeSpeechController),
+    scheduled_pcm_sources: scheduledSpeechSources.size,
+    progressive_session_active: Boolean(activeProgressiveSpeech),
+  };
   const speechPending = activeSpeechController || scheduledSpeechSources.size
     || activeProgressiveSpeech?.isSpeaking() || window.speechSynthesis?.speaking || window.speechSynthesis?.pending;
   if (activeSpeechHistoryEntry && history.includes(activeSpeechHistoryEntry) && speechPending) {
@@ -484,10 +496,18 @@ function stopSpeechOutput() {
   window.speechSynthesis?.cancel();
   activeSpeechController?.abort();
   activeSpeechController = null;
+  let sourceStopExceptions = 0;
   scheduledSpeechSources.forEach((source) => {
-    try { source.stop(); } catch { /* The source may already have ended. */ }
+    try { source.stop(); } catch { sourceStopExceptions += 1; /* The source may already have ended. */ }
   });
   scheduledSpeechSources.clear();
+  if (speechPending) {
+    speechStopSamples.push({ ...snapshot,
+      stop_dispatch_ms: Number((performance.now() - startedAt).toFixed(2)),
+      source_stop_exceptions: sourceStopExceptions,
+    });
+    if (speechStopSamples.length > 500) speechStopSamples.shift();
+  }
 }
 
 function prepareStreamingAudio() {
@@ -499,8 +519,8 @@ function prepareStreamingAudio() {
   return speechAudioContext;
 }
 
-function stopTutor({ preserveLive = false } = {}) {
-  stopSpeechOutput();
+function stopTutor({ preserveLive = false, speechStopReason = "other-control" } = {}) {
+  stopSpeechOutput(speechStopReason);
   activeAutomaticVoiceTurn = null;
   preserveInterruptedTurn();
   activeRequest?.abort();
@@ -852,7 +872,7 @@ function buildSpeechDiagnostics() {
       recognition_end_to_start: percentiles(group.samples),
     }));
   return {
-    schema_version: 10,
+    schema_version: 11,
     generated_at_utc: new Date().toISOString(),
     scope: "Current page only",
     privacy: "Diagnostics metadata only; no learner text, audio, cookies, or credentials.",
@@ -864,6 +884,8 @@ function buildSpeechDiagnostics() {
     model_streams: modelStreams,
     automatic_voice_turns: automaticVoiceTurns,
     tutor_turns: tutorTurnTraces.slice(),
+    speech_stops: speechStopSamples.slice(),
+    speech_stop_timing_scope: "Local stop command dispatch only; excludes speech detection and does not measure audible audio-stop latency.",
   };
 }
 
@@ -1394,7 +1416,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
   activeTranscriptionController?.abort();
   activeTranscriptionController = null;
   updateServerTranscribeButton();
-  stopSpeechOutput();
+  stopSpeechOutput("follow-up");
   const requestTurn = ++turn;
   preserveInterruptedTurn();
   activeRequest?.abort();
@@ -1536,7 +1558,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
     const cancelled = requestTurn !== turn || (error.name === "AbortError" && !timeoutReason);
     controller.abort();
     recordTrace(cancelled ? "cancelled" : "failed", error.trace);
-    if (progressiveSpeech && requestTurn === turn && !cancelled) stopSpeechOutput();
+    if (progressiveSpeech && requestTurn === turn && !cancelled) stopSpeechOutput("request-failed");
     if (modelModeAvailable) {
       modelStreamFailures.push({
         language: requestLanguage,
@@ -1749,7 +1771,7 @@ form.addEventListener("submit", (event) => {
 
 stopButton.addEventListener("click", () => {
   const stoppingQuizScore = Boolean(quizSession && !quizSession.awaitingAnswer);
-  stopTutor();
+  stopTutor({ speechStopReason: "stop-button" });
   sendButton.disabled = false;
   statusLine.textContent = stoppingQuizScore
     ? "Quiz scoring stopped. Your answer is ready to retry."
@@ -1764,7 +1786,7 @@ document.addEventListener("keydown", (event) => {
     && !activeTranscriptionController && !activeLiveTranscription && !speechSynthesis?.speaking && !speechSynthesis?.pending) return;
   event.preventDefault();
   const stoppingQuizScore = Boolean(quizSession && !quizSession.awaitingAnswer);
-  stopTutor();
+  stopTutor({ speechStopReason: "escape" });
   statusLine.textContent = stoppingQuizScore
     ? "Quiz scoring stopped. Your answer is ready to retry."
     : "Tutor turn stopped. You can continue the conversation.";
@@ -2041,7 +2063,7 @@ liveSttButton.addEventListener("click", () => {
     },
     speechStart: () => {
       if (run !== liveSttRun || !continuous) return;
-      stopTutor({ preserveLive: true });
+      stopTutor({ preserveLive: true, speechStopReason: "detected-speech" });
       input.value = "";
       statusLine.textContent = "Listening to your new turn. Previous tutor output stopped.";
     },
