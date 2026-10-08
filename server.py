@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import hashlib
+import math
 import os
 import re
 import sqlite3
@@ -60,6 +61,26 @@ MAX_ACTIVE_TUTOR_OR_SPEECH_REQUESTS = 4
 ACTIVE_TUTOR_OR_SPEECH_SLOTS = BoundedSemaphore(MAX_ACTIVE_TUTOR_OR_SPEECH_REQUESTS)
 LONG_REQUEST_QUOTAS = {"tutor", "speech", "recorded-stt", "live-session"}
 HTTP_IO_TIMEOUT_SECONDS = 30
+
+
+def _unique_request_fields(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    result: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("Duplicate request field")
+        result[key] = value
+    return result
+
+
+def _reject_json_constant(value: str) -> None:
+    raise ValueError("Non-finite JSON value")
+
+
+def _finite_json_float(value: str) -> float:
+    number = float(value)
+    if not math.isfinite(number):
+        raise ValueError("Non-finite JSON number")
+    return number
 
 
 class BolPrepHandler(BaseHTTPRequestHandler):
@@ -523,18 +544,39 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             self._send_json(502, {"error": "The transcription provider could not return text. Check the server terminal and try again.", "configured_model": configured_model})
 
     def _read_json_body(self) -> dict[str, Any] | None:
+        lengths = self.headers.get_all("Content-Length", [])
+        if len(lengths) != 1 or self.headers.get("Transfer-Encoding") is not None:
+            self.close_connection = True
+            self._send_json(400, {"error": "JSON requests need one Content-Length and no transfer encoding."})
+            return None
         try:
-            length = int(self.headers.get("Content-Length", "0"))
+            if not re.fullmatch(r"[0-9]+", lengths[0].strip()):
+                raise ValueError("Invalid length")
+            length = int(lengths[0])
         except ValueError:
+            self.close_connection = True
             self._send_json(400, {"error": "Invalid request length."})
             return None
         if length <= 0 or length > MAX_BODY_BYTES:
+            self.close_connection = True
             self._send_json(413, {"error": "Request is empty or too large."})
             return None
         try:
-            body = json.loads(self.rfile.read(length))
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            self._send_json(400, {"error": "Request must contain valid JSON."})
+            raw = self.rfile.read(length)
+        except TimeoutError:
+            self.close_connection = True
+            self._send_json(408, {"error": "Request upload timed out. Try again."})
+            return None
+        if len(raw) != length:
+            self.close_connection = True
+            self._send_json(400, {"error": "The JSON upload was incomplete. Try again."})
+            return None
+        try:
+            body = json.loads(raw.decode("utf-8"), object_pairs_hook=_unique_request_fields,
+                              parse_constant=_reject_json_constant, parse_float=_finite_json_float)
+        except (ValueError, UnicodeDecodeError, RecursionError):
+            self.close_connection = True
+            self._send_json(400, {"error": "Request must contain valid UTF-8 JSON with unique fields."})
             return None
         if not isinstance(body, dict):
             self._send_json(400, {"error": "Request body must be an object."})

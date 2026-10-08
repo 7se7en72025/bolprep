@@ -1949,3 +1949,9 @@
 - Agent turns reject function calls when no tools were enabled, before continuing response items or invoking tools. This closes a path where unexpected calls could reach quiz/progress functions despite a request without tool definitions.
 - Tool arguments require bounded text (16,000 Unicode characters) before JSON parsing. Duplicate fields at any parsed object level and excessive nesting return failed validation results; existing tool correction/call limits and persistence validation remain.
 - Verification: Python compilation and git diff whitespace checks with static execution-order inspection. No tests, parser/tool cases, provider calls, progress mutations, browser checks, or measured reliability claims.
+
+## Reject ambiguous or incomplete JSON uploads - 2026-10-08
+
+- JSON routes now require one decimal Content-Length and no transfer encoding. Invalid/empty/oversized lengths close the HTTP connection so unread request bytes cannot be reused as a new request. Truncated uploads are rejected; socket read timeouts produce a generic 408 and close.
+- Complete bodies decode strictly as UTF-8 and reject duplicate fields, non-finite constants, and excessive nesting with generic 400 errors before routing. Conversation role validation was inspected and already uses safe tuple membership; no change was needed there.
+- Verification: Python compilation and git diff whitespace checks with static framing/parser/error-path inspection. No tests, HTTP/parser examples, timeout experiments, browser checks, provider calls, or runtime reliability claims.
