@@ -102,6 +102,13 @@ def offline_answer(
     return f"{heading}\n" + "\n".join(notes)
 
 
+def require_completed_response(response: object) -> None:
+    """Partial text or tool calls are not proof of a finished model response."""
+    status = response.get("status") if isinstance(response, dict) else getattr(response, "status", None)
+    if status != "completed":
+        raise RuntimeError("The model response did not finish. Please try again.")
+
+
 def ask_model(
     question: str,
     history: list[dict[str, str]],
@@ -130,6 +137,7 @@ def ask_model(
                 },
             ],
         )
+    require_completed_response(response)
     answer = response.output_text.strip()
     if not answer:
         raise RuntimeError("The model returned an empty response. Please try again.")

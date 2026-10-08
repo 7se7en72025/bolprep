@@ -1913,3 +1913,9 @@
 - Server and browser cap each 24 kHz mono 16-bit PCM response at 14,400,000 bytes (five minutes of audio). Server rejects excess before forwarding and closes an already-started stream; browser rejects before allocating its combined sample buffer.
 - Added a seven-minute browser request deadline across download/resume/backpressure/playback, separate from existing idle and stalled-playback timers. Timeout/byte-limit diagnostics and existing source/reader cleanup apply; progressive segments retain separate per-request limits.
 - Verification: Python compilation, Node syntax check, and git diff whitespace checks with static limit/cleanup inspection. No tests, generated audio, long-running playback, response injections, browser/device checks, provider calls, or billing/cancellation verification.
+
+## Reject partial model responses before accepting output - 2026-10-08
+
+- Added a shared completed-status guard for terminal/legacy model replies and each streamed/non-streamed agent response. Incomplete/failed/cancelled/pending/missing statuses fail before accepting answers or executing tools from that response; stream completion events also validate their contained response status.
+- Inspected the installed SDK's Response.status and ResponseStatus declarations. They expose completed, failed, in_progress, cancelled, queued, and incomplete states. Existing partial text does not establish completion, and earlier speech/tool effects still cannot be rolled back.
+- Verification: Python compilation and git diff whitespace checks, with static SDK/status/order inspection. No tests, status injections, provider calls, model/tool runs, or browser/device verification.

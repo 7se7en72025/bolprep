@@ -9,7 +9,7 @@ import sqlite3
 import uuid
 from typing import Any, Callable
 
-from bolprep import MAX_MODEL_ANSWER_CHARS, api_is_configured, checked_evidence, offline_answer, response_instructions
+from bolprep import MAX_MODEL_ANSWER_CHARS, api_is_configured, checked_evidence, offline_answer, response_instructions, require_completed_response
 from conversation_history import model_history, prior_queries
 from progress import (
     ProgressConflict,
@@ -174,6 +174,7 @@ def _model_turn(
             response = responses_client.create(**request)
         else:
             response = _stream_response(responses_client, request, on_text_delta)
+        require_completed_response(response)
         response_usages.append(_reported_token_usage(response))
         model = _field(response, "model")
         provider_models.append(model if isinstance(model, str)
@@ -275,6 +276,7 @@ def _stream_response(client: Any, request: dict[str, Any], on_text_delta: Callab
                 completed = _field(event, "response")
                 if completed is None:
                     raise RuntimeError("The model stream returned no completed response.")
+                require_completed_response(completed)
             elif event_type in {"error", "response.failed", "response.incomplete"}:
                 # Provider messages may contain response/input details; keep failures local.
                 raise RuntimeError("The model response failed or did not finish. Please try again.")
