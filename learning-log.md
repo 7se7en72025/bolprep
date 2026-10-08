@@ -1386,3 +1386,9 @@
 - Inspection found that an unreferenced new topic could inherit the previous article even when its own question matched checked notes. The shared retrieval query helper now performs a standalone baseline lookup for substantive current questions before using recent history. Explicit current articles retain priority, and generic clarification turns retain the existing context path.
 - Both evaluation scorers use baseline query selection, keeping scorer comparisons on the same queries. This adds a local corpus lookup; it is lexical evidence selection, with possible false topic switches, rather than semantic conversation understanding.
 - Added README and manual topic-switch cases. Verification: retrieval/agent/server Python compilation and git diff whitespace checks passed. No tests, evaluation runs, or provider calls were performed; topic switching, multilingual behavior, clarification retention, and quality results remain unverified at runtime.
+
+## Retain retrieval context for language-only requests - 2026-10-08
+
+- Common Hindi/English/Hinglish names, including Devanagari variants, and translation/bolo terms now count as generic clarification words. They no longer independently force an article support check or become a substantive prior topic. Substantive words in the same request still participate in evidence matching.
+- Documented the distinction between retrieval context, model answer language, and speech controls, plus manual language-switch and minority-language-topic cases. This remains a bounded lexical vocabulary; unlisted spellings and ambiguous requests may need clarification.
+- Verification: retrieval/agent/server Python compilation and git diff whitespace checks passed. No tests, evaluation dataset runs, or provider calls were performed. Real multilingual follow-ups, unrelated-question abstention, and model language behavior remain unverified.

@@ -315,6 +315,8 @@ Schema 12 records capture_limit_ms per attempt and separates capture-limit confi
 
 ## Recent-topic retrieval for follow-ups
 
+Common Hindi, English, and Hinglish language names (including Devanagari spellings), translation requests, and `bolo` are treated as clarification terms during retrieval. A request such as `Hindi mein samjhao` can retain the recent topic rather than failing its article support check. This only affects evidence selection; it does not change speech language controls or guarantee the model's answer language. Questions about constitutional language protections still need substantive topic words such as culture or minorities.
+
 Before inheriting prior context, a current question without an article reference gets a standalone lookup when it contains substantive words. If the baseline overlap scorer finds checked notes, retrieval uses that question alone. For example, a question about personal liberty can select its own evidence after an earlier equality question. Generic clarifications still use the recent topic. This adds a local lookup and uses the same query-selection rule for both evaluation scorers; lexical matches can still select an unintended topic.
 
 Retrieval still gives an article named in the current question first priority. Otherwise it scans the last four user questions from newest to oldest, skips generic clarification-only turns, and uses the first substantive topic. A prior article contributes its article reference rather than the full old question, so unrelated older keywords cannot satisfy the current article support check. Older questions are not pooled into that retrieval query. The model still receives the separately bounded conversation history.

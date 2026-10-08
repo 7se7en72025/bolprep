@@ -29,6 +29,10 @@ STOPWORDS = {
     *HINDI_STOPWORDS,
 }
 GENERIC_ARTICLE_QUERY_TOKENS = {
+    "hindi", "english", "hinglish", "translate", "translation", "bolo",
+    "\u0939\u093f\u0902\u0926\u0940", "\u0939\u093f\u0928\u094d\u0926\u0940",
+    "\u0905\u0902\u0917\u094d\u0930\u0947\u091c\u0940", "\u0905\u0902\u0917\u094d\u0930\u0947\u091c\u093c\u0940",
+    "\u0939\u093f\u0902\u0917\u094d\u0932\u093f\u0936", "\u092c\u094b\u0932\u094b",
     "example", "examples", "give", "show", "again", "simpler", "repeat", "detail", "details",
     "samjhao", "dobara", "udaharan", "misal", "aasaan", "asan", "ek", "aur",
     "\u0909\u0926\u093e\u0939\u0930\u0923", "\u0926\u094b", "\u092b\u093f\u0930",
