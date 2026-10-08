@@ -1931,3 +1931,9 @@
 - Added server-side BOLPREP_STT_MODEL with the existing recorded-model default and bounded identifier validation. Provider success/failure results retain the requested model, not a claimed resolved version. Inspected the installed SDK transcription model parameter's string support; account/model availability remains unverified.
 - Browser recorded-STT diagnostics now group by language/requested model; missing metadata and early failures remain null. Export schema is 13, and existing live/tutor/stop readers accept the new export while retaining their own validation. Added setup/comparison boundaries and pending scenarios.
 - Verification: Python compilation, Node syntax checks, and git diff whitespace checks with static metadata/grouping inspection. No tests, provider calls, model comparisons, reports, recordings, browser/device checks, or measured quality claims.
+
+## Cancel recorded input when language changes - 2026-10-08
+
+- Speech-language changes now invalidate recorded capture/upload delivery and cancel it while keeping the draft. Previously browser/live recognition stopped on language changes but recorded input could continue under its captured old language.
+- Consolidated recorded cancellation for language changes, typing, Stop, and page hiding: invalidate startup generation and controller ownership before abort/release, immediately discard capture tracks, and leave recorder callback cleanup with its owner. Busy controls remain until recorder cleanup.
+- Verification: Node syntax check and git diff whitespace checks with static ownership/late-delivery inspection. No tests, race injections, microphone/recordings, browser/device checks, provider calls, or observed cancellation claims.

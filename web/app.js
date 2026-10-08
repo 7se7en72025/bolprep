@@ -558,6 +558,22 @@ function stopServerRecording(discard = false) {
   if (discard) activeMediaStream?.getTracks().forEach((track) => track.stop());
 }
 
+function cancelRecordedInput() {
+  const active = Boolean(serverRecordingStarting || activeMediaRecorder
+    || activeMediaStream || activeTranscriptionController);
+  // Invalidate delivery before releasing capture; recorder callbacks own cleanup.
+  serverRecordingStartCancelled = true;
+  serverRecordingRun += 1;
+  serverRecordingStarting = false;
+  const controller = activeTranscriptionController;
+  activeTranscriptionController = null;
+  controller?.abort();
+  if (activeMediaRecorder) stopServerRecording(true);
+  else activeMediaStream?.getTracks().forEach((track) => track.stop());
+  updateServerTranscribeButton(activeMediaRecorder ? "busy" : "idle");
+  return active;
+}
+
 function recordingCaptureFailure(error) {
   const failures = {
     NotAllowedError: ["permission-denied", "Microphone access was denied or blocked. Allow it in browser settings, or type your question."],
@@ -950,14 +966,7 @@ function stopTutor({ preserveLive = false, speechStopReason = "other-control" } 
   }
   if (quizSession && !quizSession.awaitingAnswer) nextQuestionButton.hidden = false;
   stopRecognition(true, preserveLive);
-  serverRecordingStartCancelled = true;
-  serverRecordingRun += 1;
-  serverRecordingStarting = false;
-  updateServerTranscribeButton();
-  if (activeMediaRecorder) stopServerRecording(true);
-  const transcriptionController = activeTranscriptionController;
-  activeTranscriptionController = null;
-  transcriptionController?.abort();
+  cancelRecordedInput();
   turn += 1;
   sendButton.disabled = false;
   quizButton.disabled = false;
@@ -2610,6 +2619,9 @@ speechLanguage.addEventListener("change", () => {
     stopSpeechOutput();
     statusLine.textContent = "Speech language changed. Current playback stopped; the new language applies next time.";
   }
+  if (cancelRecordedInput()) {
+    statusLine.textContent = "Speech language changed. Recording or transcription canceled; your draft is kept. Start a new recording when ready.";
+  }
 });
 streamedTtsOption.addEventListener("change", () => {
   if (activeProgressiveSpeech || activeSpeechController || scheduledSpeechSources.size) stopSpeechOutput();
@@ -2662,15 +2674,7 @@ input.addEventListener("input", () => {
     stopRecognition();
     statusLine.textContent = "Voice input stopped so your edit stays in the question box. Review it, then ask.";
   }
-  if (serverRecordingStarting || activeMediaRecorder || activeTranscriptionController) {
-    serverRecordingStartCancelled = true;
-    serverRecordingRun += 1;
-    serverRecordingStarting = false;
-    if (activeMediaRecorder) stopServerRecording(true);
-    const controller = activeTranscriptionController;
-    activeTranscriptionController = null;
-    controller?.abort();
-    updateServerTranscribeButton(activeMediaRecorder ? "busy" : "idle");
+  if (cancelRecordedInput()) {
     statusLine.textContent = "Recording or transcription stopped so your edit stays in the question box. Review it, then ask.";
   }
 });
@@ -2908,16 +2912,7 @@ function stopHiddenPageInput() {
   if (!active) return false;
   // Restore unconfirmed drafts and block late transcripts before releasing capture.
   stopRecognition(true);
-  serverRecordingStartCancelled = true;
-  serverRecordingRun += 1;
-  serverRecordingStarting = false;
-  if (activeMediaRecorder) stopServerRecording(true);
-  // Release tracks now; a hidden/frozen page may delay the recorder's onstop event.
-  activeMediaStream?.getTracks().forEach((track) => track.stop());
-  const controller = activeTranscriptionController;
-  activeTranscriptionController = null;
-  controller?.abort();
-  updateServerTranscribeButton(activeMediaRecorder ? "busy" : "idle");
+  cancelRecordedInput();
   return true;
 }
 
