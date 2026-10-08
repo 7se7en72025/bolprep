@@ -10,6 +10,7 @@ evals/local-live-*.json
 evals/local-tts-*.json
 evals/local-tutor-*.json
 evals/local-quiz-*.json
+evals/local-answer-*.json
 *.wav
 *.mp3
 *.m4a

@@ -1858,3 +1858,10 @@
 - Static retrieval review found any question containing the broad fundamental-rights label returned the entire corpus, bypassing subject ranking. Generic overviews now retain the broad path after removing label/scaffolding terms; topic-qualified requests rank the remaining informative subject terms through the existing lexical scorer.
 - Explicit article eligibility and corpus records are unchanged. Both overlap/rarity use the same scope logic. This is not semantic validation or evidence of improved measured quality; current results need a fresh authorized evaluation.
 - Verification: Python compilation and git diff whitespace checks only. No tests, parser/scoring examples, retrieval evaluation, browser checks, database writes, or provider calls were performed.
+
+
+## Define independent answer-support review - 2026-10-08
+
+- Added ANSWER_SUPPORT_RUBRIC.md version 1 for actual generated answers: frozen input/note provenance, shared atomic claim segmentation, independent support/contradiction/unbacked/inconclusive labels, displayed-note relevance, disposition/relevance, and reviewer disagreements. It explicitly distinguishes retrieval from answer support and repository-note support from legal correctness.
+- Defined denominators, zero-claim handling, failure/missing coverage, and matched comparison boundaries without inventing observations. Linked the procedure from README/dataset/audit and ignored private local-answer JSON collection files. Current exports/saved snapshots alone are documented as insufficient evidence.
+- Verification: inspected existing document paths and git diff whitespace checks. No tests, report computation, answer collection, human ratings, recordings, browser/device checks, or provider calls were performed. A report runner and actual reviews remain pending.
