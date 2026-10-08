@@ -49,6 +49,8 @@ if (speechPreferences.language && speechPreferences.voice && !savedVoices[speech
   savedVoices[speechPreferences.language] = speechPreferences.voice;
 }
 const quizButton = document.querySelector("#quiz-button");
+const quizDifficulty = document.querySelector("#quiz-difficulty");
+const quizPresetLabels = { basic: "Basic", standard: "Standard", challenge: "Challenge" };
 const nextQuestionButton = document.querySelector("#next-question");
 const endQuizButton = document.querySelector("#end-quiz");
 const sendLabel = document.querySelector("#send-label");
@@ -243,10 +245,15 @@ function validTutorToolEvents(events) {
     const result = event.result;
     if (!object(result)) return false;
     if (event.name === "start_quiz") {
+      if (result.difficulty !== undefined && (typeof result.difficulty !== "string"
+        || !Object.hasOwn(quizPresetLabels, result.difficulty))) return false;
+      const pool = result.difficulty === "basic" ? ["art14_equality", "art21_protection"]
+        : result.difficulty === "challenge" ? ["art19_freedoms", "art22_arrest_safeguards"] : null;
       if (!text(result.quiz_id, 128) || !Array.isArray(result.questions)
         || result.questions.length < 1 || result.questions.length > 3) return false;
       if (!result.questions.every((question) => object(question) && text(question.id, 128)
-        && text(question.prompt, 3000) && validStudySource(question.source))) return false;
+        && text(question.prompt, 3000) && validStudySource(question.source)
+        && (!pool || pool.includes(question.id)))) return false;
       return new Set(result.questions.map((question) => question.id)).size === result.questions.length;
     }
     if (event.name === "score_answer") {
@@ -1918,7 +1925,8 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
     const response = await apiFetch("/api/agent/turn", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question, history: history.slice(-20), language: requestLanguage }),
+      body: JSON.stringify({ question, history: history.slice(-20), language: requestLanguage,
+        quiz_difficulty: quizDifficulty.value }),
       signal: controller.signal,
     });
     requestId = response.headers.get("X-Request-ID");
@@ -1984,6 +1992,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
       quizSession = {
         quizId: startedQuiz.result.quiz_id,
         questions: startedQuiz.result.questions,
+        difficulty: startedQuiz.result.difficulty || "standard",
         index: 0,
         results: [],
         awaitingAnswer: false,
@@ -2037,6 +2046,8 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
 }
 
 async function startQuiz() {
+  const difficulty = quizDifficulty.value;
+  const questionCount = difficulty === "standard" ? 3 : 2;
   stopTutor();
   prepareStreamingAudio();
   const requestTurn = turn;
@@ -2050,22 +2061,25 @@ async function startQuiz() {
   }, 30_000);
   quizButton.disabled = true;
   nextQuestionButton.hidden = true;
-  statusLine.textContent = "Preparing a three-question Fundamental Rights quiz…";
+  statusLine.textContent = `Preparing a ${questionCount}-question ${quizPresetLabels[difficulty]} quiz…`;
   try {
     const response = await apiFetch("/api/quiz/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ topic: "fundamental rights", question_count: 3, language: speechLanguage.value }),
+      body: JSON.stringify({ topic: "fundamental rights", question_count: questionCount,
+        language: speechLanguage.value, difficulty }),
       signal: controller.signal,
     });
     const payload = await response.json();
     if (timedOut) throw new Error("Quiz preparation timed out after 30 seconds. Try again.");
     if (!response.ok) throw new Error(payload?.error || "Could not start the quiz.");
     if (requestTurn !== turn) return;
-    if (!validTutorToolEvents([{ name: "start_quiz", ok: true, result: payload }])) {
+    if (!validTutorToolEvents([{ name: "start_quiz", ok: true, result: payload }])
+      || payload.difficulty !== difficulty || payload.questions.length !== questionCount) {
       throw new Error("The server returned an invalid quiz. Try starting it again.");
     }
-    quizSession = { quizId: payload.quiz_id, questions: payload.questions, index: 0, results: [], awaitingAnswer: false };
+    quizSession = { quizId: payload.quiz_id, difficulty: payload.difficulty,
+      questions: payload.questions, index: 0, results: [], awaitingAnswer: false };
     input.value = "";
     showQuizQuestion();
   } catch (error) {
@@ -2139,7 +2153,7 @@ function showQuizQuestion(speakPrompt = true) {
   inputLabel.textContent = "Your quiz answer";
   input.maxLength = 1000;
   input.placeholder = "Speak or type your answer…";
-  const prompt = `Question ${quizSession.index + 1} of ${quizSession.questions.length}: ${current.prompt}`;
+  const prompt = `${quizPresetLabels[quizSession.difficulty || "standard"]} quiz · Question ${quizSession.index + 1} of ${quizSession.questions.length}: ${current.prompt}`;
   const promptHistoryEntry = rememberMessage("assistant", prompt, [current.source]);
   addMessage("assistant", prompt, [current.source], "QUIZ QUESTION SOURCE", { historyEntry: promptHistoryEntry });
   const readyText = activeLiveTranscription?.continuous

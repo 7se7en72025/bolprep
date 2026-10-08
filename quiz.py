@@ -13,6 +13,11 @@ from typing import Any
 QUESTION_BANK = Path(__file__).resolve().parent / "data" / "quiz_questions.json"
 MAX_QUESTIONS = 3
 MAX_ANSWER_LENGTH = 1000
+QUIZ_PRESETS = {
+    "basic": ("art14_equality", "art21_protection"),
+    "standard": None,
+    "challenge": ("art19_freedoms", "art22_arrest_safeguards"),
+}
 
 
 def _concept_aliases(concept: dict[str, Any]) -> list[str]:
@@ -95,24 +100,35 @@ def _load_questions() -> list[dict[str, Any]]:
 
 def start_quiz(
     topic: str = "fundamental rights",
-    question_count: int = 3,
+    question_count: int | None = None,
     language: str = "hi-IN",
+    difficulty: str = "standard",
 ) -> dict[str, Any]:
     """Start a bounded quiz and reveal only prompts and source metadata."""
     if not isinstance(topic, str) or topic.casefold().strip() != "fundamental rights":
         raise ValueError("Only the supported topic 'fundamental rights' is available.")
-    if not isinstance(question_count, int) or isinstance(question_count, bool):
+    if question_count is not None and (not isinstance(question_count, int) or isinstance(question_count, bool)):
         raise ValueError("Question count must be an integer.")
     if not isinstance(language, str) or language not in {"hi-IN", "en-IN"}:
         raise ValueError("Choose Hindi/Hinglish or English questions.")
+    if not isinstance(difficulty, str) or difficulty not in QUIZ_PRESETS:
+        raise ValueError("Choose basic, standard, or challenge quiz difficulty.")
 
     available = [question for question in _load_questions() if question["topic"] == "fundamental rights"]
+    pool = QUIZ_PRESETS[difficulty]
+    if pool is not None:
+        available = [question for question in available if question["id"] in pool]
+    if not available:
+        raise ValueError("No checked questions are available for this quiz preset.")
+    if question_count is None:
+        question_count = min(MAX_QUESTIONS, len(available))
     if not 1 <= question_count <= min(MAX_QUESTIONS, len(available)):
         raise ValueError(f"Choose between 1 and {min(MAX_QUESTIONS, len(available))} questions.")
 
     selected = random.SystemRandom().sample(available, question_count)
     return {
         "topic": "fundamental rights",
+        "difficulty": difficulty,
         "questions": [
             {
                 "id": question["id"],

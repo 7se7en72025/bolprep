@@ -26,6 +26,7 @@ h1 { font: 700 clamp(31px, 5vw, 43px)/1.12 'Segoe UI', sans-serif; letter-spacin
 .quiz-button { border: 1px solid #cbd9cb; border-radius: 8px; background: #eef4ec; color: #315b48; padding: 8px 11px; font-size: 11px; font-weight: 700; cursor: pointer; }
 .quiz-button:hover:not(:disabled) { background: #e1ecdf; }
 .quiz-button:disabled { opacity: .55; cursor: progress; }
+.quiz-difficulty { max-width: 145px; }
 .conversation { padding: 23px 22px 12px; max-height: 350px; min-height: 124px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
 .message { max-width: 88%; padding: 13px 15px; border-radius: 12px; line-height: 1.6; font-size: 14px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .message p { margin: 3px 0 0; }

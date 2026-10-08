@@ -19,7 +19,7 @@ from bolprep import api_is_configured, ask_model, offline_answer
 from conversation_history import clean_history, prior_queries
 from agent import run_agent_turn
 from progress import ProgressConflict, clear_progress, create_quiz_run, ensure_session, get_progress, save_answer
-from quiz import score_answer, start_quiz
+from quiz import QUIZ_PRESETS, score_answer, start_quiz
 from retrieval import load_corpus, retrieval_query, retrieve
 from request_limits import RequestLimiter
 from access import ACCESS_COOKIE, ACCESS_LIFETIME_SECONDS, AccessGate
@@ -251,6 +251,10 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         question = body.get("question")
         history = body.get("history", [])
         language = body.get("language", "hi-IN")
+        quiz_difficulty = body.get("quiz_difficulty", "standard")
+        if not isinstance(quiz_difficulty, str) or quiz_difficulty not in QUIZ_PRESETS:
+            self._send_json(400, {"error": "Choose basic, standard, or challenge quiz difficulty."})
+            return
         if not isinstance(question, str) or not question.strip() or len(question) > 1200:
             self._send_json(400, {"error": "Enter a question under 1,200 characters."})
             return
@@ -301,6 +305,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 cleaned_history,
                 self.session_id,
                 language,
+                quiz_difficulty=quiz_difficulty,
                 on_text_delta=lambda delta: self._write_ndjson({"type": "delta", "text": delta}),
                 on_speech_mode=lambda progressive: self._write_ndjson(
                     {"type": "speech_mode", "progressive": progressive}
@@ -533,10 +538,11 @@ class BolPrepHandler(BaseHTTPRequestHandler):
 
     def _handle_quiz_start(self, body: dict[str, Any]) -> None:
         topic = body.get("topic", "fundamental rights")
-        question_count = body.get("question_count", 3)
+        question_count = body.get("question_count")
         language = body.get("language", "hi-IN")
+        difficulty = body.get("difficulty", "standard")
         try:
-            quiz = start_quiz(topic, question_count, language)
+            quiz = start_quiz(topic, question_count, language, difficulty)
         except ValueError as exc:
             self._send_json(400, {"error": str(exc)})
             return

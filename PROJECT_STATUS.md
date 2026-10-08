@@ -28,7 +28,7 @@ Audit date: 2026-10-08. This is an implementation/evidence inventory, not a rele
 
 ## Other first-release gaps
 
-- The quiz API uses topic/question count/language, not the roadmap's difficulty argument; no difficulty-conditioned question bank is implemented.
+- The quiz API/tool now accepts a difficulty preset selecting author-assigned Basic/Standard/Challenge question groups. Rubrics remain fixed; measured learner difficulty, selection runtime, and model argument compliance are unverified.
 - Progress saving is consolidated into scoring, rather than a separate exposed `save_progress` model tool. The local flow is a deliberate prototype shape, not evidence of every roadmap tool signature.
 - Local cookie ownership and optional shared demo login are implemented; separate authenticated learner accounts and hosted budgets/deployment hardening are pending.
 - Request metadata records a configured model label and reported usage, not guaranteed resolved provider/model versions or monetary cost. Saved metadata is client-supplied, not an authenticated server trace store.

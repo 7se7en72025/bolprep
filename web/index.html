@@ -24,6 +24,12 @@
         <div class="card-head">
           <div class="tutor-id"><span class="status-dot" aria-hidden="true"></span><div><strong>Your tutor</strong><small id="mode-label">Checking setup…</small></div></div>
           <div class="head-actions">
+            <label class="sr-only" for="quiz-difficulty">Quiz preset for the next quiz</label>
+            <select id="quiz-difficulty" class="language-select quiz-difficulty" title="Author-assigned question groups; applies to the next quiz">
+              <option value="basic">Basic: core rights</option>
+              <option value="standard" selected>Standard: mixed</option>
+              <option value="challenge">Challenge: lists</option>
+            </select>
             <button class="quiz-button" id="quiz-button" type="button">Quiz me</button>
             <button class="text-button" id="next-question" type="button" hidden>Next question</button>
             <button class="text-button" id="end-quiz" type="button" hidden>End quiz</button>

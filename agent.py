@@ -16,7 +16,7 @@ from progress import (
     get_progress,
     save_answer,
 )
-from quiz import score_answer, start_quiz
+from quiz import QUIZ_PRESETS, score_answer, start_quiz
 from retrieval import retrieval_query, retrieve
 
 
@@ -27,15 +27,16 @@ TOOLS: list[dict[str, Any]] = [
     {
         "type": "function",
         "name": "start_quiz",
-        "description": "Start a short quiz from the checked Fundamental Rights question bank when the learner asks for a quiz, test, or viva.",
+        "description": "Start a short checked Fundamental Rights quiz. Basic selects Articles 14/21, challenge selects Articles 19/22 (each allows 1-2 questions); standard mixes the bank (1-3). These are author-assigned presets, not measured difficulty levels.",
         "parameters": {
             "type": "object",
             "properties": {
                 "topic": {"type": "string", "enum": ["fundamental rights"]},
                 "question_count": {"type": "integer", "enum": [1, 2, 3]},
                 "language": {"type": "string", "enum": ["hi-IN", "en-IN"]},
+                "difficulty": {"type": "string", "enum": ["basic", "standard", "challenge"]},
             },
-            "required": ["topic", "question_count", "language"],
+            "required": ["topic", "question_count", "language", "difficulty"],
             "additionalProperties": False,
         },
         "strict": True,
@@ -99,13 +100,16 @@ def run_agent_turn(
     on_text_delta: Callable[[str], None] | None = None,
     on_speech_mode: Callable[[bool], None] | None = None,
     on_sources: Callable[[list[dict[str, str]]], None] | None = None,
+    quiz_difficulty: str = "standard",
 ) -> dict[str, Any]:
     """Answer a turn, using validated quiz/progress functions in model mode."""
+    if not isinstance(quiz_difficulty, str) or quiz_difficulty not in QUIZ_PRESETS:
+        raise ValueError("Choose basic, standard, or challenge quiz difficulty.")
     documents = retrieve(_retrieval_query(question, history))
     if on_sources is not None:
         on_sources([_source(document) for document in documents])
     if responses_client is None and not api_is_configured():
-        return _offline_turn(question, documents, session_id, language)
+        return _offline_turn(question, documents, session_id, language, quiz_difficulty)
 
     if responses_client is None:
         try:
@@ -126,6 +130,7 @@ def run_agent_turn(
             f"{instructions} You may use start_quiz to start a quiz, score_answer to score an answer "
             "with the server's fixed rubric, and get_weak_topics to read this browser session's saved results. "
             "Never claim a tool succeeded unless its result says ok."
+            f" The current quiz preset is {quiz_difficulty}; use it unless the current question explicitly requests another preset."
         )
     input_items: list[Any] = [
         *model_history(history),
@@ -241,15 +246,16 @@ def _execute_tool(name: str, arguments: str, call_id: str, session_id: str) -> t
         if not isinstance(values, dict):
             raise ValueError("Tool arguments must be an object.")
         if name == "start_quiz":
+            difficulty = values.pop("difficulty", "standard")
             _check_fields(values, {"topic", "question_count", "language"})
             if (
                 values["topic"] != "fundamental rights"
-                or isinstance(values["question_count"], bool)
+                or type(values["question_count"]) is not int
                 or values["question_count"] not in {1, 2, 3}
-                or values["language"] not in {"hi-IN", "en-IN"}
+                or not isinstance(values["language"], str) or values["language"] not in {"hi-IN", "en-IN"}
             ):
                 raise ValueError("The quiz request contains an unsupported topic, size, or language.")
-            quiz = start_quiz(values["topic"], values["question_count"], values["language"])
+            quiz = start_quiz(values["topic"], values["question_count"], values["language"], difficulty)
             quiz_id = str(uuid.uuid4())
             create_quiz_run(session_id, quiz_id, quiz["topic"], [item["id"] for item in quiz["questions"]])
             result = {**quiz, "quiz_id": quiz_id}
@@ -289,13 +295,14 @@ def _offline_turn(
     documents: list[dict[str, Any]],
     session_id: str,
     language: str,
+    difficulty: str = "standard",
 ) -> dict[str, Any]:
     tool_events: list[dict[str, Any]] = []
     normalized = question.casefold()
     quiz_intent = QUIZ_INTENT.search(normalized)
     revision_intent = REVISION_INTENT.search(normalized)
     if quiz_intent:
-        quiz = start_quiz(language=language)
+        quiz = start_quiz(language=language, difficulty=difficulty)
         quiz_id = str(uuid.uuid4())
         create_quiz_run(session_id, quiz_id, quiz["topic"], [item["id"] for item in quiz["questions"]])
         result = {**quiz, "quiz_id": quiz_id}
