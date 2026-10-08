@@ -2161,11 +2161,29 @@ speechLanguage.addEventListener("change", () => {
   stopLiveTranscription();
   statusLine.textContent = "Language changed. Start a new live transcript; partial words were discarded.";
 });
-window.addEventListener("pagehide", () => stopLiveTranscription(false));
+function stopHiddenPageInput() {
+  const active = recognitionListening || activeLiveTranscription || serverRecordingStarting
+    || activeMediaRecorder || activeMediaStream || activeTranscriptionController;
+  if (!active) return false;
+  // Restore unconfirmed drafts and block late transcripts before releasing capture.
+  stopRecognition(true);
+  serverRecordingStartCancelled = true;
+  serverRecordingRun += 1;
+  serverRecordingStarting = false;
+  if (activeMediaRecorder) stopServerRecording(true);
+  // Release tracks now; a hidden/frozen page may delay the recorder's onstop event.
+  activeMediaStream?.getTracks().forEach((track) => track.stop());
+  const controller = activeTranscriptionController;
+  activeTranscriptionController = null;
+  controller?.abort();
+  updateServerTranscribeButton(activeMediaRecorder ? "busy" : "idle");
+  return true;
+}
+
+window.addEventListener("pagehide", stopHiddenPageInput);
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden || !activeLiveTranscription) return;
-  stopLiveTranscription();
-  statusLine.textContent = "Live microphone stopped when the page was hidden. Start Live mic again when ready.";
+  if (!document.hidden || !stopHiddenPageInput()) return;
+  statusLine.textContent = "Speech input canceled when the page was hidden. Review your draft or start the microphone again when ready.";
 });
 
 serverTranscribeButton.addEventListener("click", () => {

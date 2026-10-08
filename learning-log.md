@@ -1398,3 +1398,9 @@
 - Added a schema 11/12 command-line report for existing speech_stops exports. It validates metadata, caps input size/count, deduplicates identical projected records, and groups by reason/pre-stop state for nearest-rank dispatch p50/p95 and separate source-stop exception counts. Raw records, paths, timestamps, and turn counters are omitted from output.
 - Documented event-ID absence, collisions/changed snapshots, retained-record bounds, self-reported inputs, and the distinction between local dispatch and audible interruption. Updated README and manual checks without adding acoustic claims.
 - Verification: JavaScript syntax, CLI help, and git diff whitespace checks passed. No tests, sample aggregation, browser exports, recordings, or provider calls were run; report aggregation/error behavior and real-device interruption remain unverified.
+
+## Cancel all speech input when the page is hidden - 2026-10-08
+
+- Inspection found lifecycle cleanup covered live transcription only. Added shared visibility/pagehide cleanup for browser recognition, live capture, recorded capture/pending permission, and recorded transcription. It restores unconfirmed drafts through existing rules, invalidates pending capture, discards clips, aborts transcription, and issues track stops before delayed recorder callbacks.
+- Return requires explicit microphone restart. Already-submitted tutor work is separate, and aborting a local request does not undo upstream processing. Added README and manual lifecycle/permission-race checks.
+- Verification: JavaScript syntax and git diff whitespace checks passed. No tests, browser interactions, recordings, or provider calls were run. Hidden/frozen-page events, cached-page restoration, final-transcript isolation, permission races, and hardware release remain unverified.
