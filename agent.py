@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import sqlite3
 import uuid
 from typing import Any, Callable
 
@@ -299,6 +300,9 @@ def _execute_tool(name: str, arguments: str, call_id: str, session_id: str) -> t
             raise ValueError("This tool is not available.")
         event = {"name": name, "ok": True, "result": result}
         return {"ok": True, "result": result}, event
+    except (sqlite3.Error, OSError):
+        message = "Study tool data is unavailable. Try again later; check saved progress before retrying a score."
+        return {"ok": False, "error": message}, {"name": name or "unknown", "ok": False, "error": message}
     except (json.JSONDecodeError, KeyError, TypeError, ValueError, ProgressConflict) as exc:
         message = str(exc) or "The tool arguments are invalid."
         return {"ok": False, "error": message}, {"name": name or "unknown", "ok": False, "error": message}

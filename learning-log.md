@@ -1823,3 +1823,10 @@
 - Static session review found every browser request initialized SQLite, blocking root/text/speech on storage failure. Cookie identity is now assigned without storage; progress/history operations retain their own error paths. Quiz creation inserts its owner and quiz in one transaction, so direct/model quizzes no longer depend on earlier root-page initialization.
 - Removed redundant owner recreation after progress deletion; a later quiz creates it when needed. Existing history ownership and quiz foreign-key/retry checks remain. Updated the recent storage review procedure to reflect lazy persistence and transactional owner creation.
 - Verification: Python compilation and git diff whitespace checks only. No tests, requests, transaction/failure exercises, database writes, browser checks, or provider calls were performed. Degraded operation and persistence recovery remain unverified.
+
+
+## Surface model tool storage failures as failed outcomes - 2026-10-08
+
+- Static tool review found SQLite/file-access errors escaped _execute_tool and aborted the whole tutor turn before the model saw a failed action. Added generic failed tool results/outcomes for these errors, without exposing database/path details or claiming rollback.
+- Existing argument/conflict handling and call/round bounds remain; the model can narrate the unavailable action, but compliance and browser diagnostics remain unverified. Offline tool failures retain their separate existing turn-error path.
+- Verification: Python compilation and git diff whitespace checks only. No tests, failure injection, tool executions, database writes, browser checks, or provider calls were performed.
