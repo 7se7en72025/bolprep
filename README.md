@@ -31,7 +31,7 @@ if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 .\.venv\Scripts\python.exe server.py
 ```
 
-For the terminal tutor, run `.\.venv\Scripts\python.exe bolprep.py` and use `/quit` to leave.
+For the terminal tutor, run `.\.venv\Scripts\python.exe bolprep.py`. Use `/new` to clear conversation context and `/quit` to leave. Questions are limited to 1,200 Unicode code points. Context retains up to 20 messages, with answers shortened to 3,000 code points and marked when clipped; full text stays in terminal output.
 
 ## Configuration
 

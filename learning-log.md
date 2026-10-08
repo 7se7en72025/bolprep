@@ -1802,3 +1802,10 @@
 - Added a shared 12,000-code-point model-answer cap to agent and terminal/legacy completed answers. Streamed provider text is counted per response and rejected before forwarding an overflowing delta; existing finally closes the provider stream.
 - Added browser completed-answer mode/length validation with an initial UTF-16 size guard before code-point counting. No silent truncation, offline note-summary cap, provider billing cap, or rollback of earlier speech/tool writes is claimed.
 - Verification: Python compilation, JavaScript syntax, and git diff whitespace checks only. No tests, model responses, browser/device checks, boundary executions, database writes, or provider calls were performed. Added unperformed overflow/recovery scenarios to the run sheet.
+
+
+## Bound terminal conversation context - 2026-10-08
+
+- Static terminal review found the 20-message window retained unrestricted user text and full long answers. Added a 1,200-code-point question guard before retrieval/model calls and a 3,000-code-point assistant context prefix with an explicit clipping marker. Full output/citations remain visible, and rejected questions do not enter history.
+- Added /new to clear in-memory topic context with an explicit user confirmation message; /quit and /exit behavior remains. Reset does not erase terminal scrollback or any stored browser data.
+- Verification: Python compilation and git diff whitespace checks only. No tests, interactive sessions, model calls, boundary executions, database writes, or provider calls were performed.

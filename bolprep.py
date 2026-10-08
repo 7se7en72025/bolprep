@@ -144,6 +144,7 @@ def run() -> int:
     history: list[dict[str, str]] = []
 
     print("BolPrep text tutor - type /quit to exit.")
+    print("Questions can contain up to 1,200 characters. Type /new to clear conversation context.")
     if has_api_key:
         print("Model mode: using OPENAI_MODEL (or the default model).")
     else:
@@ -161,6 +162,13 @@ def run() -> int:
         if question.casefold() in {"/quit", "/exit"}:
             print("BolPrep: Session ended.")
             return 0
+        if question.casefold() == "/new":
+            history.clear()
+            print("BolPrep: Started a new study conversation.")
+            continue
+        if len(question) > 1200:
+            print("BolPrep: Shorten your question to 1,200 characters before asking.")
+            continue
 
         try:
             prior_questions = prior_queries(history)
@@ -179,10 +187,14 @@ def run() -> int:
         for document in documents:
             source = document["source"]
             print(f"Source: {source['title']} - {source['section']} - {source['url']}")
+        context_answer = answer
+        if len(context_answer) > 3000:
+            marker = "\n[Earlier answer clipped for context; full text remains in terminal output.]"
+            context_answer = context_answer[:3000 - len(marker)] + marker
         history.extend(
             [
                 {"role": "user", "content": question},
-                {"role": "assistant", "content": answer},
+                {"role": "assistant", "content": context_answer},
             ]
         )
         # Bound prompt growth in a long-running session while retaining recent turns.
