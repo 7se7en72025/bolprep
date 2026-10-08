@@ -29,6 +29,9 @@ STOPWORDS = {
     *HINDI_STOPWORDS,
 }
 GENERIC_ARTICLE_QUERY_TOKENS = {
+    "compare", "comparison", "difference", "differences", "different", "between", "vs", "versus",
+    "antar", "farq", "fark", "tulna",
+    "\u0905\u0902\u0924\u0930", "\u0924\u0941\u0932\u0928\u093e", "\u0914\u0930",
     "hindi", "english", "hinglish", "translate", "translation", "bolo",
     "\u0939\u093f\u0902\u0926\u0940", "\u0939\u093f\u0928\u094d\u0926\u0940",
     "\u0905\u0902\u0917\u094d\u0930\u0947\u091c\u0940", "\u0905\u0902\u0917\u094d\u0930\u0947\u091c\u093c\u0940",
@@ -69,9 +72,9 @@ def retrieval_query(question: str, prior_questions: list[str]) -> str:
     if _tokens(current_question) - GENERIC_ARTICLE_QUERY_TOKENS and retrieve(current_question):
         return current_question
     for previous in reversed(prior_questions[-4:]):
-        reference = ARTICLE_REFERENCE_PATTERN.search(previous)
-        if reference:
-            return f"{reference.group(0)} {current_question}"
+        references = list(ARTICLE_REFERENCE_PATTERN.finditer(previous))
+        if references:
+            return " ".join([*(reference.group(0) for reference in references), current_question])
         if _tokens(previous) - GENERIC_ARTICLE_QUERY_TOKENS:
             return f"{previous} {current_question}"
     return current_question
@@ -158,24 +161,30 @@ def retrieve(question: str, limit: int | None = None, *, scoring: str = "overlap
         and not token.isdigit()
     }
     normalized_question = question.casefold()
-    article_reference = ARTICLE_REFERENCE_PATTERN.search(question)
+    article_references = list(ARTICLE_REFERENCE_PATTERN.finditer(question))
     documents = load_corpus()
-    if article_reference:
-        raw_article_id = (article_reference.group("article_id") or article_reference.group("hindi_id")).casefold()
-        article_id = "".join(
-            str(unicodedata.decimal(character)) if character.isdecimal() else character
-            for character in raw_article_id
-        )
-        # A suffix reference (such as 21A) identifies the note; it is not topic evidence.
-        informative_tokens.discard(raw_article_id)
-        document = next((item for item in documents if item["id"] == f"article-{article_id}"), None)
-        if document is None:
-            return []
-        if informative_tokens:
-            keyword_tokens, body_tokens = _note_token_fields(document)
-            if not informative_tokens & (keyword_tokens | body_tokens):
+    if article_references:
+        # References identify notes; their number/suffix tokens are not topic evidence.
+        for reference in article_references:
+            informative_tokens -= _tokens(reference.group(0))
+        by_id = {document["id"]: document for document in documents}
+        selected: dict[str, dict[str, Any]] = {}
+        for reference in article_references:
+            raw_id = (reference.group("article_id") or reference.group("hindi_id")).casefold()
+            article_id = "".join(
+                str(unicodedata.decimal(character)) if character.isdecimal() else character
+                for character in raw_id
+            )
+            document = by_id.get(f"article-{article_id}")
+            if document is None:
                 return []
-        return [document][:limit] if limit is not None else [document]
+            if informative_tokens:
+                keyword_tokens, body_tokens = _note_token_fields(document)
+                if not informative_tokens & (keyword_tokens | body_tokens):
+                    return []
+            selected[document["id"]] = document
+        results = list(selected.values())
+        return results[:limit] if limit is not None else results
 
     if any(phrase in normalized_question for phrase in ("fundamental rights", "\u092e\u094c\u0932\u093f\u0915 \u0905\u0927\u093f\u0915\u093e\u0930", "maulik adhikar")):
         return documents if limit is None else documents[:limit]
