@@ -1877,3 +1877,9 @@
 - Recorded transcription and streamed PCM speech now scope their per-request OpenAI HTTP clients with context managers. Response consumption remains inside the client scope; early validation returns and disconnected streams also exit the scope.
 - These two routes log exception class names instead of raw provider exception text. Existing generic browser errors and pre/post-header stream failure handling remain. Added manual resource/failure observations to the run sheet.
 - Verification: Python compilation and git diff whitespace checks, with static scope inspection. No tests, provider calls, recordings, browser/device checks, resource measurements, or cancellation/billing claims.
+
+## Scope owned tutor clients to a turn - 2026-10-08
+
+- Agent model execution now has an internal workflow helper called inside the owned OpenAI client context. All tool rounds and stream handling share that client; completion and raised errors exit the context. Caller-injected response clients are not closed. Retrieval, offline handling, and source callbacks remain in the public entry point.
+- Terminal/legacy ask_model also consumes its response within an owned client context. Documented ownership and pending resource/failure scenarios.
+- Verification: Python compilation and git diff whitespace checks, with static call/scope inspection. No tests, provider calls, model/tool runs, browser/device checks, resource measurements, or cancellation/rollback claims.

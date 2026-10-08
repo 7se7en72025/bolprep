@@ -117,19 +117,19 @@ def ask_model(
         ) from exc
 
     model = os.getenv("OPENAI_MODEL", "gpt-6-astra")
-    client = OpenAI(timeout=45.0, max_retries=1)
     evidence = checked_evidence(documents, question, language)
-    response = client.responses.create(
-        model=model,
-        instructions=response_instructions(language),
-        input=[
-            *model_history(history),
-            {
-                "role": "user",
-                "content": f"Question: {question}\n\nChecked study notes:\n{evidence}",
-            },
-        ],
-    )
+    with OpenAI(timeout=45.0, max_retries=1) as client:
+        response = client.responses.create(
+            model=model,
+            instructions=response_instructions(language),
+            input=[
+                *model_history(history),
+                {
+                    "role": "user",
+                    "content": f"Question: {question}\n\nChecked study notes:\n{evidence}",
+                },
+            ],
+        )
     answer = response.output_text.strip()
     if not answer:
         raise RuntimeError("The model returned an empty response. Please try again.")

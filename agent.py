@@ -119,8 +119,29 @@ def run_agent_turn(
             raise RuntimeError(
                 "Install the optional API dependency with `python -m pip install -r requirements.txt`."
             ) from exc
-        responses_client = OpenAI(timeout=45.0, max_retries=1).responses
+        with OpenAI(timeout=45.0, max_retries=1) as client:
+            return _model_turn(
+                question, history, session_id, language, client.responses,
+                on_text_delta, on_speech_mode, quiz_difficulty, documents,
+            )
+    return _model_turn(
+        question, history, session_id, language, responses_client,
+        on_text_delta, on_speech_mode, quiz_difficulty, documents,
+    )
 
+
+def _model_turn(
+    question: str,
+    history: list[dict[str, str]],
+    session_id: str,
+    language: str,
+    responses_client: Any,
+    on_text_delta: Callable[[str], None] | None,
+    on_speech_mode: Callable[[bool], None] | None,
+    quiz_difficulty: str,
+    documents: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Complete the tool workflow while the caller keeps its client open."""
     evidence = checked_evidence(documents, question, language)
     instructions = response_instructions(language)
     tools_requested = _has_tool_intent(question)

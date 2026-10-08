@@ -502,3 +502,8 @@ Compare generic fundamental-rights overviews in English, Hindi, and Hinglish wit
 ### Speech provider client cleanup (not yet verified)
 
 During authorized provider checks, repeat recorded transcription and streamed speech, including empty/oversized transcription results, provider rejection/timeout, and browser playback disconnects. Confirm the per-request client context exits after success and failure and that speech/transcription server error logs contain exception types rather than provider response bodies. Streamed speech must finish its response before client closure; a failure after audio headers must close the connection instead of appending a JSON error to PCM. Client cleanup does not prove provider-side cancellation or billing cessation. No provider, network-resource, disconnect, or browser checks were performed.
+
+
+### Tutor model client ownership (not yet verified)
+
+In authorized model checks, inspect terminal and legacy tutor requests plus agent turns with zero, one, and multiple tool rounds. Confirm one owned client spans the complete agent workflow and closes after a successful answer, rejected tool arguments, tool-round exhaustion, provider failure, or an interrupted streaming callback. Caller-injected response clients must remain open for their owner to reuse. Offline turns should create no provider client; note retrieval and source callbacks should still occur once. Inspect completed response/usage/source metadata and fixed-progress idempotency after cleanup. Closing local connections is not evidence of provider cancellation or rollback of tools already executed. No runtime/provider/resource observations were collected.
