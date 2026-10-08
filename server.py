@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json
 import os
+import time
 import uuid
+from datetime import datetime, timezone
 from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -185,8 +187,29 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 self._send_json(400, {"error": "Conversation history is invalid."})
                 return
             cleaned_history.append({"role": item["role"], "content": item["content"]})
+        request_id = str(uuid.uuid4())
+        started_at = datetime.now(timezone.utc).isoformat()
+        started = time.perf_counter()
+
+        def turn_trace(outcome: str, result: dict[str, Any] | None = None) -> dict[str, Any]:
+            result = result or {}
+            mode = result.get("mode", "model" if api_is_configured() else "offline")
+            return {
+                "request_id": request_id,
+                "started_at_utc": started_at,
+                "outcome": outcome,
+                "server_duration_ms": round((time.perf_counter() - started) * 1000, 2),
+                "mode": mode,
+                "configured_model": os.getenv("OPENAI_MODEL", "gpt-6-astra") if mode == "model" else None,
+                "source_count": len(result.get("sources", [])),
+                "tool_outcomes": [{"name": event["name"], "ok": event.get("ok") is True}
+                                  for event in result.get("tool_events", [])],
+                "usage": None,
+            }
+
         self.send_response(200)
         self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
+        self.send_header("X-Request-ID", request_id)
         self.send_header("Transfer-Encoding", "chunked")
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
@@ -203,14 +226,16 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                     {"type": "speech_mode", "progressive": progressive}
                 ),
             )
+            result["trace"] = turn_trace("completed", result)
             self._write_ndjson({"type": "complete", "payload": result})
             self._finish_chunked_response()
         except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
             self.close_connection = True
         except Exception as exc:
-            print(f"Tutor agent request failed: {exc}")
+            print(f"Tutor agent request {request_id} failed: {exc}")
             try:
-                self._write_ndjson({"type": "error", "error": "Tutor request failed. Check the server terminal and try again."})
+                self._write_ndjson({"type": "error", "error": "Tutor request failed. Check the server terminal and try again.",
+                                   "trace": turn_trace("failed")})
                 self._finish_chunked_response()
             except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
                 self.close_connection = True

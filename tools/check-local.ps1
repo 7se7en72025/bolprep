@@ -93,7 +93,25 @@ try {
         throw 'Quiz scoring retry or saved progress did not return the expected single result.'
     }
 
-    Write-Output "Local smoke check passed: offline mode, $($health.study_notes) study notes, page load, source-linked Hinglish answer, and quiz start/score/idempotent retry/progress."
+    $turnBody = @{ question = 'weak topics'; language = 'hi-IN'; history = @() } | ConvertTo-Json -Depth 4
+    $turnResponse = Invoke-WebRequest -Uri 'http://127.0.0.1:8000/api/agent/turn' `
+        -Method Post -ContentType 'application/json' -Body $turnBody -WebSession $session -UseBasicParsing -TimeoutSec 10
+    $turnText = if ($turnResponse.Content -is [byte[]]) {
+        [Text.Encoding]::UTF8.GetString($turnResponse.Content)
+    } else { [string]$turnResponse.Content }
+    $turnEvents = $turnText -split "`n" | Where-Object { $_.Trim() } | ForEach-Object { $_ | ConvertFrom-Json }
+    $completed = @($turnEvents | Where-Object { $_.type -eq 'complete' })
+    if ($completed.Count -ne 1) { throw "The offline agent did not complete its revision turn (events: $($turnEvents.type -join ','))." }
+    $trace = $completed[0].payload.trace
+    if (($trace.request_id -ne $turnResponse.Headers['X-Request-ID']) -or
+        (-not $trace.request_id) -or ($trace.outcome -ne 'completed') -or
+        ($trace.mode -ne 'offline') -or ($trace.server_duration_ms -lt 0) -or
+        ($trace.tool_outcomes.Count -ne 1) -or ($trace.tool_outcomes[0].name -ne 'get_weak_topics') -or
+        ($trace.tool_outcomes[0].ok -ne $true)) {
+        throw 'The agent turn trace did not match its request ID and actual tool outcome.'
+    }
+
+    Write-Output "Local smoke check passed: offline mode, $($health.study_notes) study notes, page load, source-linked Hinglish answer, quiz progress/retry, and traced revision tool outcome."
 }
 finally {
     if ($process -and -not $process.HasExited) {

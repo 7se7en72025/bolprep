@@ -1214,3 +1214,10 @@
 - Added a 90-second idle deadline while fetching streamed speech, refreshed by each nonempty audio chunk and cleared before buffered playback finishes. Timeout failures use `stream-timeout`, fall back before playback starts, and stop queued sources after playback has started. Deliberate interruption also releases the pending playback wait without requiring an audio-ended event.
 - Browser timers may be delayed in suspended tabs. Actual audible playback and provider cancellation remain unverified.
 - Verification: JavaScript syntax and diff checks passed. A temporary actual-source simulation verified initial and midstream idle timeouts, correct fallback/queued-source cleanup, timer removal, and cancellation during buffered playback without recording success or failure. No provider or audio device was used.
+
+## Trace tutor turns in diagnostics - 2026-10-08
+
+- Agent turns now return an `X-Request-ID` and a text-free trace with UTC start time, server duration, configured model, source count, and actual tool outcomes. Server failures carry trace metadata and log the request ID.
+- The browser's schema 6 export retains up to 500 completed, failed, or canceled turn traces with client duration. Usage is explicitly unavailable, and early disconnects can lack server metadata. Traces stay in page memory and exclude learner text, audio, and session cookies.
+- The offline smoke check now verifies that a revision turn's trace ID matches its response header and reports its executed `get_weak_topics` outcome. Browser interactions and live-model tracing remain unverified.
+- Verification: Python compilation, JavaScript syntax, diff checks, and the extended isolated offline smoke command passed. Temporary failure probes verified matching header/event/log request IDs, no question text in trace metadata, and propagation of error traces through the actual client parser. The smoke reader explicitly decodes byte-array NDJSON responses as UTF-8 for Windows PowerShell.

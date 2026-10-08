@@ -81,6 +81,7 @@ const speechFailures = [];
 const automaticVoiceTurnSamples = [];
 const modelStreamSamples = [];
 const modelStreamFailures = [];
+const tutorTurnTraces = [];
 const recognitionSamples = [];
 const recognitionFailures = [];
 const recordedTranscriptionSamples = [];
@@ -158,7 +159,11 @@ async function readAgentStream(response, onTextDelta, onSpeechMode) {
     if (event.type === "delta" && typeof event.text === "string") onTextDelta(event.text);
     else if (event.type === "speech_mode" && typeof event.progressive === "boolean") onSpeechMode?.(event.progressive);
     else if (event.type === "complete") payload = event.payload;
-    else if (event.type === "error") throw new Error(event.error || "Tutor request failed.");
+    else if (event.type === "error") {
+      const error = new Error(event.error || "Tutor request failed.");
+      error.trace = event.trace;
+      throw error;
+    }
   }
   while (true) {
     const { value, done } = await reader.read();
@@ -711,22 +716,23 @@ function buildSpeechDiagnostics() {
       recognition_end_to_start: percentiles(group.samples),
     }));
   return {
-    schema_version: 5,
+    schema_version: 6,
     generated_at_utc: new Date().toISOString(),
     scope: "Current page only",
-    privacy: "Timing and failure categories only; no transcript text or audio.",
+    privacy: "Timing, request IDs, and tool outcomes only; no transcript text or audio.",
     tts,
     stt,
     recorded_stt: recordedStt,
     model_streams: modelStreams,
     automatic_voice_turns: automaticVoiceTurns,
+    tutor_turns: tutorTurnTraces.slice(),
   };
 }
 
 copySpeechDiagnosticsButton.addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(JSON.stringify(buildSpeechDiagnostics(), null, 2));
-    statusLine.textContent = "Current-page speech diagnostics copied. They contain timings and counts only.";
+    statusLine.textContent = "Current-page diagnostics copied. They contain no transcript text or audio.";
   } catch {
     statusLine.textContent = "Clipboard access was unavailable. Use Download JSON or allow clipboard access and try again.";
   }
@@ -744,7 +750,7 @@ downloadSpeechDiagnosticsButton.addEventListener("click", () => {
   link.click();
   link.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-  statusLine.textContent = "Current-page speech diagnostics downloaded as JSON. They contain timings and counts only.";
+  statusLine.textContent = "Current-page diagnostics downloaded. They contain no transcript text or audio.";
 });
 
 function splitSpeechText(text, maxCodePoints = 500) {
@@ -1144,6 +1150,27 @@ async function sendQuestion(question) {
   const controller = activeRequest;
   const requestLanguage = speechLanguage.value;
   const requestStartedAt = performance.now();
+  const clientStartedAtUtc = new Date().toISOString();
+  let requestId = null;
+  let traceRecorded = false;
+  const recordTrace = (outcome, trace = null) => {
+    if (traceRecorded) return;
+    traceRecorded = true;
+    tutorTurnTraces.push({
+      request_id: trace?.request_id || requestId,
+      started_at_utc: trace?.started_at_utc || clientStartedAtUtc,
+      outcome,
+      language: requestLanguage,
+      client_duration_ms: Number((performance.now() - requestStartedAt).toFixed(2)),
+      server_duration_ms: trace?.server_duration_ms ?? null,
+      mode: trace?.mode ?? null,
+      configured_model: trace?.configured_model ?? null,
+      source_count: trace?.source_count ?? null,
+      tool_outcomes: (trace?.tool_outcomes || []).map(({ name, ok }) => ({ name, ok: ok === true })),
+      usage: null,
+    });
+    if (tutorTurnTraces.length > 500) tutorTurnTraces.shift();
+  };
   let firstTextMs = null;
   const progressiveSpeechAllowed = !streamedTtsOption.checked;
   let progressiveSpeech = null;
@@ -1159,6 +1186,7 @@ async function sendQuestion(question) {
       body: JSON.stringify({ question, history: history.slice(-20), language: requestLanguage }),
       signal: controller.signal,
     });
+    requestId = response.headers.get("X-Request-ID");
     const payload = await readAgentStream(response, (delta) => {
       if (requestTurn !== turn) return;
       if (firstTextMs === null) firstTextMs = performance.now() - requestStartedAt;
@@ -1176,12 +1204,14 @@ async function sendQuestion(question) {
       activeProgressiveSpeech = progressiveSpeech;
     });
     if (requestTurn !== turn) {
+      recordTrace("cancelled", payload.trace);
       if (payload.mode === "model") {
         modelStreamFailures.push({ language: requestLanguage, model: modelName, reason: "cancelled" });
         if (modelStreamFailures.length > 500) modelStreamFailures.shift();
       }
       return;
     }
+    recordTrace("completed", payload.trace);
     const usedProgressiveSpeech = progressiveSpeech?.finish() || false;
     if (activeProgressiveSpeech === progressiveSpeech) activeProgressiveSpeech = null;
     if (payload.mode === "model") {
@@ -1224,6 +1254,7 @@ async function sendQuestion(question) {
       speak(payload.answer);
     }
   } catch (error) {
+    recordTrace(error.name === "AbortError" || requestTurn !== turn ? "cancelled" : "failed", error.trace);
     if (progressiveSpeech && requestTurn === turn && error.name !== "AbortError") stopSpeechOutput();
     if (modelModeAvailable) {
       modelStreamFailures.push({
