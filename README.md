@@ -345,6 +345,8 @@ Record requests chunks about once per second and retains at most 5 MiB of encode
 
 ## Multilingual note indexing
 
+Explicit article references normalize Unicode decimal digits to the ASCII corpus IDs, so Devanagari numbers can select the same notes. Latin suffixes remain case-insensitive, including mixed digit-script references such as `२१A`. The reference token itself is excluded from substantive support checks: naming `21A` does not make an unrelated topic supported. This does not parse spelled-out numbers, Hindi letter suffixes, ranges, or multiple-article comparisons. Unicode lookup, suffix handling, and unsupported-topic behavior remain unverified at runtime.
+
 Overlap and experimental rarity scoring now index English, Hindi, and Roman Hinglish titles/summaries alongside the keyword list. Explicit-article support checks use the same fields. Tokens are sets, so repeated words across translations do not multiply body overlap; rarity document frequency still counts each note once. Corpus text and sources are unchanged. Common translated words can still produce weak matches, and this remains lexical retrieval without semantic translation. Current rankings, multilingual recall, false positives, and scorer comparison results are unmeasured; historical figures used the earlier English-body index.
 
 ## Recent-topic retrieval for follow-ups

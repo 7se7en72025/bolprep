@@ -161,7 +161,13 @@ def retrieve(question: str, limit: int | None = None, *, scoring: str = "overlap
     article_reference = ARTICLE_REFERENCE_PATTERN.search(question)
     documents = load_corpus()
     if article_reference:
-        article_id = (article_reference.group("article_id") or article_reference.group("hindi_id")).casefold()
+        raw_article_id = (article_reference.group("article_id") or article_reference.group("hindi_id")).casefold()
+        article_id = "".join(
+            str(unicodedata.decimal(character)) if character.isdecimal() else character
+            for character in raw_article_id
+        )
+        # A suffix reference (such as 21A) identifies the note; it is not topic evidence.
+        informative_tokens.discard(raw_article_id)
         document = next((item for item in documents if item["id"] == f"article-{article_id}"), None)
         if document is None:
             return []

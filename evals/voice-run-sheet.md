@@ -300,6 +300,8 @@ Export schema 12: attempts should carry capture_limit_ms, summary capture_limit_
 
 ### Multilingual retrieval indexing checks (not yet performed)
 
+Compare ASCII and Devanagari article numbers for bare references, generic clarifications, and substantive supported questions, including a Latin-suffix reference such as २१A. Repeat with a prior Devanagari reference followed by a generic example request. Try an unrelated subject after a suffix reference: the number/suffix itself must not satisfy topic support. Unknown article IDs should return no checked source. Spelled-out numbers and Hindi letter suffixes remain unsupported; record those separately from decimal-digit normalization.
+
 Choose substantive terms present in checked Hindi/Hinglish titles or summaries but absent from their keyword lists, then inspect retrieved sources for those questions and explicit article references. Compare English/Hindi/Hinglish formulations, unrelated prompts containing common translated words, and article-topic mismatches. Repeated terms across translations should not multiply body-token scores. When evaluation runs are authorized, rerun both scorers on the same dataset/corpus and report gains/regressions by language; do not reuse historical English-body results as current metrics.
 
 ### Speech input and retrieval context checks (not yet performed)

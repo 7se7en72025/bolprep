@@ -1482,3 +1482,9 @@
 - Inspection found lexical body scoring and explicit-article support used English titles/summaries only. Added one shared token-field helper covering English, Hindi, and Roman Hinglish checked text for both scoring variants and article checks. Keyword weight, raw eligibility, result limits, and distinct-token scoring remain in place.
 - Repeated translated words do not multiply body overlap; rarity frequency counts each note once. Broader language coverage can change rankings and false positives, with no semantic or quality improvement claim. Added README/manual translated-body and mismatch cases; historical metrics refer to the old index.
 - Verification: retrieval/terminal/agent/server/eval Python compilation, retrieval CLI help, and git diff whitespace checks passed. No tests, evaluation runs, browser interactions, or provider calls were performed; multilingual recall, article support, scoring comparisons, and common-word false positives remain unmeasured.
+
+## Normalize decimal article numbers for corpus lookup - 2026-10-08
+
+- The reference regex already accepted Unicode decimal digits, but raw IDs did not match ASCII corpus keys. Lookup now maps decimal digits to ASCII while retaining case-insensitive Latin suffixes. Prior-context references pass through the same lookup.
+- Removed the reference token from substantive evidence checks, preventing suffix IDs such as 21A from satisfying their own topic-overlap requirement for unrelated questions. Spelled-out numbers, Hindi suffix letters, ranges, and multiple-reference comparisons are not implemented. Added README/manual digit, suffix, follow-up, and abstention cases.
+- Verification: retrieval/terminal/agent/server/eval Python compilation and git diff whitespace checks passed. No tests, evaluation runs, interactive sessions, or provider calls were performed; Unicode lookup, suffix behavior, unsupported handling, and retrieval quality remain unverified at runtime.
