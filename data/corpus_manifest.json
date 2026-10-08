@@ -1,0 +1,687 @@
+{
+  "schema_version": 1,
+  "corpus_path": "data/fundamental_rights.json",
+  "corpus_sha256": "9ed8d6970fe1d95d9b2c32d9b0caa9d9dd9ae75e89a0c55e05ca30001e0deeaa",
+  "document_count": 48,
+  "scope": "Repository-authored short study summaries with recorded source metadata; not full constitutional text or legal interpretation.",
+  "reuse_permission_review": "No separate permission/license review is recorded in this manifest. Source links and check dates do not establish redistribution rights.",
+  "limitations": [
+    "Source check dates are repository records, not a fresh source verification performed by this exporter.",
+    "Inventory validation does not prove factual accuracy, translation fidelity, citation support, or retrieval quality.",
+    "Regenerate after corpus edits; this is a snapshot, not a runtime source of truth."
+  ],
+  "documents": [
+    {
+      "id": "article-12",
+      "titles": {
+        "English": "Article 12 — Definition of the State",
+        "Hindi": "अनुच्छेद 12 — राज्य की परिभाषा",
+        "Hinglish": "Article 12 — Part III mein State ka meaning"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 12",
+        "checked_on": "2026-10-05"
+      }
+    },
+    {
+      "id": "article-13",
+      "titles": {
+        "English": "Article 13 — Laws inconsistent with Fundamental Rights",
+        "Hindi": "अनुच्छेद 13 — मौलिक अधिकारों से असंगत कानून",
+        "Hinglish": "Article 13 — Fundamental Rights se takrane wale laws"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 13(1)–(4)",
+        "checked_on": "2026-10-05"
+      }
+    },
+    {
+      "id": "article-14",
+      "titles": {
+        "English": "Article 14 — Equality before law",
+        "Hindi": "अनुच्छेद 14 — कानून के समक्ष समानता",
+        "Hinglish": "Article 14 — kanoon ke saamne barabari"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 14",
+        "checked_on": "2026-10-04"
+      }
+    },
+    {
+      "id": "article-15",
+      "titles": {
+        "English": "Article 15 — Prohibition of discrimination",
+        "Hindi": "अनुच्छेद 15 — भेदभाव का निषेध",
+        "Hinglish": "Article 15 — bhedbhaav par rok"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 15",
+        "checked_on": "2026-10-04"
+      }
+    },
+    {
+      "id": "article-16",
+      "titles": {
+        "English": "Article 16 — Equality in public employment",
+        "Hindi": "अनुच्छेद 16 — सार्वजनिक रोजगार में समान अवसर",
+        "Hinglish": "Article 16 — public jobs mein equal opportunity"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 16",
+        "checked_on": "2026-10-04"
+      }
+    },
+    {
+      "id": "article-17",
+      "titles": {
+        "English": "Article 17 — Abolition of untouchability",
+        "Hindi": "अनुच्छेद 17 — अस्पृश्यता का उन्मूलन",
+        "Hinglish": "Article 17 — untouchability par rok"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 17",
+        "checked_on": "2026-10-05"
+      }
+    },
+    {
+      "id": "article-18",
+      "titles": {
+        "English": "Article 18 — Abolition of titles",
+        "Hindi": "अनुच्छेद 18 — उपाधियों का उन्मूलन",
+        "Hinglish": "Article 18 — titles par rok"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 18(1)–(3)",
+        "checked_on": "2026-10-05"
+      }
+    },
+    {
+      "id": "article-19",
+      "titles": {
+        "English": "Article 19 — Certain freedoms",
+        "Hindi": "अनुच्छेद 19 — कुछ स्वतंत्रताएँ",
+        "Hinglish": "Article 19 — kuchh freedoms"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 19",
+        "checked_on": "2026-10-08"
+      }
+    },
+    {
+      "id": "article-20",
+      "titles": {
+        "English": "Article 20 — Protection in respect of conviction for offences",
+        "Hindi": "अनुच्छेद 20 — अपराधों के लिए दोषसिद्धि से संरक्षण",
+        "Hinglish": "Article 20 — offences mein conviction se protection"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 20(1)–(3)",
+        "checked_on": "2026-10-05"
+      }
+    },
+    {
+      "id": "article-21",
+      "titles": {
+        "English": "Article 21 — Life and personal liberty",
+        "Hindi": "अनुच्छेद 21 — जीवन और व्यक्तिगत स्वतंत्रता",
+        "Hinglish": "Article 21 — jeevan aur personal liberty"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 21",
+        "checked_on": "2026-10-04"
+      }
+    },
+    {
+      "id": "article-21a",
+      "titles": {
+        "English": "Article 21A — Right to education",
+        "Hindi": "अनुच्छेद 21A — शिक्षा का अधिकार",
+        "Hinglish": "Article 21A — education ka right"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 21A",
+        "checked_on": "2026-10-04"
+      }
+    },
+    {
+      "id": "article-23",
+      "titles": {
+        "English": "Article 23 — Prohibition of trafficking and forced labour",
+        "Hindi": "अनुच्छेद 23 — मानव तस्करी और बेगार का निषेध",
+        "Hinglish": "Article 23 — trafficking aur forced labour par rok"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 23",
+        "checked_on": "2026-10-05"
+      }
+    },
+    {
+      "id": "article-24",
+      "titles": {
+        "English": "Article 24 — Prohibition of hazardous work by children",
+        "Hindi": "अनुच्छेद 24 — बच्चों से खतरनाक काम कराने का निषेध",
+        "Hinglish": "Article 24 — bachchon se hazardous kaam par rok"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 24",
+        "checked_on": "2026-10-05"
+      }
+    },
+    {
+      "id": "article-22",
+      "titles": {
+        "English": "Article 22 — Protection against arrest and detention",
+        "Hindi": "अनुच्छेद 22 — गिरफ्तारी और निरोध के विरुद्ध संरक्षण",
+        "Hinglish": "Article 22 — arrest aur detention se protection"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 22(1)–(3)",
+        "checked_on": "2026-10-05"
+      }
+    },
+    {
+      "id": "article-25",
+      "titles": {
+        "English": "Article 25 — Freedom of conscience and religion",
+        "Hindi": "अनुच्छेद 25 — अंतःकरण और धर्म की स्वतंत्रता",
+        "Hinglish": "Article 25 — conscience aur religion ki freedom"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 25(1)",
+        "checked_on": "2026-10-05"
+      }
+    },
+    {
+      "id": "article-26",
+      "titles": {
+        "English": "Article 26 — Freedom to manage religious affairs",
+        "Hindi": "अनुच्छेद 26 — धार्मिक मामलों के प्रबंधन की स्वतंत्रता",
+        "Hinglish": "Article 26 — religious affairs manage karne ki freedom"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 26",
+        "checked_on": "2026-10-05"
+      }
+    },
+    {
+      "id": "article-27",
+      "titles": {
+        "English": "Article 27 — Freedom from taxes for promoting a particular religion",
+        "Hindi": "अनुच्छेद 27 — किसी विशेष धर्म के प्रचार के लिए कर देने से स्वतंत्रता",
+        "Hinglish": "Article 27 — kisi particular religion ko promote karne wale tax se freedom"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 27",
+        "checked_on": "2026-10-05"
+      }
+    },
+    {
+      "id": "article-28",
+      "titles": {
+        "English": "Article 28 — Freedom from religious instruction in certain educational institutions",
+        "Hindi": "अनुच्छेद 28 — कुछ शिक्षण संस्थानों में धार्मिक शिक्षा से स्वतंत्रता",
+        "Hinglish": "Article 28 — kuch educational institutions mein religious instruction se freedom"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 28(1)–(3)",
+        "checked_on": "2026-10-05"
+      }
+    },
+    {
+      "id": "article-29",
+      "titles": {
+        "English": "Article 29 — Protection of cultural and educational interests",
+        "Hindi": "अनुच्छेद 29 — सांस्कृतिक और शैक्षिक हितों का संरक्षण",
+        "Hinglish": "Article 29 — cultural aur educational interests ka protection"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 29(1)–(2)",
+        "checked_on": "2026-10-05"
+      }
+    },
+    {
+      "id": "article-31c",
+      "titles": {
+        "English": "Article 31C - Protection for laws implementing specified directive principles",
+        "Hindi": "अनुच्छेद 31C - कुछ नीति-निर्देशक सिद्धांत लागू करने वाले कानूनों का संरक्षण",
+        "Hinglish": "Article 31C - specified directive principles lagu karne wale laws ka protection"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 31C",
+        "checked_on": "2026-10-06"
+      }
+    },
+    {
+      "id": "article-32",
+      "titles": {
+        "English": "Article 32 — Remedies for enforcement of Fundamental Rights",
+        "Hindi": "अनुच्छेद 32 — मौलिक अधिकारों के प्रवर्तन के उपाय",
+        "Hinglish": "Article 32 — Fundamental Rights lagu karane ke remedies"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 32(1)–(2)",
+        "checked_on": "2026-10-05"
+      }
+    },
+    {
+      "id": "article-30",
+      "titles": {
+        "English": "Article 30 — Right of minorities to establish and administer educational institutions",
+        "Hindi": "अनुच्छेद 30 — अल्पसंख्यकों का शैक्षणिक संस्थान स्थापित और प्रशासित करने का अधिकार",
+        "Hinglish": "Article 30 — minorities ka educational institutions establish aur administer karne ka right"
+      },
+      "source": {
+        "title": "The Constitution of India — Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 30(1), (1A), and (2)",
+        "checked_on": "2026-10-05"
+      }
+    },
+    {
+      "id": "article-31a",
+      "titles": {
+        "English": "Article 31A - Protection for certain laws about estates and property",
+        "Hindi": "अनुच्छेद 31A - संपत्ति से जुड़े कुछ कानूनों का संरक्षण",
+        "Hinglish": "Article 31A - estates aur property se jude kuch laws ka protection"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 31A(1)",
+        "checked_on": "2026-10-06"
+      }
+    },
+    {
+      "id": "article-33",
+      "titles": {
+        "English": "Article 33 - Parliament may modify rights for specified forces and services",
+        "Hindi": "अनुच्छेद 33 - कुछ बलों और सेवाओं के लिए अधिकारों में संसद द्वारा बदलाव",
+        "Hinglish": "Article 33 - specified forces aur services ke liye Parliament rights modify kar sakti hai"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 33",
+        "checked_on": "2026-10-06"
+      }
+    },
+    {
+      "id": "article-34",
+      "titles": {
+        "English": "Article 34 - Parliament may provide indemnity for acts under martial law",
+        "Hindi": "अनुच्छेद 34 - मार्शल लॉ के दौरान किए गए कार्यों के लिए संसद क्षतिपूर्ति दे सकती है",
+        "Hinglish": "Article 34 - martial law ke dauran hue acts ke liye Parliament indemnity de sakti hai"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 34",
+        "checked_on": "2026-10-06"
+      }
+    },
+    {
+      "id": "article-35",
+      "titles": {
+        "English": "Article 35 - Parliament makes laws for specified Fundamental Rights matters",
+        "Hindi": "अनुच्छेद 35 - कुछ मौलिक अधिकारों के मामलों पर संसद कानून बनाती है",
+        "Hinglish": "Article 35 - kuch Fundamental Rights matters par Parliament law banati hai"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 35",
+        "checked_on": "2026-10-06"
+      }
+    },
+    {
+      "id": "article-31b",
+      "titles": {
+        "English": "Article 31B - validation of certain laws in the Ninth Schedule",
+        "Hindi": "अनुच्छेद 31B - नौवीं अनुसूची के कुछ कानूनों का संरक्षण",
+        "Hinglish": "Article 31B - Ninth Schedule ke kuch laws ka protection"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 31B",
+        "checked_on": "2026-10-06"
+      }
+    },
+    {
+      "id": "article-31",
+      "titles": {
+        "English": "Article 31 - omitted from the Constitution",
+        "Hindi": "अनुच्छेद 31 - संविधान से हटाया गया",
+        "Hinglish": "Article 31 - Constitution se omit kiya gaya"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part III, Article 31 and footnote on omission",
+        "checked_on": "2026-10-06"
+      }
+    },
+    {
+      "id": "article-39",
+      "titles": {
+        "English": "Article 39(a)-(f) - livelihood, resources, equal pay, and protection",
+        "Hindi": "अनुच्छेद 39(a)-(f) - आजीविका, संसाधन, समान वेतन और सुरक्षा",
+        "Hinglish": "Article 39(a)-(f) - livelihood, resources, equal pay aur protection"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 39(a)-(f)",
+        "checked_on": "2026-10-07"
+      }
+    },
+    {
+      "id": "article-36",
+      "titles": {
+        "English": "Article 36 - definition of State for Part IV",
+        "Hindi": "अनुच्छेद 36 - भाग IV के लिए राज्य की परिभाषा",
+        "Hinglish": "Article 36 - Part IV ke liye State ki definition"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 36",
+        "checked_on": "2026-10-07"
+      }
+    },
+    {
+      "id": "article-37",
+      "titles": {
+        "English": "Article 37 - application of the Directive Principles",
+        "Hindi": "अनुच्छेद 37 - नीति-निदेशक सिद्धांतों का लागू होना",
+        "Hinglish": "Article 37 - Directive Principles ka application"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 37",
+        "checked_on": "2026-10-06"
+      }
+    },
+    {
+      "id": "article-38",
+      "titles": {
+        "English": "Article 38 - social order for people's welfare",
+        "Hindi": "अनुच्छेद 38 - लोगों के कल्याण के लिए सामाजिक व्यवस्था",
+        "Hinglish": "Article 38 - logon ke welfare ke liye social order"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 38(1) and (2)",
+        "checked_on": "2026-10-06"
+      }
+    },
+    {
+      "id": "article-39a",
+      "titles": {
+        "English": "Article 39A - equal justice and free legal aid",
+        "Hindi": "अनुच्छेद 39A - समान न्याय और मुफ्त कानूनी सहायता",
+        "Hinglish": "Article 39A - equal justice aur free legal aid"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 39A",
+        "checked_on": "2026-10-07"
+      }
+    },
+    {
+      "id": "article-40",
+      "titles": {
+        "English": "Article 40 - village panchayats",
+        "Hindi": "अनुच्छेद 40 - ग्राम पंचायतें",
+        "Hinglish": "Article 40 - village panchayats ko organize karna"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 40",
+        "checked_on": "2026-10-06"
+      }
+    },
+    {
+      "id": "article-41",
+      "titles": {
+        "English": "Article 41 - work, education, and public assistance",
+        "Hindi": "अनुच्छेद 41 - काम, शिक्षा और सार्वजनिक सहायता",
+        "Hinglish": "Article 41 - work, education aur public assistance"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 41",
+        "checked_on": "2026-10-06"
+      }
+    },
+    {
+      "id": "article-42",
+      "titles": {
+        "English": "Article 42 - humane work conditions and maternity relief",
+        "Hindi": "अनुच्छेद 42 - मानवीय कार्य-स्थितियां और मातृत्व राहत",
+        "Hinglish": "Article 42 - humane work conditions aur maternity relief"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 42",
+        "checked_on": "2026-10-06"
+      }
+    },
+    {
+      "id": "article-43a",
+      "titles": {
+        "English": "Article 43A - workers' participation in industry management",
+        "Hindi": "???????? 43A - ?????? ??????? ??? ???????? ?? ????????",
+        "Hinglish": "Article 43A - industry management mein workers ki participation"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 43A",
+        "checked_on": "2026-10-07"
+      }
+    },
+    {
+      "id": "article-43b",
+      "titles": {
+        "English": "Article 43B - promotion of cooperative societies",
+        "Hindi": "???????? 43B - ?????? ???????? ?? ??????",
+        "Hinglish": "Article 43B - cooperative societies ko promote karna"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 43B",
+        "checked_on": "2026-10-07"
+      }
+    },
+    {
+      "id": "article-44",
+      "titles": {
+        "English": "Article 44 - uniform civil code",
+        "Hindi": "Anuchhed 44 - uniform civil code",
+        "Hinglish": "Article 44 - uniform civil code"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 44",
+        "checked_on": "2026-10-06"
+      }
+    },
+    {
+      "id": "article-43",
+      "titles": {
+        "English": "Article 43 - living wage and cottage industries",
+        "Hindi": "Anuchhed 43 - jeevan-yapan yogya vetan aur kuteer udyog",
+        "Hinglish": "Article 43 - living wage aur cottage industries"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 43",
+        "checked_on": "2026-10-06"
+      }
+    },
+    {
+      "id": "article-45",
+      "titles": {
+        "English": "Article 45 - early childhood care and education",
+        "Hindi": "अनुच्छेद 45 - प्रारंभिक बाल्य देखभाल और शिक्षा",
+        "Hinglish": "Article 45 - early childhood care aur education"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 45",
+        "checked_on": "2026-10-07"
+      }
+    },
+    {
+      "id": "article-46",
+      "titles": {
+        "English": "Article 46 - educational and economic interests of weaker sections",
+        "Hindi": "अनुच्छेद 46 - कमजोर वर्गों के शैक्षिक और आर्थिक हित",
+        "Hinglish": "Article 46 - weaker sections ke educational aur economic interests"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 46",
+        "checked_on": "2026-10-07"
+      }
+    },
+    {
+      "id": "article-47",
+      "titles": {
+        "English": "Article 47 - nutrition, living standards, and public health",
+        "Hindi": "अनुच्छेद 47 - पोषण, जीवन स्तर और सार्वजनिक स्वास्थ्य",
+        "Hinglish": "Article 47 - nutrition, living standard aur public health"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 47",
+        "checked_on": "2026-10-07"
+      }
+    },
+    {
+      "id": "article-48",
+      "titles": {
+        "English": "Article 48 - agriculture and animal husbandry",
+        "Hindi": "अनुच्छेद 48 - कृषि और पशुपालन",
+        "Hinglish": "Article 48 - agriculture aur animal husbandry"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 48",
+        "checked_on": "2026-10-07"
+      }
+    },
+    {
+      "id": "article-49",
+      "titles": {
+        "English": "Article 49 - protection of nationally important monuments",
+        "Hindi": "अनुच्छेद 49 - राष्ट्रीय महत्व के स्मारकों का संरक्षण",
+        "Hinglish": "Article 49 - nationally important monuments ka protection"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 49",
+        "checked_on": "2026-10-07"
+      }
+    },
+    {
+      "id": "article-50",
+      "titles": {
+        "English": "Article 50 - separation of judiciary and executive",
+        "Hindi": "अनुच्छेद 50 - न्यायपालिका और कार्यपालिका का पृथक्करण",
+        "Hinglish": "Article 50 - judiciary aur executive ka separation"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 50",
+        "checked_on": "2026-10-07"
+      }
+    },
+    {
+      "id": "article-51",
+      "titles": {
+        "English": "Article 51 - international peace and security",
+        "Hindi": "अनुच्छेद 51 - अंतरराष्ट्रीय शांति और सुरक्षा",
+        "Hinglish": "Article 51 - international peace aur security"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IV, Article 51",
+        "checked_on": "2026-10-07"
+      }
+    },
+    {
+      "id": "article-51a",
+      "titles": {
+        "English": "Article 51A - fundamental duties",
+        "Hindi": "???????? 51A - ????? ???????",
+        "Hinglish": "Article 51A - fundamental duties"
+      },
+      "source": {
+        "title": "The Constitution of India - Legislative Department, Government of India",
+        "url": "https://www.legislative.gov.in/static/uploads/2025/08/7af1daa22d65f9d04c00ae9b9aa5a799.pdf",
+        "section": "Part IVA, Article 51A",
+        "checked_on": "2026-10-08"
+      }
+    }
+  ]
+}

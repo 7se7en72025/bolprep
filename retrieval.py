@@ -152,7 +152,12 @@ def retrieval_query(question: str, prior_questions: list[str]) -> str:
 
 def load_corpus(path: Path = CORPUS_PATH) -> list[dict[str, Any]]:
     """Load notes and fail closed if a record is missing required metadata."""
-    documents = json.loads(path.read_text(encoding="utf-8"))
+    return parse_corpus(path.read_text(encoding="utf-8"))
+
+
+def parse_corpus(text: str) -> list[dict[str, Any]]:
+    """Validate one text snapshot, allowing inventories to hash the exact parsed bytes."""
+    documents = json.loads(text)
     if not isinstance(documents, list) or not documents:
         raise ValueError("Study corpus must be a non-empty JSON list.")
     required = {
