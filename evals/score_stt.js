@@ -1,5 +1,9 @@
 // Score manually paired STT transcripts without uploading or printing their text.
 const fs = require("node:fs");
+const failureReasons = new Set([
+  "no-speech", "permission-denied", "device-error", "network-error",
+  "unsupported-language", "empty-transcript", "other",
+]);
 
 function words(text) {
   return text.normalize("NFC").toLowerCase()
@@ -30,13 +34,17 @@ function score(trials) {
     if (!trial || typeof trial !== "object" || Array.isArray(trial)) {
       throw new Error(`Trial ${index + 1} must be an object.`);
     }
-    const { config, language, prompt_id: promptId, reference, transcript } = trial;
+    const { config, language, prompt_id: promptId, reference, transcript, failure_reason: failureReason } = trial;
     if (typeof config !== "string" || !config.trim()
       || !["Hindi", "Hinglish", "English"].includes(language)
       || typeof promptId !== "string" || !promptId.trim()
       || typeof reference !== "string" || !words(reference).length
       || (transcript !== null && typeof transcript !== "string")) {
       throw new Error(`Trial ${index + 1} needs config, language, prompt_id, nonempty reference, and transcript (string or null).`);
+    }
+    const failed = !transcript || !words(transcript).length;
+    if (failureReason !== undefined && (!failed || !failureReasons.has(failureReason))) {
+      throw new Error(`Trial ${index + 1} needs a failed transcript and a supported failure_reason code.`);
     }
     const promptKey = JSON.stringify([language, promptId.trim()]);
     const normalizedReference = words(reference).join(" ");
@@ -48,7 +56,7 @@ function score(trials) {
     if (!groups.has(key)) groups.set(key, {
       config: config.trim(), language, attempts: 0, failures: 0, scored: 0,
       errors: 0, reference_words: 0, all_attempts_errors: 0, all_attempts_reference_words: 0,
-      prompts: new Set(), attempts_by_prompt: new Map(), prompt_results: new Map(),
+      failure_reasons: {}, prompts: new Set(), attempts_by_prompt: new Map(), prompt_results: new Map(),
     });
     const group = groups.get(key);
     const referenceWords = words(reference);
@@ -64,9 +72,11 @@ function score(trials) {
     prompt.attempts += 1;
     group.all_attempts_reference_words += referenceWords.length;
     prompt.all_attempts_reference_words += referenceWords.length;
-    if (!transcript || !words(transcript).length) {
+    if (failed) {
       group.failures += 1;
       prompt.failures += 1;
+      const reason = failureReason || "unclassified";
+      group.failure_reasons[reason] = (group.failure_reasons[reason] || 0) + 1;
       group.all_attempts_errors += referenceWords.length;
       prompt.all_attempts_errors += referenceWords.length;
       continue;

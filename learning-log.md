@@ -1143,3 +1143,9 @@
 
 - When the server reports that a different answer was already saved for the quiz question, the status now tells the learner to start a new quiz instead of suggesting the conflicting answer can be retried. Other scoring errors keep the normal retry guidance.
 - `node --check web/app.js` and `git diff --check` passed. The saved-versus-revised answer race still needs the browser run-sheet check.
+
+## Separate STT failure causes in local scoring - 2026-10-08
+
+- The optional `failure_reason` field now groups failed or empty transcript attempts under fixed cause codes. Missing reasons appear as `unclassified`; successful transcripts cannot carry a failure reason. The run sheet and README explain the new output.
+- `node --check evals/score_stt.js`, `git diff --check`, and a synthetic three-attempt CLI run passed; the run reported one `no-speech` and one `unclassified` failure. No real speech was evaluated, and these counts depend on accurate manual labeling.
+- The repository-local Python environment could not start in this task environment, so no Python retrieval change or evaluation was attempted.
