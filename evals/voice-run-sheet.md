@@ -298,7 +298,11 @@ Repeat a short prompt at 20 and 60 seconds, then use a longer self-authored quiz
 
 Export schema 12: attempts should carry capture_limit_ms, summary capture_limit_s should match, and different limits should stay separate. Keep old unknown-limit exports separate. Verify the five-minute session/sixty-second idle limits, long-transcript review safeguards, and final-word retention. Record actual failures; a longer capture option is not evidence of better STT or quiz scoring.
 
-### Recent-topic follow-up checks (not yet performed)
+### Multilingual retrieval indexing checks (not yet performed)
+
+Choose substantive terms present in checked Hindi/Hinglish titles or summaries but absent from their keyword lists, then inspect retrieved sources for those questions and explicit article references. Compare English/Hindi/Hinglish formulations, unrelated prompts containing common translated words, and article-topic mismatches. Repeated terms across translations should not multiply body-token scores. When evaluation runs are authorized, rerun both scorers on the same dataset/corpus and report gains/regressions by language; do not reuse historical English-body results as current metrics.
+
+### Speech input and retrieval context checks (not yet performed)
 
 For Record, leave microphone permission unresolved for more than 45 seconds in an active tab. Expect the control to return to idle and one capture-timeout failure while the original draft stays intact. Grant the old request afterward: its tracks should stop and no capture/upload should start. Repeat after Cancel/hide and while a newer attempt is pending; the old deadline or permission grant must not cancel the newer one. Permission rejection/normal capture before the deadline should not produce a later timeout failure. Observe browser prompt and microphone indicators separately from local UI state.
 

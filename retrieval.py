@@ -132,6 +132,14 @@ def load_corpus(path: Path = CORPUS_PATH) -> list[dict[str, Any]]:
     return documents
 
 
+def _note_token_fields(document: dict[str, Any]) -> tuple[set[str], set[str]]:
+    """Index checked titles/summaries in every available corpus language."""
+    body = " ".join(document[field] for field in (
+        "title", "summary", "title_hi", "summary_hi", "title_hinglish", "summary_hinglish",
+    ))
+    return _tokens(" ".join(document["keywords"])), _tokens(body)
+
+
 def retrieve(question: str, limit: int | None = None, *, scoring: str = "overlap") -> list[dict[str, Any]]:
     """Rank notes with shared article checks and a selected lexical scoring rule."""
     if (
@@ -158,8 +166,7 @@ def retrieve(question: str, limit: int | None = None, *, scoring: str = "overlap
         if document is None:
             return []
         if informative_tokens:
-            keyword_tokens = _tokens(" ".join(document["keywords"]))
-            body_tokens = _tokens(f"{document['title']} {document['summary']}")
+            keyword_tokens, body_tokens = _note_token_fields(document)
             if not informative_tokens & (keyword_tokens | body_tokens):
                 return []
         return [document][:limit] if limit is not None else [document]
@@ -167,8 +174,7 @@ def retrieve(question: str, limit: int | None = None, *, scoring: str = "overlap
     if any(phrase in normalized_question for phrase in ("fundamental rights", "\u092e\u094c\u0932\u093f\u0915 \u0905\u0927\u093f\u0915\u093e\u0930", "maulik adhikar")):
         return documents if limit is None else documents[:limit]
 
-    token_fields = [(_tokens(" ".join(document["keywords"])),
-                     _tokens(f"{document['title']} {document['summary']}")) for document in documents]
+    token_fields = [_note_token_fields(document) for document in documents]
     weights: dict[str, float] = {}
     if scoring == "rarity":
         for token in query_tokens:
