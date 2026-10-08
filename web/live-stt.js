@@ -147,12 +147,15 @@ class BolPrepLiveTranscription {
     let event;
     try { event = JSON.parse(data); } catch { return; }
     if (!event || typeof event !== "object" || typeof event.type !== "string") return;
-    if (this.completedItems.has(event.item_id)) return;
     if (event.type === "error") {
       this.fail("The live transcription provider could not finish. Try Record or type your question.");
       return;
     }
+    if (this.completedItems.has(event.item_id)) return;
     if (event.type === "input_audio_buffer.committed" && this.state === "finalizing") {
+      if (typeof event.item_id !== "string" || !event.item_id || event.item_id.length > 128) return;
+      if (this.itemId && this.itemId !== event.item_id) return;
+      if (this.committedItemId && this.committedItemId !== event.item_id) return;
       this.committedItemId = event.item_id;
       return;
     }
@@ -168,7 +171,7 @@ class BolPrepLiveTranscription {
       "conversation.item.input_audio_transcription.completed",
       "conversation.item.input_audio_transcription.failed",
     ].includes(event.type)) return;
-    if (typeof event.item_id !== "string" || !event.item_id) return;
+    if (typeof event.item_id !== "string" || !event.item_id || event.item_id.length > 128) return;
     if (this.itemId && this.itemId !== event.item_id) return;
     if (this.committedItemId && this.committedItemId !== event.item_id) return;
     this.itemId = event.item_id;

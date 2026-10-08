@@ -1464,3 +1464,9 @@
 - Inspection found item-specific failed events bypassed the current/committed-item checks used for transcript text. They now pass those checks before failure cleanup, so completed or mismatched item failures cannot cancel an established current turn. Connection-wide errors keep their existing handling.
 - Restricted identity binding to known delta/completed/failed transcription event types. Unknown types are ignored. An event can still establish identity before the current/committed ID is known; complete stale-order isolation is not claimed. Added README/manual matching, mismatched, reused, and unknown-event cases.
 - Verification: live/app JavaScript syntax and git diff whitespace checks passed. No tests, controlled events, browser interactions, recordings, or provider calls were run; provider compatibility, reused-turn filtering, failure counts, and remaining first-event ambiguity remain unverified at runtime.
+
+## Preserve live identity across commit acknowledgments - 2026-10-08
+
+- Inspection found commit acknowledgments could overwrite committedItemId without checking the current transcript ID. Acknowledgments now require a nonempty bounded ID and match any known current/committed identity before assignment; transcription IDs share the 128-unit bound. Matching duplicates remain accepted.
+- Connection-wide errors are processed before completed-item filtering so stale item metadata cannot suppress them. First accepted identity remains ambiguous when no current/committed ID exists. Added README/manual acknowledgment, malformed ID, duplicate, and global-error cases.
+- Verification: live/app JavaScript syntax and git diff whitespace checks passed. No tests, controlled events, browser interactions, recordings, or provider calls were performed; provider ID compatibility, event ordering, final acceptance, and cleanup remain unverified at runtime.
