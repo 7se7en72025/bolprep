@@ -1404,3 +1404,9 @@
 - Inspection found lifecycle cleanup covered live transcription only. Added shared visibility/pagehide cleanup for browser recognition, live capture, recorded capture/pending permission, and recorded transcription. It restores unconfirmed drafts through existing rules, invalidates pending capture, discards clips, aborts transcription, and issues track stops before delayed recorder callbacks.
 - Return requires explicit microphone restart. Already-submitted tutor work is separate, and aborting a local request does not undo upstream processing. Added README and manual lifecycle/permission-race checks.
 - Verification: JavaScript syntax and git diff whitespace checks passed. No tests, browser interactions, recordings, or provider calls were run. Hidden/frozen-page events, cached-page restoration, final-transcript isolation, permission races, and hardware release remain unverified.
+
+## Discard recorded clips after microphone loss - 2026-10-08
+
+- Added recorded-capture audio-track validation and ended-event watchers. Permanent loss marks discard before recorder cleanup, records capture-ended once, stops tracks, and prompts reconnect/type. Recorder completion checks track state as well so an earlier onstop event cannot send a truncated clip after device loss.
+- Watchers are removed on completion/start failure; existing cancellation and discard guards suppress duplicate failure reporting. Normal Stop/limit transcription remains available when tracks are live. Temporary mute is not classified as permanent loss.
+- Updated README and manual device/event-order checks. Verification: JavaScript syntax and git diff whitespace checks passed. No tests, browser interactions, recordings, or provider calls were run; real-device loss, permission revocation, event ordering, normal completion, and duplicate suppression remain unverified.

@@ -305,6 +305,7 @@ function recordingCaptureFailure(error) {
     NotAllowedError: ["permission-denied", "Microphone access was denied or blocked. Allow it in browser settings, or type your question."],
     SecurityError: ["microphone-blocked", "This browser page is not allowed to use the microphone. Open the local tutor page directly, or type your question."],
     NotFoundError: ["no-microphone", "No microphone was found. Connect one and try again, or type your question."],
+    CaptureEndedError: ["capture-ended", "The microphone disconnected. Reconnect it and record again, or type your question."],
     NotReadableError: ["microphone-unavailable", "The microphone could not be opened. Close other apps using it and try again, or type your question."],
     OverconstrainedError: ["microphone-unsupported", "The browser could not start a supported microphone input. Try browser speech input or type your question."],
   };
@@ -325,11 +326,16 @@ async function startServerRecording() {
   updateServerTranscribeButton("starting");
   statusLine.textContent = "Allow microphone access, then ask a short question. Audio is sent for transcription when you stop.";
   let stream;
+  let detachTrackListeners = () => {};
   try {
     stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     if (recordingRun !== serverRecordingRun || serverRecordingStartCancelled) {
       stream.getTracks().forEach((track) => track.stop());
       return;
+    }
+    const audioTracks = stream.getAudioTracks();
+    if (!audioTracks.length || audioTracks.some((track) => track.readyState === "ended")) {
+      throw Object.assign(new Error("Microphone capture ended."), { name: "CaptureEndedError" });
     }
     const mimeType = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"]
       .find((candidate) => typeof MediaRecorder.isTypeSupported === "function"
@@ -343,6 +349,19 @@ async function startServerRecording() {
     activeMediaRecorder = recorder;
     serverRecordingChunks = [];
     discardServerRecording = false;
+    const captureEnded = () => {
+      if (recordingRun !== serverRecordingRun || discardServerRecording
+        || activeMediaRecorder !== recorder) return;
+      // Mark discard first so recorder errors and repeated track events cannot count twice.
+      discardServerRecording = true;
+      recordedTranscriptionFailures.push({ language: recordingLanguage, reason: "capture-ended" });
+      if (recordedTranscriptionFailures.length > 500) recordedTranscriptionFailures.shift();
+      stopServerRecording(true);
+      stream.getTracks().forEach((track) => track.stop());
+      statusLine.textContent = "The microphone disconnected. This recording was discarded. Reconnect it and record again, or type your question.";
+    };
+    audioTracks.forEach((track) => track.addEventListener("ended", captureEnded));
+    detachTrackListeners = () => audioTracks.forEach((track) => track.removeEventListener("ended", captureEnded));
     recorder.ondataavailable = (event) => {
       if (event.data?.size) serverRecordingChunks.push(event.data);
     };
@@ -356,6 +375,9 @@ async function startServerRecording() {
       if (unexpected) statusLine.textContent = "Recording failed. Try again or type your question.";
     };
     recorder.onstop = () => {
+      // Some browsers stop the recorder before delivering the track's ended event.
+      if (audioTracks.some((track) => track.readyState === "ended")) captureEnded();
+      detachTrackListeners();
       if (serverRecordingTimer !== null) {
         window.clearTimeout(serverRecordingTimer);
         serverRecordingTimer = null;
@@ -385,6 +407,7 @@ async function startServerRecording() {
       stopServerRecording(false);
     }, 20_000);
   } catch (error) {
+    detachTrackListeners();
     stream?.getTracks().forEach((track) => track.stop());
     if (recordingRun !== serverRecordingRun || serverRecordingStartCancelled) return;
     const [reason, message] = recordingCaptureFailure(error);

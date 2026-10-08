@@ -240,6 +240,10 @@ Let a tutor finish generating text while its browser/provider voice continues. S
 
 Repeat with a long Unicode answer: history must stay within 3,000 code points per assistant message while the displayed answer remains complete. Start New session and confirm earlier annotations do not enter new follow-ups. Do not infer exact heard words or provider cancellation from the note.
 
+### Recorded microphone loss checks (not yet performed)
+
+While Record is capturing, unplug the microphone or revoke its permission. Check that the partial clip is discarded, no transcription upload starts, tracks close, and exactly one capture-ended failure is recorded. Repeat near the 20-second limit and just after pressing recording Stop to inspect track/recorder event ordering. Ordinary Stop and the limit with live tracks should still produce an editable transcript. Cancel/hide the page and check no extra device-loss failure is counted. Reconnect and explicitly start another recording; temporary mute should not be treated as permanent loss.
+
 ### Hidden-page speech input checks (not yet performed)
 
 For browser recognition, Live mic, and Record separately, switch tabs/minimize while connecting, listening, and finalizing. No canceled final transcript should submit automatically or overwrite a later draft. Unconfirmed browser/live words should restore the original draft; confirmed browser words should remain for review. For Record, also hide while microphone permission is pending and while the upload is transcribing: newly granted tracks should close, the clip should be discarded, and late results should be ignored. Check the browser's microphone indicator and restart each input explicitly after returning. Navigate away/back to exercise pagehide and cached-page restoration. Record device/lifecycle failures; a local stop command does not prove immediate hardware release or upstream cancellation.
