@@ -97,9 +97,12 @@ def run_agent_turn(
     responses_client: Any | None = None,
     on_text_delta: Callable[[str], None] | None = None,
     on_speech_mode: Callable[[bool], None] | None = None,
+    on_sources: Callable[[list[dict[str, str]]], None] | None = None,
 ) -> dict[str, Any]:
     """Answer a turn, using validated quiz/progress functions in model mode."""
     documents = retrieve(_retrieval_query(question, history))
+    if on_sources is not None:
+        on_sources([_source(document) for document in documents])
     if responses_client is None and not api_is_configured():
         return _offline_turn(question, documents, session_id, language)
 

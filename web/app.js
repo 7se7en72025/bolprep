@@ -154,7 +154,7 @@ function updateMicrophoneButton(listening, disabled = false) {
   micButton.disabled = disabled || unavailable;
 }
 
-function addMessage(role, text, sources = []) {
+function addMessage(role, text, sources = [], sourceLabel = "STUDY SOURCE") {
   const article = document.createElement("article");
   article.className = `message ${role === "user" ? "user-message" : "tutor-message"}`;
   const speaker = document.createElement("span");
@@ -168,7 +168,7 @@ function addMessage(role, text, sources = []) {
     sourceList.className = "sources";
     const label = document.createElement("span");
     label.className = "sources-label";
-    label.textContent = "STUDY SOURCE";
+    label.textContent = sourceLabel;
     sourceList.append(label);
     for (const source of sources) {
       const link = document.createElement("a");
@@ -185,7 +185,7 @@ function addMessage(role, text, sources = []) {
   return article;
 }
 
-async function readAgentStream(response, onTextDelta, onSpeechMode, onActivity) {
+async function readAgentStream(response, onTextDelta, onSpeechMode, onActivity, onSources) {
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
     throw new Error(error.error || "Tutor request failed.");
@@ -200,6 +200,7 @@ async function readAgentStream(response, onTextDelta, onSpeechMode, onActivity) 
     const event = JSON.parse(line);
     if (event.type === "delta" && typeof event.text === "string") onTextDelta(event.text);
     else if (event.type === "speech_mode" && typeof event.progressive === "boolean") onSpeechMode?.(event.progressive);
+    else if (event.type === "retrieved_sources" && Array.isArray(event.sources)) onSources?.(event.sources);
     else if (event.type === "complete") payload = event.payload;
     else if (event.type === "error") {
       const error = new Error(event.error || "Tutor request failed.");
@@ -1527,7 +1528,10 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
         ? createProgressiveStreamedSpeech()
         : createProgressiveBrowserSpeech();
       activeProgressiveSpeech = progressiveSpeech;
-    }, resetIdleDeadline);
+    }, resetIdleDeadline, (sources) => {
+      if (requestTurn !== turn || controller.signal.aborted || !sources.length) return;
+      if (!activePartialMessage) activePartialMessage = addMessage("assistant", "", sources, "RETRIEVED NOTES");
+    });
     window.clearTimeout(idleTimer);
     window.clearTimeout(totalTimer);
     if (requestTurn !== turn) {

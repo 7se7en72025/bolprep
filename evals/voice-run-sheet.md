@@ -255,3 +255,9 @@ Suspend the audio context while capacity is exhausted: no clock progress should 
 ### TTS listener comparison
 
 Follow [rubric version 1](TTS_RUBRIC.md) for matched prompts and anonymous fluent listeners. Document configuration settings, playback environment, order, and sample size. Score actual private observations with `node evals/score_tts.js evals/local-tts-ratings.json`. Inspect failures and both all-attempt/completed prompt-listener coverage flags before comparing distributions. Do not convert unavailable playback into a low pronunciation score, invent observations, or claim significance from descriptive medians. Scorer runtime and listener collection remain unverified.
+
+### Retrieved sources during streamed speech (not yet performed)
+
+Ask a supported Article 14 question in a configured model session with progressive browser/provider speech. Retrieved note links should appear before answer text completes and remain visible during early speech. At completion, the partial message should be replaced with one final answer/source list. Repeat offline and with quiz/revision tools; the early label describes retrieval, not answer-support validation.
+
+Ask an unsupported question: no early evidence links should be invented. Stop, fail, or supersede a turn after source arrival: its partial sources must not appear under the next answer or resume from a late event. Check the actual final answer against the retrieved note separately before claiming citation support.

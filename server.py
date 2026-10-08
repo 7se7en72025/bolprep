@@ -303,6 +303,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 on_speech_mode=lambda progressive: self._write_ndjson(
                     {"type": "speech_mode", "progressive": progressive}
                 ),
+                on_sources=lambda sources: self._write_ndjson({"type": "retrieved_sources", "sources": sources}),
             )
             result["trace"] = turn_trace("completed", result)
             self._write_ndjson({"type": "complete", "payload": result})
