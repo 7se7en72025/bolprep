@@ -98,11 +98,17 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 return
             if not self._permit_api_request("history-read" if self.path == "/api/history" else "progress-read"):
                 return
-            self._ensure_browser_session()
+            if not self._ensure_browser_session():
+                return
             if self.path == "/api/history":
                 self._handle_saved_history()
             else:
-                self._send_json(200, get_progress(self.session_id))
+                try:
+                    progress = get_progress(self.session_id)
+                except (sqlite3.Error, OSError):
+                    self._storage_unavailable()
+                    return
+                self._send_json(200, progress)
             return
         if self.path == "/" and not ACCESS_GATE.allowed(self._access_token()):
             self._redirect("/login")
@@ -125,7 +131,8 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             self.send_error(404, "Not found")
             return
         if self.path == "/":
-            self._ensure_browser_session()
+            if not self._ensure_browser_session():
+                return
         path, content_type = route
         try:
             payload = path.read_bytes()
@@ -149,12 +156,17 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             return
         if not self._permit_api_request("history-delete" if self.path == "/api/history" else "progress-delete"):
             return
-        self._ensure_browser_session()
+        if not self._ensure_browser_session():
+            return
         if self.path == "/api/history":
             self._handle_saved_history()
             return
-        clear_progress(self.session_id)
-        ensure_session(self.session_id)
+        try:
+            clear_progress(self.session_id)
+            ensure_session(self.session_id)
+        except (sqlite3.Error, OSError):
+            self._storage_unavailable()
+            return
         self._send_json(200, {"ok": True})
 
     def do_POST(self) -> None:
@@ -183,7 +195,8 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 return
             self._handle_access(body)
             return
-        self._ensure_browser_session()
+        if not self._ensure_browser_session():
+            return
         if self.path == "/api/transcribe":
             self._handle_transcription()
             return
@@ -548,12 +561,16 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             self._send_json(400, {"error": str(exc)})
             return
         quiz_id = str(uuid.uuid4())
-        create_quiz_run(
-            self.session_id,
-            quiz_id,
-            quiz["topic"],
-            [question["id"] for question in quiz["questions"]],
-        )
+        try:
+            create_quiz_run(
+                self.session_id,
+                quiz_id,
+                quiz["topic"],
+                [question["id"] for question in quiz["questions"]],
+            )
+        except (sqlite3.Error, OSError):
+            self._storage_unavailable()
+            return
         quiz["quiz_id"] = quiz_id
         self._send_json(200, quiz)
 
@@ -583,6 +600,9 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             result = save_answer(self.session_id, quiz_id, question_id, idempotency_key, result)
         except ProgressConflict as exc:
             self._send_json(409, {"error": str(exc)})
+            return
+        except (sqlite3.Error, OSError):
+            self._storage_unavailable()
             return
         except ValueError as exc:
             self._send_json(400, {"error": str(exc)})
@@ -643,7 +663,15 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         self._send_json(200, {"ok": True}, include_session_cookie=False,
                         access_cookie=f"{ACCESS_COOKIE}={new_token}; HttpOnly; SameSite=Strict; Path=/; Max-Age={ACCESS_LIFETIME_SECONDS}")
 
-    def _ensure_browser_session(self) -> None:
+    def _storage_unavailable(self) -> None:
+        # Setup may fail before a POST body is consumed. Do not reuse that socket.
+        self.close_connection = True
+        self._send_json(503, {
+            "error": "Saved study data is unavailable. Try again later; check saved progress before retrying a score or deletion.",
+            "code": "storage-unavailable",
+        })
+
+    def _ensure_browser_session(self) -> bool:
         cookie = SimpleCookie()
         try:
             cookie.load(self.headers.get("Cookie", ""))
@@ -658,7 +686,12 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 session_id = None
         self.new_session_cookie = session_id is None
         self.session_id = session_id or str(uuid.uuid4())
-        ensure_session(self.session_id)
+        try:
+            ensure_session(self.session_id)
+        except (sqlite3.Error, OSError):
+            self._storage_unavailable()
+            return False
+        return True
 
     def _send_session_cookie_if_needed(self) -> None:
         if self.new_session_cookie:

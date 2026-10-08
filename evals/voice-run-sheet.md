@@ -447,3 +447,8 @@ During authorized browser stream checks, split valid Hindi and supplementary cha
 ### Provider PCM reader ownership (not yet verified)
 
 Inspect provider playback completion, explicit Stop, a new speech turn, fetch abort, odd final PCM bytes, empty streams, idle/playback timeout, and scheduling errors. Once a reader is acquired, it should release its lock in finally; unfinished streams should receive cancellation without delaying cleanup on that promise. Existing source-stop, deadline, abort-listener, controller-ownership, and fallback behavior must remain intact. Repeat with progressive sentence queues and a cancellation promise that never resolves: canceled output must not block later speech or change the new turn's status. Browser/network buffering and upstream provider work are outside this local cleanup claim. No playback, stream-injection, browser, or provider checks have been performed.
+
+
+### Study storage unavailable recovery (not yet verified)
+
+With an authorized isolated database, inspect locked/unwritable/corrupt storage during session initialization, progress GET/DELETE, quiz creation, and score persistence. Expect generic JSON 503 with storage-unavailable, no paths/exception text, and a closed connection. During POST setup failure before body consumption, send another request on the same socket: unread body bytes must not be parsed as a new request. No quiz/result success should be reported after a failed storage operation. A write or deletion may have completed before a later error; refresh before retrying. Matching retry keys must preserve existing replay behavior once storage recovers. Inspect browser control recovery and root-page setup failures. No databases were altered and none of these failure scenarios have been executed.

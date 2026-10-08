@@ -1781,3 +1781,10 @@
 - Static playback review found the PCM response reader was scoped inside try and never released. Added explicit request-owned reader/end state and finally cleanup: cancel unfinished reads without awaiting the cancellation promise, then release the lock.
 - Preserved source scheduling, stop/fallback behavior, deadlines, and active-controller ownership. Added unperformed completion/error/abort/progressive-queue scenarios to the manual run sheet.
 - Verification: JavaScript syntax and git diff whitespace checks only. No tests, audio playback, stream injection, browser/device checks, recordings, or provider calls were performed.
+
+
+## Return recoverable study-storage errors - 2026-10-08
+
+- Static route review found session initialization and several progress/quiz operations could escape without a JSON response on SQLite/filesystem errors. Added generic storage-unavailable 503 responses around those operations, before success headers are emitted.
+- Session setup now returns an explicit success flag; all four callers stop on failure. Error responses close the connection, including POST failures before body consumption, so unread bodies cannot desynchronize keep-alive requests. No exception/path details or rollback guarantees are exposed.
+- Verification: Python compilation and git diff whitespace checks only. No tests, requests, database writes, lock/corruption exercises, browser checks, or provider calls were performed. Added unperformed isolated-storage scenarios to the run sheet.
