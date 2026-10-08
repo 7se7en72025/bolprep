@@ -127,6 +127,19 @@ The planned end-to-end experience is a student asking in Hindi, English, or Hing
 
 A central voice-engineering challenge is interruption handling. When a student speaks while audio is playing, the tutor should stop playback, cancel the old generation, preserve conversation context, and ignore late results from the interrupted turn. The current client keeps an interrupted pending question with an explicit interruption note for the next turn and the server quietly handles the resulting disconnected socket; provider-side generation cancellation remains incomplete. The project also aims to compare speech configurations on the same examples and report measured quality and latency, including failure cases.
 
+## Saved conversation API (browser controls pending)
+
+The server now has explicitly saved text-conversation storage in the configured local SQLite database. Existing browser use still keeps conversation text in the tab: no automatic save or browser history controls are implemented yet. API saving requires `consent_to_save: true`, a UUID v4 `save_id`, `language` (`hi-IN`/`en-IN`), and 1–20 `messages` containing `role`, `content`, and optional checked-note `source_ids`. User text is limited to 1,200 Unicode code points; assistant text to 3,000. At least one user message is required. Source IDs must exist in the checked corpus, and their current metadata is copied into the snapshot; this does not prove they support the saved text. No audio, model credentials, or automatic provider requests are stored/created by this API.
+
+| Route | Behavior |
+| --- | --- |
+| `POST /api/history` | Validate consent/content, save the snapshot, and return its ID, UTC save time, title, language, and message count. |
+| `GET /api/history` | List up to 20 saved conversation summaries for this browser, newest first. |
+| `POST /api/history/load` with `save_id` | Read the owned snapshot, including copied source metadata; another browser's ID returns 404. |
+| `DELETE /api/history` | Delete this browser's saved conversations; quiz scores remain. |
+
+The existing browser cookie determines ownership, and the optional demo access gate applies. This remains a local cookie-scoped prototype without separate learner accounts or encrypted text storage. Losing the cookie loses access to its records. The newest 20 conversations are retained per cookie; older ones are removed during saving. A retained save ID can be retried with unchanged selected content without another insert; changed content returns 409. Once evicted/deleted, an ID has no retained retry guarantee. Quiz-score deletion does not clear conversation records. Requests use the existing 256 KiB body/I/O limits, with shared per-minute quotas of 10 saves, 60 reads, and 6 deletions. Database lock/availability failures return a generic 503. Storage, ownership, retention, retry concurrency, deletion, and API behavior remain unverified at runtime; browser save/resume/delete controls are the next integration step.
+
 ## Target architecture
 
 ```text

@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import hashlib
 import os
+import sqlite3
 import time
 import uuid
 from datetime import datetime, timezone
@@ -21,6 +22,7 @@ from quiz import score_answer, start_quiz
 from retrieval import load_corpus, retrieval_query, retrieve
 from request_limits import RequestLimiter
 from access import ACCESS_COOKIE, ACCESS_LIFETIME_SECONDS, AccessGate
+from session_history import HistoryConflict, clear_conversations, get_conversation, list_conversations, save_conversation
 
 
 ROOT = Path(__file__).resolve().parent
@@ -40,12 +42,15 @@ POST_QUOTAS = {
     "/api/transcription/session": "live-session",
     "/api/quiz/start": "quiz-write",
     "/api/quiz/score": "quiz-write",
+    "/api/history": "history-save",
+    "/api/history/load": "history-read",
 }
 # All local browsers share these quotas. Cookie changes cannot reset a quota.
 REQUEST_LIMITER = RequestLimiter({
     "tutor": 30, "speech": 60, "recorded-stt": 10, "live-session": 6,
     "quiz-write": 60, "progress-read": 60, "progress-delete": 6,
     "login": 6, "logout": 30,
+    "history-save": 10, "history-read": 60, "history-delete": 6,
 })
 ACCESS_GATE = AccessGate(os.getenv("BOLPREP_ACCESS_PASSWORD", ""))
 MAX_ACTIVE_TUTOR_OR_SPEECH_REQUESTS = 4
@@ -87,13 +92,16 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             )
             return
 
-        if self.path == "/api/progress":
+        if self.path in {"/api/progress", "/api/history"}:
             if not self._require_access():
                 return
-            if not self._permit_api_request("progress-read"):
+            if not self._permit_api_request("history-read" if self.path == "/api/history" else "progress-read"):
                 return
             self._ensure_browser_session()
-            self._send_json(200, get_progress(self.session_id))
+            if self.path == "/api/history":
+                self._handle_saved_history()
+            else:
+                self._send_json(200, get_progress(self.session_id))
             return
         if self.path == "/" and not ACCESS_GATE.allowed(self._access_token()):
             self._redirect("/login")
@@ -132,14 +140,17 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         self._finish_response(payload)
 
     def do_DELETE(self) -> None:
-        if self.path != "/api/progress":
+        if self.path not in {"/api/progress", "/api/history"}:
             self.send_error(404, "Not found")
             return
         if not self._require_access():
             return
-        if not self._permit_api_request("progress-delete"):
+        if not self._permit_api_request("history-delete" if self.path == "/api/history" else "progress-delete"):
             return
         self._ensure_browser_session()
+        if self.path == "/api/history":
+            self._handle_saved_history()
+            return
         clear_progress(self.session_id)
         ensure_session(self.session_id)
         self._send_json(200, {"ok": True})
@@ -176,6 +187,9 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             return
         body = self._read_json_body()
         if body is None:
+            return
+        if self.path in {"/api/history", "/api/history/load"}:
+            self._handle_saved_history(body)
             return
         if self.path == "/api/transcription/session":
             self._handle_transcription_session(body)
@@ -507,6 +521,28 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             self._send_json(400, {"error": "Request body must be an object."})
             return None
         return body
+
+    def _handle_saved_history(self, body: dict[str, Any] | None = None) -> None:
+        try:
+            if self.command == "GET":
+                result = list_conversations(self.session_id)
+            elif self.command == "DELETE":
+                clear_conversations(self.session_id)
+                result = {"ok": True}
+            elif self.path == "/api/history/load":
+                result = get_conversation(self.session_id, (body or {}).get("save_id"))
+                if result is None:
+                    self._send_json(404, {"error": "Saved conversation was not found for this browser."})
+                    return
+            else:
+                result = save_conversation(self.session_id, body or {})
+            self._send_json(200, result)
+        except HistoryConflict as error:
+            self._send_json(409, {"error": str(error)})
+        except ValueError as error:
+            self._send_json(400, {"error": str(error)})
+        except (sqlite3.Error, RuntimeError, OSError):
+            self._send_json(503, {"error": "Saved conversation storage is unavailable. Try again later."})
 
     def _handle_quiz_start(self, body: dict[str, Any]) -> None:
         topic = body.get("topic", "fundamental rights")
