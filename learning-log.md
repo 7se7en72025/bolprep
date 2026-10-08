@@ -1943,3 +1943,9 @@
 - Active committed/transcription events now fail on invalid item identifiers rather than silently waiting. Current delta/completed payloads require text before item adoption or draft updates; malformed values use existing generic provider-failed cleanup.
 - Valid stale/duplicate completed items and mismatched known IDs remain ignored. Empty final transcripts and transcript-length guards retain their own failure paths; unknown valid event types remain ignored. Removed a redundant envelope check already covered by strict parsing.
 - Verification: Node syntax check and git diff whitespace checks, with static state/order inspection. No tests, event injections, recordings, browser/device runs, provider calls, or measured turn-boundary reliability claims.
+
+## Enforce tool enablement and bounded argument JSON - 2026-10-08
+
+- Agent turns reject function calls when no tools were enabled, before continuing response items or invoking tools. This closes a path where unexpected calls could reach quiz/progress functions despite a request without tool definitions.
+- Tool arguments require bounded text (16,000 Unicode characters) before JSON parsing. Duplicate fields at any parsed object level and excessive nesting return failed validation results; existing tool correction/call limits and persistence validation remain.
+- Verification: Python compilation and git diff whitespace checks with static execution-order inspection. No tests, parser/tool cases, provider calls, progress mutations, browser checks, or measured reliability claims.

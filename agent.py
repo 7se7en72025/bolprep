@@ -23,6 +23,7 @@ from retrieval import retrieval_query, retrieve
 
 MAX_TOOL_CALLS = 6
 MAX_TOOL_ROUNDS = 3
+MAX_TOOL_ARGUMENT_CHARS = 16000
 
 TOOLS: list[dict[str, Any]] = [
     {
@@ -189,6 +190,8 @@ def _model_turn(
         calls = [item for item in _field(response, "output", []) if _field(item, "type") == "function_call"]
         if not calls:
             break
+        if not tools_requested:
+            raise RuntimeError("The model requested tools that were not enabled for this turn.")
         total_calls += len(calls)
         if total_calls > MAX_TOOL_CALLS:
             raise RuntimeError("This turn requested too many tool calls. Please try a simpler request.")
@@ -289,9 +292,23 @@ def _stream_response(client: Any, request: dict[str, Any], on_text_delta: Callab
     return completed
 
 
+def _unique_tool_fields(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    values: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in values:
+            raise ValueError("Tool arguments contain duplicate fields.")
+        values[key] = value
+    return values
+
+
 def _execute_tool(name: str, arguments: str, call_id: str, session_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
     try:
-        values = json.loads(arguments)
+        if not isinstance(arguments, str) or len(arguments) > MAX_TOOL_ARGUMENT_CHARS:
+            raise ValueError("Tool arguments must be text of at most 16,000 characters.")
+        try:
+            values = json.loads(arguments, object_pairs_hook=_unique_tool_fields)
+        except RecursionError as exc:
+            raise ValueError("Tool arguments are nested too deeply.") from exc
         if not isinstance(values, dict):
             raise ValueError("Tool arguments must be an object.")
         if name == "start_quiz":
