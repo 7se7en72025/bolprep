@@ -1,9 +1,12 @@
-// One microphone turn per connection. The server mints a short-lived credential;
+// The server mints a short-lived credential;
 // media goes directly to the provider over WebRTC and is never saved by BolPrep.
 class BolPrepLiveTranscription {
-  constructor(callbacks, { autoFinish = false } = {}) {
+  constructor(callbacks, { autoFinish = false, continuous = false } = {}) {
     this.callbacks = callbacks;
-    this.autoFinish = autoFinish;
+    this.continuous = continuous;
+    this.autoFinish = autoFinish || continuous;
+    this.completedItems = new Set();
+    this.turnNumber = 1;
     this.controller = new AbortController();
     this.timers = new Set();
     this.closed = false;
@@ -31,7 +34,6 @@ class BolPrepLiveTranscription {
   cancel(outcome = "cancelled", reason = null) {
     if (this.closed) return;
     this.closed = true;
-    const endedAt = performance.now();
     this.controller.abort();
     this.timers.forEach(clearTimeout);
     this.timers.clear();
@@ -39,6 +41,14 @@ class BolPrepLiveTranscription {
     this.stream?.getTracks().forEach((track) => track.stop());
     this.channel?.close();
     this.peer?.close();
+    this.reportMetrics(outcome, reason);
+    this.callbacks.closed();
+  }
+
+  reportMetrics(outcome, reason = null) {
+    if (this.metricsReported) return;
+    this.metricsReported = true;
+    const endedAt = performance.now();
     const duration = (start, end) => Number.isFinite(start) && Number.isFinite(end)
       ? Number(Math.max(0, end - start).toFixed(2)) : null;
     this.callbacks.metrics?.({
@@ -46,6 +56,9 @@ class BolPrepLiveTranscription {
       language: this.language ?? null,
       model: "gpt-live-transcribe",
       auto_finish_requested: this.autoFinish,
+      continuous: this.continuous,
+      turn_number: this.turnNumber,
+      connection_reused: this.turnNumber > 1,
       pause_detection_used: this.pauseDetectionUsed === true,
       pause_detection_fallback_reason: this.pauseDetectionFallbackReason ?? null,
       finish_reason: this.finishReason ?? null,
@@ -57,7 +70,38 @@ class BolPrepLiveTranscription {
       commit_to_final_ms: outcome === "completed" ? duration(this.committedAt, endedAt) : null,
       total_duration_ms: duration(this.startedAt, endedAt),
     });
-    this.callbacks.closed();
+  }
+
+  resetTurn(reused = false) {
+    if (reused) {
+      this.turnNumber += 1;
+      this.startedAt = performance.now();
+      this.startedAtUtc = new Date().toISOString();
+    }
+    this.metricsReported = false;
+    this.partial = "";
+    this.itemId = null;
+    this.committedItemId = null;
+    this.firstPartialAt = undefined;
+    this.finishedAt = undefined;
+    this.committedAt = undefined;
+    this.finishReason = undefined;
+    this.pauseDetectionUsed = false;
+    this.pauseDetectionFallbackReason = undefined;
+    this.listeningAt = undefined;
+  }
+
+  beginListening(reused = false) {
+    if (this.closed) return;
+    if (this.state !== "clearing") this.resetTurn(reused);
+    this.state = "listening";
+    this.listeningAt = performance.now();
+    this.stream.getAudioTracks().forEach((track) => { track.enabled = true; });
+    this.callbacks.status("Live listening. Tap Done when you finish (20-second speech limit).", this.state);
+    this.captureTimer = this.continuous
+      ? this.later(() => this.fail("No speech detected for 60 seconds. Start Live mic again when ready.", "no-speech"), 60000)
+      : this.later(() => this.finish("capture-limit"), 20000);
+    this.startSpeechDetection();
   }
 
   finish(reason = "manual") {
@@ -65,14 +109,14 @@ class BolPrepLiveTranscription {
     this.state = "finalizing";
     this.finishReason = reason;
     this.finishedAt = performance.now();
-    this.stopSpeechDetection();
+    this.stopSpeechDetection(!this.continuous);
     clearTimeout(this.captureTimer);
     this.timers.delete(this.captureTimer);
     this.stream.getTracks().forEach((track) => { track.enabled = false; });
     this.callbacks.status("Finishing live transcript…", this.state);
     // Allow the last media packets to travel before committing the audio turn.
     this.later(() => {
-      this.stream.getTracks().forEach((track) => track.stop());
+      if (!this.continuous) this.stream.getTracks().forEach((track) => track.stop());
       if (this.channel.readyState !== "open") {
         this.fail("Live transcription disconnected. Partial words were discarded; try again or type.", "connection-closed");
         return;
@@ -84,7 +128,7 @@ class BolPrepLiveTranscription {
         return;
       }
       this.committedAt = performance.now();
-      this.later(() => this.fail("No final live transcript arrived. Try Record or type your question.", "final-transcript-timeout"), 30000);
+      this.finalTimer = this.later(() => this.fail("No final live transcript arrived. Try Record or type your question.", "final-transcript-timeout"), 30000);
     }, 250);
   }
 
@@ -93,6 +137,7 @@ class BolPrepLiveTranscription {
     let event;
     try { event = JSON.parse(data); } catch { return; }
     if (!event || typeof event !== "object" || typeof event.type !== "string") return;
+    if (this.completedItems.has(event.item_id)) return;
     if (event.type === "error" || event.type === "conversation.item.input_audio_transcription.failed") {
       this.fail("The live transcription provider could not finish. Try Record or type your question.");
       return;
@@ -101,6 +146,13 @@ class BolPrepLiveTranscription {
       this.committedItemId = event.item_id;
       return;
     }
+    if (event.type === "input_audio_buffer.cleared" && this.state === "clearing") {
+      clearTimeout(this.clearTimer);
+      this.timers.delete(this.clearTimer);
+      this.beginListening(true);
+      return;
+    }
+    if (!["listening", "finalizing"].includes(this.state)) return;
     if (!event.type?.startsWith("conversation.item.input_audio_transcription.")) return;
     if (typeof event.item_id !== "string" || !event.item_id) return;
     if (this.itemId && this.itemId !== event.item_id) return;
@@ -120,18 +172,36 @@ class BolPrepLiveTranscription {
         this.fail("No speech was transcribed. Try again or type your question.", "empty-transcript");
         return;
       }
-      this.cancel("completed");
-      this.callbacks.final(text);
+      clearTimeout(this.finalTimer);
+      this.timers.delete(this.finalTimer);
+      if (this.continuous) {
+        this.completedItems.add(event.item_id);
+        this.reportMetrics("completed");
+        this.state = "clearing";
+        this.callbacks.final(text);
+        if (this.closed) return;
+        this.resetTurn(true);
+        try {
+          this.channel.send(JSON.stringify({ type: "input_audio_buffer.clear" }));
+          this.clearTimer = this.later(() => this.fail("Live input could not prepare the next turn. Start Live mic again.", "buffer-clear-timeout"), 5000);
+        } catch {
+          this.fail("Live input could not prepare the next turn. Start Live mic again.", "connection-failed");
+        }
+      } else {
+        this.cancel("completed");
+        this.callbacks.final(text);
+      }
     }
   }
 
-  stopSpeechDetection() {
+  stopSpeechDetection(closeContext = true) {
     clearTimeout(this.detectionTimer);
     this.timers.delete(this.detectionTimer);
     this.detectionSource?.disconnect();
     this.detectionSource = null;
     this.detector?.disconnect();
     this.detector = null;
+    if (!closeContext) return;
     const context = this.detectionContext;
     this.detectionContext = null;
     if (context && context.state !== "closed") void context.close().catch(() => {});
@@ -141,6 +211,10 @@ class BolPrepLiveTranscription {
     if (!this.autoFinish) return;
     const manual = (reason) => {
       this.pauseDetectionFallbackReason = reason;
+      if (this.continuous) {
+        this.fail("Conversation mode needs working speech detection. Restart Live mic with conversation mode off to use Done.", reason);
+        return;
+      }
       this.stopSpeechDetection();
       this.callbacks.status("Automatic pause detection is unavailable. Tap Done when finished (20-second limit).", this.state);
     };
@@ -184,6 +258,14 @@ class BolPrepLiveTranscription {
             if (!heardSpeech) {
               speechMs = rms >= 0.015 ? speechMs + observedMs : 0;
               heardSpeech = speechMs >= 250;
+              if (heardSpeech) {
+                if (this.continuous) {
+                  clearTimeout(this.captureTimer);
+                  this.timers.delete(this.captureTimer);
+                  this.captureTimer = this.later(() => this.finish("capture-limit"), 20000);
+                }
+                this.callbacks.speechStart?.();
+              }
             }
             quietMs = heardSpeech && rms < 0.008 ? quietMs + observedMs : 0;
             if (quietMs >= 3000) {
@@ -196,7 +278,9 @@ class BolPrepLiveTranscription {
           manual("analysis-failed");
         }
       };
-      this.callbacks.status("Live listening. A 3-second quiet pause finishes your transcript; Done also works (20-second limit).", this.state);
+      this.callbacks.status(this.continuous
+        ? "Conversation mic is listening. Speak to interrupt; pause for 3 seconds to send. Stop ends the session."
+        : "Live listening. A 3-second quiet pause finishes your transcript; Done also works (20-second limit).", this.state);
       this.detectionTimer = this.later(poll, 50);
     } catch {
       manual("analysis-failed");
@@ -251,12 +335,10 @@ class BolPrepLiveTranscription {
         if (this.closed) return;
         this.timers.forEach(clearTimeout);
         this.timers.clear();
-        this.state = "listening";
-        this.listeningAt = performance.now();
-        stream.getAudioTracks().forEach((track) => { track.enabled = true; });
-        this.callbacks.status("Live listening. Tap Done when you finish (20-second limit).", this.state);
-        this.captureTimer = this.later(() => this.finish("capture-limit"), 20000);
-        this.startSpeechDetection();
+        if (this.continuous) {
+          this.later(() => this.fail("The five-minute conversation limit was reached. Start Live mic again when ready.", "session-limit"), 300000);
+        }
+        this.beginListening();
       });
       stage = "session";
       const tokenResponse = await fetch("/api/transcription/session", {

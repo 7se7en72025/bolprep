@@ -9,6 +9,7 @@ const serverSttNote = document.querySelector("#server-stt-note");
 const liveSttButton = document.querySelector("#live-stt-button");
 const liveSttNote = document.querySelector("#live-stt-note");
 const liveAutoFinish = document.querySelector("#live-auto-finish");
+const liveConversation = document.querySelector("#live-conversation");
 const stopButton = document.querySelector("#stop-button");
 const modeLabel = document.querySelector("#mode-label");
 const speechLanguage = document.querySelector("#speech-language");
@@ -197,7 +198,8 @@ function rememberTurn(userMessage, assistantMessage) {
 function updateLiveSttButton(state = "idle") {
   liveSttButton.hidden = !liveTranscriptionAvailable;
   liveSttButton.disabled = !liveTranscriptionAvailable;
-  liveAutoFinish.disabled = !liveTranscriptionAvailable || state !== "idle";
+  liveAutoFinish.disabled = !liveTranscriptionAvailable || state !== "idle" || liveConversation.checked;
+  liveConversation.disabled = !liveTranscriptionAvailable || state !== "idle";
   const listening = state === "listening";
   const label = listening ? "Done" : state === "idle" ? "Live mic" : "Cancel";
   liveSttButton.querySelector(".button-label").textContent = label;
@@ -216,8 +218,8 @@ function stopLiveTranscription(restoreUnconfirmed = true) {
   updateLiveSttButton();
 }
 
-function stopRecognition(restoreUnconfirmed = false) {
-  stopLiveTranscription(restoreUnconfirmed);
+function stopRecognition(restoreUnconfirmed = false, preserveLive = false) {
+  if (!preserveLive) stopLiveTranscription(restoreUnconfirmed);
   if (restoreUnconfirmed && recognitionListening && !recognitionHadFinalResult) {
     input.value = recognitionOriginalInput;
   }
@@ -451,7 +453,7 @@ function prepareStreamingAudio() {
   return speechAudioContext;
 }
 
-function stopTutor() {
+function stopTutor({ preserveLive = false } = {}) {
   stopSpeechOutput();
   activeAutomaticVoiceTurn = null;
   preserveInterruptedTurn();
@@ -463,7 +465,7 @@ function stopTutor() {
     quizSession.pendingAnswer = "";
   }
   if (quizSession && !quizSession.awaitingAnswer) nextQuestionButton.hidden = false;
-  stopRecognition(true);
+  stopRecognition(true, preserveLive);
   serverRecordingStartCancelled = true;
   serverRecordingRun += 1;
   serverRecordingStarting = false;
@@ -698,13 +700,15 @@ function buildSpeechDiagnostics() {
     }));
   const liveSttGroups = new Map();
   liveTranscriptionAttempts.forEach((attempt) => {
-    const key = JSON.stringify([attempt.language, attempt.model, attempt.auto_finish_requested, attempt.pause_detection_used]);
+    const key = JSON.stringify([attempt.language, attempt.model, attempt.auto_finish_requested, attempt.pause_detection_used, attempt.continuous, attempt.connection_reused]);
     if (!liveSttGroups.has(key)) {
       liveSttGroups.set(key, {
         language: attempt.language,
         model: attempt.model,
         auto_finish_requested: attempt.auto_finish_requested,
         pause_detection_used: attempt.pause_detection_used,
+        continuous: attempt.continuous,
+        connection_reused: attempt.connection_reused,
         attempts: [],
       });
     }
@@ -730,7 +734,10 @@ function buildSpeechDiagnostics() {
         model: group.model,
         auto_finish_requested: group.auto_finish_requested,
         pause_detection_used: group.pause_detection_used,
+        continuous: group.continuous,
+        connection_reused: group.connection_reused,
         configuration: { transcription_delay: "low", capture_limit_s: 20, quiet_pause_s: 3,
+          idle_limit_s: group.continuous ? 60 : null, session_limit_s: group.continuous ? 300 : null,
           activity_rms_threshold: 0.015, activity_minimum_ms: 250, quiet_rms_threshold: 0.008 },
         attempt_count: group.attempts.length,
         completed_count: completed.length,
@@ -798,7 +805,7 @@ function buildSpeechDiagnostics() {
       recognition_end_to_start: percentiles(group.samples),
     }));
   return {
-    schema_version: 7,
+    schema_version: 8,
     generated_at_utc: new Date().toISOString(),
     scope: "Current page only",
     privacy: "Diagnostics metadata only; no learner text, audio, cookies, or credentials.",
@@ -1218,8 +1225,8 @@ previewVoiceButton.addEventListener("click", () => {
   speak(preview, "Voice preview finished.", "preview");
 });
 
-async function sendQuestion(question) {
-  stopLiveTranscription(false);
+async function sendQuestion(question, { preserveLive = false } = {}) {
+  if (!preserveLive) stopLiveTranscription(false);
   prepareStreamingAudio();
   serverRecordingStartCancelled = true;
   serverRecordingRun += 1;
@@ -1424,8 +1431,8 @@ function showQuizQuestion(speakPrompt = true) {
   if (speakPrompt) speak(current.prompt, readyText);
 }
 
-async function submitQuizAnswer(answer) {
-  stopLiveTranscription(false);
+async function submitQuizAnswer(answer, { preserveLive = false } = {}) {
+  if (!preserveLive) stopLiveTranscription(false);
   prepareStreamingAudio();
   if (!quizSession || !quizSession.awaitingAnswer) return;
   stopSpeechOutput();
@@ -1817,6 +1824,7 @@ liveSttButton.addEventListener("click", () => {
   }
   stopTutor();
   const run = ++liveSttRun;
+  const continuous = liveConversation.checked;
   liveSttOriginalInput = input.value;
   const capture = new window.BolPrepLiveTranscription({
     metrics: (attempt) => {
@@ -1826,9 +1834,30 @@ liveSttButton.addEventListener("click", () => {
     partial: (text) => {
       if (run === liveSttRun) input.value = text;
     },
+    speechStart: () => {
+      if (run !== liveSttRun || !continuous) return;
+      stopTutor({ preserveLive: true });
+      input.value = "";
+      statusLine.textContent = "Listening to your new turn. Previous tutor output stopped.";
+    },
     final: (text) => {
       if (run !== liveSttRun) return;
       input.value = text;
+      if (continuous) {
+        if (text.length > input.maxLength || (quizSession && !quizSession.awaitingAnswer)) {
+          stopLiveTranscription(false);
+          statusLine.textContent = text.length > input.maxLength
+            ? `Conversation paused. Shorten the transcript to ${input.maxLength} characters before sending.`
+            : "Conversation paused. Tap Next question to continue your quiz; the transcript remains for review.";
+          return;
+        }
+        stopTutor({ preserveLive: true });
+        input.value = "";
+        liveSttOriginalInput = "";
+        if (quizSession) void submitQuizAnswer(text, { preserveLive: true });
+        else void sendQuestion(text, { preserveLive: true });
+        return;
+      }
       statusLine.textContent = text.length > input.maxLength
         ? `Final transcript received. Shorten it to ${input.maxLength} characters before sending.`
         : "Final live transcript received. Review it, then send.";
@@ -1848,18 +1877,24 @@ liveSttButton.addEventListener("click", () => {
       activeLiveTranscription = null;
       updateLiveSttButton();
     },
-  }, { autoFinish: liveAutoFinish.checked });
+  }, { autoFinish: liveAutoFinish.checked, continuous });
   activeLiveTranscription = capture;
   updateLiveSttButton("connecting");
   statusLine.textContent = "Connecting live microphone…";
   void capture.start(speechLanguage.value);
 });
+liveConversation.addEventListener("change", () => updateLiveSttButton());
 speechLanguage.addEventListener("change", () => {
   if (!activeLiveTranscription) return;
   stopLiveTranscription();
   statusLine.textContent = "Language changed. Start a new live transcript; partial words were discarded.";
 });
 window.addEventListener("pagehide", () => stopLiveTranscription(false));
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden || !activeLiveTranscription) return;
+  stopLiveTranscription();
+  statusLine.textContent = "Live microphone stopped when the page was hidden. Start Live mic again when ready.";
+});
 
 serverTranscribeButton.addEventListener("click", () => {
   if (serverRecordingStarting || activeTranscriptionController) {

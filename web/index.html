@@ -62,6 +62,7 @@
         </form>
         <label class="speech-input-setting" for="auto-submit-speech"><input id="auto-submit-speech" type="checkbox" disabled> Automatically submit a final browser transcript (skip review)</label>
         <label class="speech-input-setting" for="live-auto-finish"><input id="live-auto-finish" type="checkbox" disabled> Finish Live mic after a 3-second quiet pause (experimental; review before sending)</label>
+        <label class="speech-input-setting" for="live-conversation"><input id="live-conversation" type="checkbox" disabled> Conversation mode: automatically send final transcripts and keep listening (experimental; use headphones; 5-minute limit)</label>
         <label class="speech-setting" for="speech-rate">Browser speech rate
           <select id="speech-rate" class="language-select">
             <option value="0.75">Slow (0.75×)</option>
@@ -114,7 +115,7 @@
         <ul id="weak-topics" class="weak-topics"></ul>
       </section>
 
-      <footer><span>Start with one question. Follow-ups are welcome.</span><span class="privacy-note">Speech starts only when you tap Speak. Browser speech services may process audio; questions go to the configured AI provider in model mode.</span></footer>
+      <footer><span>Start with one question. Follow-ups are welcome.</span><span class="privacy-note">The microphone starts only when you choose Speak, Record, or Live mic. Speech services may process audio; questions go to the configured AI provider in model mode.</span></footer>
     </main>
     <script src="/live-stt.js" defer></script>
     <script src="/app.js" defer></script>

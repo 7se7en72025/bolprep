@@ -167,14 +167,14 @@ This is a manual interaction check, not provider cancellation proof. The local c
 
 ## Experimental live microphone checks
 
-With a configured key and a WebRTC-capable browser, try a short Hindi, English, and Hinglish question with **Live mic**. Observe partial text, tap **Done**, review the final transcript, and send it. Repeat with a spoken quiz answer. Record failures and actual transcripts in your ignored local evaluation input; download schema 7 diagnostics to keep live STT timings and outcomes alongside your private transcript labels.
+With a configured key and a WebRTC-capable browser, try a short Hindi, English, and Hinglish question with **Live mic**. Observe partial text, tap **Done**, review the final transcript, and send it. Repeat with a spoken quiz answer. Record failures and actual transcripts in your ignored local evaluation input; download schema 8 diagnostics to keep live STT timings and outcomes alongside your private transcript labels.
 
 - Try submitting while listening or finalizing: submission should wait for a final transcript.
 - Cancel with Escape, Stop, Cancel, a language change, or New session: the microphone indicator should turn off and late events must not replace the restored draft.
 - Edit a partial transcript: capture should stop and the edit should remain.
 - Cancel while the permission prompt is open, then grant permission: capture must not resume.
 - Leave a capture running: it should finish at 20 seconds. Block the connection or final event: the connection/finalization deadline should restore the controls.
-- Start live input during tutor playback: old audio should stop. This requires clicking Live mic; automatic speech interruption is pending.
+- Start live input during tutor playback: old audio should stop. Standard Live mic requires a click; use the opt-in conversation checks below for detected speech interruptions.
 - Verify the last words survive Done across network conditions; the media drain delay needs real-device validation.
 - Enable optional quiet-pause completion before capture. Speak, pause for one second, then continue: capture should continue. After finishing, stay quiet for at least three seconds: finalization should begin and the completed transcript should remain for review.
 - Repeat with quiet speech and background noise. Record premature endings or failure to finish; thresholds are heuristics and have not been tuned against real recordings.
@@ -182,3 +182,14 @@ With a configured key and a WebRTC-capable browser, try a short Hindi, English, 
 - Cancel automatic capture and start another: old polling must not finish the new turn. Changing the pause option is disabled during capture.
 - Export diagnostics after a success, deliberate cancellation, permission failure, and stalled final transcript. Each terminal attempt should appear once in `live_stt_attempts`; cancellations should remain separate from failures. Confirm missing first-partial events remain null and summary timings include a sample count.
 - Note whether completion used Done, quiet-pause detection, or the capture limit. Compare equivalent recordings/configurations; connection time includes microphone permission, and commit-to-final is a software interval rather than learner speech-end latency.
+
+### Continuous conversation checks
+
+Enable Conversation mode before Live mic, with headphones. Ask a question and pause for three seconds: the final transcript should submit automatically, and the same microphone connection should listen again once the provider buffer-clear acknowledgment arrives. Speak a follow-up while the tutor answers: old playing/queued audio should stop, the old response should not resume, and the new question should retain interrupted context. Repeat in Hindi, English, and Hinglish; record late-event, lost-word, and echo failures.
+
+- Repeat two or more turns; diagnostics should show increasing `turn_number` and `connection_reused` after the initial turn, with one outcome per attempted turn.
+- Confirm ordinary pauses under three seconds do not submit. Use Done to end a turn manually. Speech during finalization/buffer clearing is muted and can be lost; observe when the UI returns to listening.
+- Try Stop, Escape, editing, language change, tab hiding, and page exit during listening/finalization/clearing. Mic tracks should end; late events must not restart capture or submit a new question.
+- With analysis blocked/suspended, conversation mode should close and suggest restarting in manual mode. With no detected activity, it should end after sixty seconds; the overall session should end at five minutes. Foreground browser timer timing is approximate.
+- In a quiz, confirm an awaited answer submits automatically; Next question remains manual. An overlong transcript or speech between quiz questions should end conversation capture while leaving the text for review.
+- Compare speaker playback separately; do not count headphone-only results as echo validation. Provider generation cancellation and real-device behavior remain unverified until these checks are performed.
