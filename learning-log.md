@@ -1697,3 +1697,10 @@
 - Replaced the long README with a project guide covering setup, configuration, study workflow, voice paths, storage, evidence limits, and bounded repository work. Preserved the detailed original in IMPLEMENTATION_NOTES.md with an explicit historical-results caveat.
 - Restored a corrupted Hindi rubric example in the manual voice run sheet and an edition separator in the archived notes.
 - Verification: reviewed documentation links and current helper commands and ran git diff whitespace checks. No tests, evaluations, browser/device sessions, recordings, or provider calls were performed. Local verification authorization remains pending.
+
+
+## Preserve provider-reported tutor model identity - 2026-10-08
+
+- Added bounded optional provider model IDs in completed response/tool-round order, separately from the requested model. Missing/invalid IDs remain null; offline traces use an empty list and failed traces remain unavailable. Read the installed SDK Response.model declaration before using the field.
+- Carried identity through live diagnostics, exports, explicit conversation snapshots, and report configuration groups. Validators bound IDs and require response-count agreement; older traces remain accepted and server normalization preserves field absence for retained-save retry compatibility. Returned IDs are not claimed as immutable versions or speech provenance.
+- Verification: Python compilation, JavaScript syntax checks, and git diff whitespace checks only. No tests, provider calls, browser/device checks, database writes, or report/evaluation runs. The pending verification request remains unanswered.

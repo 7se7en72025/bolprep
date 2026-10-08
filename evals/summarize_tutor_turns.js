@@ -21,6 +21,12 @@ function record(raw, label) {
     ? utc.replace(/\.(\d+)Z$/, (_, digits) => `.${(digits + "000").slice(0, 3)}Z`)
     : utc.replace(/Z$/, ".000Z");
   if (new Date(raw.started_at_utc).toISOString() !== milliseconds) invalid();
+  const models = raw.provider_reported_models ?? null;
+  if (models !== null && (!Array.isArray(models) || models.length > 4
+    || models.length !== raw.model_response_count
+    || (raw.mode !== "model" && models.length)
+    || !models.every((model) => model === null || (typeof model === "string"
+      && /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(model))))) invalid();
   const status = raw.server_metadata_status === undefined ? "legacy" : raw.server_metadata_status;
   if (!["valid", "invalid", "unavailable", "legacy"].includes(status)
     || !(raw.server_duration_ms === null || duration(raw.server_duration_ms))
@@ -34,7 +40,7 @@ function record(raw, label) {
       && typeof tool.ok === "boolean")) invalid();
   if (["invalid", "unavailable"].includes(status)
     && (raw.server_duration_ms !== null || raw.mode !== null || raw.configured_model !== null
-      || raw.source_count !== null || raw.tool_outcomes.length)) invalid();
+      || raw.source_count !== null || raw.tool_outcomes.length || models !== null)) invalid();
   if (status === "valid" && (raw.server_duration_ms === null || raw.mode === null || raw.source_count === null)) invalid();
   return {
     request_id: raw.request_id?.toLowerCase() ?? null,
@@ -45,6 +51,7 @@ function record(raw, label) {
     server_duration_ms: raw.server_duration_ms,
     mode: raw.mode,
     configured_model: raw.configured_model,
+    provider_reported_models: models,
     source_count: raw.source_count,
     server_metadata_status: status,
     tool_outcomes: raw.tool_outcomes.map(({ name, ok }) => ({ name, ok })),
@@ -95,6 +102,7 @@ function summarize(paths) {
       }
       const configuration = {
         language: turn.language, mode: turn.mode, configured_model: turn.configured_model,
+        provider_reported_models: turn.provider_reported_models,
         server_metadata_status: turn.server_metadata_status,
       };
       const key = JSON.stringify(configuration);
@@ -118,6 +126,7 @@ function summarize(paths) {
       "Deduplication compares only selected metadata. Null-ID identical records may collapse distinct turns; changed snapshots remain separate.",
       "ID and null-ID snapshots remain separate. Legacy and current metadata under one ID conflict; do not combine these snapshots.",
       "Usage and monetary cost are not summarized. No prompt pairing or controlled experiment is established.",
+      "Provider-reported model IDs are grouped in response order; missing IDs stay null. IDs may be aliases, not immutable versions. Speech model IDs are outside this report.",
     ],
     groups: [...groups.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, group]) => {
       const tools = new Map();

@@ -57,6 +57,13 @@ def _request_trace(value: Any) -> dict[str, Any]:
         invalid()
     response_count = value.get("model_response_count")
     usage_count = value.get("usage_response_count")
+    models = value.get("provider_reported_models")
+    if models is not None:
+        if (not isinstance(models, list) or len(models) > 4 or len(models) != response_count
+                or any(model is not None and not (isinstance(model, str)
+                    and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}", model)) for model in models)
+                or value["mode"] != "model" and models):
+            invalid()
     if (not (response_count is None or count(response_count))
             or not (usage_count is None or count(usage_count))
             or response_count is not None and usage_count is not None and usage_count > response_count):
@@ -75,6 +82,7 @@ def _request_trace(value: Any) -> dict[str, Any]:
         "source_count": value["source_count"],
         "tool_outcomes": [{"name": tool["name"], "ok": tool["ok"]} for tool in tools],
         "usage": usage, "model_response_count": response_count, "usage_response_count": usage_count,
+        **({"provider_reported_models": models} if "provider_reported_models" in value else {}),
     }
 
 

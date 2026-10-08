@@ -88,7 +88,7 @@ The server has request-size limits, shared in-memory rate limits, and four concu
 
 ## Evaluation and diagnostics
 
-The page exposes request diagnostics and exports for local review. Software timings do not measure audible latency, and token counts are not cost estimates. Saved request metadata is client-supplied and is not authenticated provenance.
+The page exposes request diagnostics and exports for local review. Software timings do not measure audible latency, and token counts are not cost estimates. Saved request metadata is client-supplied and is not authenticated provenance. Tutor traces distinguish the requested model from provider-reported model IDs for each completed response/tool round; missing IDs remain unavailable. Report groups preserve this ordered list. Returned IDs may still be aliases, not immutable model versions, and speech models are outside these tutor traces.
 
 | Artifact | Purpose |
 | --- | --- |

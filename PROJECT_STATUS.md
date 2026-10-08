@@ -31,7 +31,7 @@ Audit date: 2026-10-08. This is an implementation/evidence inventory, not a rele
 - The quiz API/tool now accepts a difficulty preset selecting author-assigned Basic/Standard/Challenge question groups. Rubrics remain fixed; measured learner difficulty, selection runtime, and model argument compliance are unverified.
 - Progress saving is consolidated into scoring, rather than a separate exposed `save_progress` model tool. The local flow is a deliberate prototype shape, not evidence of every roadmap tool signature.
 - Local cookie ownership and optional shared demo login are implemented; separate authenticated learner accounts and hosted budgets/deployment hardening are pending.
-- Request metadata records a configured model label and reported usage, not guaranteed resolved provider/model versions or monetary cost. Saved metadata is client-supplied, not an authenticated server trace store.
+- Request metadata records configured and provider-reported tutor model IDs per response, plus reported usage; provider IDs may still be aliases and do not guarantee immutable model versions or monetary cost. Speech model provenance and runtime verification remain pending. Saved metadata is client-supplied, not an authenticated server trace store.
 - Short notes and lexical matching are implemented; generated-answer support review, measured quiz-scoring agreement, and applicable source reuse permission remain open; data/SOURCE_REVIEW.md records edition evidence and the unresolved policy retrieval.
 
 ## Named deliverables
@@ -41,7 +41,7 @@ Audit date: 2026-10-08. This is an implementation/evidence inventory, not a rele
 | Repository, reproducible setup, secret-free `.env.example` | Tracked source/setup files exist; setup runtime needs fresh proof. |
 | Curated corpus manifest and dataset documentation | `data/corpus_manifest.json` and `evals/DATASETS.md`; inventory generation validates local records, not source accuracy/rights. |
 | Automated interruption/tool/retrieval/persistence checks | Existing Python tests cover portions of tools, retrieval, quiz, and progress. No tracked browser interruption suite or newer history/report coverage was found in this audit. No tests were run. |
-| Benchmark report with measured results/configuration/failures | Historical constructed-text results are recorded in README; no tracked current voice benchmark report was found. |
+| Benchmark report with measured results/configuration/failures | Historical constructed-text results are preserved in IMPLEMENTATION_NOTES.md; no tracked current voice benchmark report was found. |
 | Demo video and architecture walkthrough | DEMO_SCRIPT.md outline and ARCHITECTURE.md walkthrough exist; no completed demo-video artifact was found. |
 
 ## Next evidence to collect

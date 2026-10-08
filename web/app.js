@@ -138,7 +138,7 @@ function renderTutorTraces() {
     const details = document.createElement("p");
     details.textContent = `Started ${trace.started_at_utc} | Client ${duration(trace.client_duration_ms)} | Server ${duration(trace.server_duration_ms)} | Sources ${trace.source_count ?? "unavailable"}`;
     const identity = document.createElement("p");
-    identity.textContent = `Request ${trace.request_id || "unavailable"} | Model ${trace.configured_model || "unavailable"}`;
+    identity.textContent = `Request ${trace.request_id || "unavailable"} | Requested ${trace.configured_model || "unavailable"} | Provider reported ${reportedModelsText(trace.provider_reported_models)}`;
     const tools = document.createElement("p");
     tools.textContent = trace.tool_outcomes.length
       ? `Tools: ${trace.tool_outcomes.map((tool) => `${tool.name}: ${tool.ok ? "succeeded" : "failed"}`).join(", ")}`
@@ -186,6 +186,12 @@ function validStudySources(sources) {
   return Array.isArray(sources) && sources.length <= 100 && sources.every(validStudySource);
 }
 
+function reportedModelsText(models) {
+  return models == null ? "unavailable" : models.length
+    ? models.map((model, index) => `${index + 1}: ${model || "unavailable"}`).join(", ")
+    : "none (offline)";
+}
+
 function validTutorTrace(trace) {
   const object = (value) => value && typeof value === "object" && !Array.isArray(value);
   const count = (value) => Number.isSafeInteger(value) && value >= 0;
@@ -209,6 +215,12 @@ function validTutorTrace(trace) {
     || !(trace.usage_response_count === null || count(trace.usage_response_count))) return false;
   if (trace.model_response_count !== null && trace.usage_response_count !== null
     && trace.usage_response_count > trace.model_response_count) return false;
+  const models = trace.provider_reported_models;
+  if (models != null && (!Array.isArray(models) || models.length > 4
+    || models.length !== trace.model_response_count
+    || (trace.mode !== "model" && models.length)
+    || !models.every((model) => model === null || (typeof model === "string"
+      && /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(model))))) return false;
   if (trace.usage === null) return true;
   return object(trace.usage)
     && ["input_tokens", "output_tokens", "total_tokens", "response_count"]
@@ -229,6 +241,10 @@ function savedRequestTrace(trace) {
   const fields = ["request_id", "started_at_utc", "outcome", "server_duration_ms", "mode", "configured_model",
     "source_count", "model_response_count", "usage_response_count"];
   const selected = Object.fromEntries(fields.map((field) => [field, trace[field]]));
+  if (trace.provider_reported_models !== undefined) {
+    selected.provider_reported_models = trace.provider_reported_models === null
+      ? null : trace.provider_reported_models.slice();
+  }
   selected.tool_outcomes = trace.tool_outcomes.map(({ name, ok }) => ({ name, ok }));
   selected.usage = trace.usage === null ? null : Object.fromEntries(
     ["input_tokens", "output_tokens", "total_tokens", "response_count"].map((field) => [field, trace.usage[field]]));
@@ -322,6 +338,8 @@ function addMessage(role, text, sources = [], sourceLabel = "STUDY SOURCE", repl
     const usage = requestTrace.usage;
     const lines = [
       "Client snapshot of reported request metadata; excludes speech timings and cost.",
+      `Provider-reported models by response: ${reportedModelsText(requestTrace.provider_reported_models)}`,
+      "Reported identifiers do not guarantee immutable model versions.",
       `${requestTrace.outcome} · ${requestTrace.mode} · ${requestTrace.configured_model || "model unavailable"}`,
       `${requestTrace.started_at_utc} · request ${requestTrace.request_id}`,
       `Reported server duration: ${requestTrace.server_duration_ms} ms · ${requestTrace.source_count} sources`,
@@ -1899,6 +1917,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
       server_duration_ms: trace?.server_duration_ms ?? null,
       mode: trace?.mode ?? null,
       configured_model: trace?.configured_model ?? null,
+      provider_reported_models: trace?.provider_reported_models?.slice() ?? null,
       source_count: trace?.source_count ?? null,
       tool_outcomes: (trace?.tool_outcomes || []).map(({ name, ok }) => ({ name, ok: ok === true })),
       usage: trace?.usage ? {

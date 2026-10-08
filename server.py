@@ -283,6 +283,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 "server_duration_ms": round((time.perf_counter() - started) * 1000, 2),
                 "mode": mode,
                 "configured_model": os.getenv("OPENAI_MODEL", "gpt-6-astra") if mode == "model" else None,
+                "provider_reported_models": result.get("provider_reported_models", [] if mode == "offline" else None),
                 "source_count": len(result.get("sources", [])),
                 "tool_outcomes": [{"name": event["name"], "ok": event.get("ok") is True}
                                   for event in result.get("tool_events", [])],

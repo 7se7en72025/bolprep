@@ -137,6 +137,7 @@ def run_agent_turn(
         {"role": "user", "content": f"{question.strip()}\n\nChecked study notes:\n{evidence}"},
     ]
     response_usages: list[dict[str, int] | None] = []
+    provider_models: list[str | None] = []
     def create_response() -> Any:
         request = {
             "model": os.getenv("OPENAI_MODEL", "gpt-6-astra"),
@@ -151,6 +152,9 @@ def run_agent_turn(
         else:
             response = _stream_response(responses_client, request, on_text_delta)
         response_usages.append(_reported_token_usage(response))
+        model = _field(response, "model")
+        provider_models.append(model if isinstance(model, str)
+                               and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}", model) else None)
         return response
 
     response = create_response()
@@ -202,6 +206,7 @@ def run_agent_turn(
         "answer": answer, "sources": sources, "tool_events": tool_events, "mode": "model",
         "usage": usage, "model_response_count": len(response_usages),
         "usage_response_count": len(reported_usages),
+        "provider_reported_models": provider_models,
     }
 
 

@@ -89,7 +89,7 @@ The guard applies to rubric authoring. A student can still mention two separate 
 
 ## Explain measurements honestly
 
-The page reports software events: transcript timing, model text timing, PCM scheduling or browser synthesis start, and local cancellation dispatch. They exclude actual sound reaching the listener. Request token usage is separate from speech usage and monetary cost; missing usage stays unavailable. The configured model label is not proof of a resolved provider/model version.
+The page reports software events: transcript timing, model text timing, PCM scheduling or browser synthesis start, and local cancellation dispatch. They exclude actual sound reaching the listener. Request token usage is separate from speech usage and monetary cost; missing usage stays unavailable. The configured model label is recorded separately from provider-reported tutor model IDs, in response/tool-round order. Missing or invalid IDs stay null; offline turns report an empty list. Older traces can omit this optional field, and failed turns do not claim completed-response identity. The report groups by this ordered list; returned IDs may still be aliases and do not establish immutable model versions or speech-model provenance.
 
 Saved request metadata is a client snapshot, not an authenticated audit trail. Local report tools validate structure/coverage and summarize supplied observations, but cannot authenticate identities or prove representative sampling. The human TTS and quiz procedures exist; actual listener/reviewer observations and current benchmark reports remain missing.
 
