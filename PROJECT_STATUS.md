@@ -32,7 +32,7 @@ Audit date: 2026-10-08. This is an implementation/evidence inventory, not a rele
 - Progress saving is consolidated into scoring, rather than a separate exposed `save_progress` model tool. The local flow is a deliberate prototype shape, not evidence of every roadmap tool signature.
 - Local cookie ownership and optional shared demo login are implemented; separate authenticated learner accounts and hosted budgets/deployment hardening are pending.
 - Request metadata records a configured model label and reported usage, not guaranteed resolved provider/model versions or monetary cost. Saved metadata is client-supplied, not an authenticated server trace store.
-- Short notes and lexical matching are implemented; generated-answer support review, measured quiz-scoring agreement, and source reuse review remain open.
+- Short notes and lexical matching are implemented; generated-answer support review, measured quiz-scoring agreement, and applicable source reuse permission remain open; data/SOURCE_REVIEW.md records edition evidence and the unresolved policy retrieval.
 
 ## Named deliverables
 

@@ -24,7 +24,13 @@ def main() -> None:
         "corpus_sha256": hashlib.sha256(original).hexdigest(),
         "document_count": len(documents),
         "scope": "Repository-authored short study summaries with recorded source metadata; not full constitutional text or legal interpretation.",
-        "reuse_permission_review": "No separate permission/license review is recorded in this manifest. Source links and check dates do not establish redistribution rights.",
+        "source_review": {
+            "record": "data/SOURCE_REVIEW.md", "reviewed_on": "2026-10-08",
+            "edition": "Second English-Malayalam diglot edition, 2024",
+            "reuse_status": "unresolved",
+            "repository_translations": "Hindi/Hinglish summaries are repository study material, not official translations from this edition.",
+        },
+        "reuse_permission_review": "See data/SOURCE_REVIEW.md for edition evidence and the unresolved policy review. Applicable reuse permission has not been established.",
         "limitations": [
             "Source check dates are repository records, not a fresh source verification performed by this exporter.",
             "Inventory validation does not prove factual accuracy, translation fidelity, citation support, or retrieval quality.",

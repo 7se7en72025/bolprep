@@ -8,7 +8,7 @@
 .\.venv\Scripts\python.exe tools/export-corpus-manifest.py --output data/corpus_manifest.json
 ```
 
-The exporter parses and validates the same byte snapshot it hashes. It inventories repository records without checking the linked source again, evaluating retrieval, or calling a provider. Notes are short repository-authored summaries, not a full legal corpus. Recorded dates/links do not establish correctness, translation fidelity, or redistribution permission; a separate reuse review remains unrecorded in the manifest.
+The exporter parses and validates the same byte snapshot it hashes. It inventories repository records without checking the linked source again, evaluating retrieval, or calling a provider. Notes are short repository-authored summaries, not a full legal corpus. Recorded dates/links do not establish correctness, translation fidelity, or redistribution permission; the [source review record](../data/SOURCE_REVIEW.md) identifies the referenced edition and documents an unresolved attempt to establish applicable reuse permission. Hindi/Hinglish summaries are repository study material, not official translations from that English?Malayalam edition.
 
 ## Constructed retrieval set
 
