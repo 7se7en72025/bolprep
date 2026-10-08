@@ -167,7 +167,7 @@ This is a manual interaction check, not provider cancellation proof. The local c
 
 ## Experimental live microphone checks
 
-With a configured key and a WebRTC-capable browser, try a short Hindi, English, and Hinglish question with **Live mic**. Observe partial text, tap **Done**, review the final transcript, and send it. Repeat with a spoken quiz answer. Record failures and actual transcripts in your ignored local evaluation input; live STT is not included in the diagnostics export yet.
+With a configured key and a WebRTC-capable browser, try a short Hindi, English, and Hinglish question with **Live mic**. Observe partial text, tap **Done**, review the final transcript, and send it. Repeat with a spoken quiz answer. Record failures and actual transcripts in your ignored local evaluation input; download schema 7 diagnostics to keep live STT timings and outcomes alongside your private transcript labels.
 
 - Try submitting while listening or finalizing: submission should wait for a final transcript.
 - Cancel with Escape, Stop, Cancel, a language change, or New session: the microphone indicator should turn off and late events must not replace the restored draft.
@@ -180,3 +180,5 @@ With a configured key and a WebRTC-capable browser, try a short Hindi, English, 
 - Repeat with quiet speech and background noise. Record premature endings or failure to finish; thresholds are heuristics and have not been tuned against real recordings.
 - Keep silent from the start: pause detection should not finish before activity is detected; the 20-second limit still applies. If audio analysis is unavailable or suspended, check the manual-Done message and finish manually.
 - Cancel automatic capture and start another: old polling must not finish the new turn. Changing the pause option is disabled during capture.
+- Export diagnostics after a success, deliberate cancellation, permission failure, and stalled final transcript. Each terminal attempt should appear once in `live_stt_attempts`; cancellations should remain separate from failures. Confirm missing first-partial events remain null and summary timings include a sample count.
+- Note whether completion used Done, quiet-pause detection, or the capture limit. Compare equivalent recordings/configurations; connection time includes microphone permission, and commit-to-final is a software interval rather than learner speech-end latency.

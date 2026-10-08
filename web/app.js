@@ -93,6 +93,7 @@ const recognitionSamples = [];
 const recognitionFailures = [];
 const recordedTranscriptionSamples = [];
 const recordedTranscriptionFailures = [];
+const liveTranscriptionAttempts = [];
 let turn = 0;
 let pendingAutomaticVoiceInput = null;
 let activeAutomaticVoiceTurn = null;
@@ -695,6 +696,57 @@ function buildSpeechDiagnostics() {
       failure_reasons: group.failure_reasons,
       upload_to_result: percentiles(group.completed.map((sample) => sample.elapsedMs)),
     }));
+  const liveSttGroups = new Map();
+  liveTranscriptionAttempts.forEach((attempt) => {
+    const key = JSON.stringify([attempt.language, attempt.model, attempt.auto_finish_requested, attempt.pause_detection_used]);
+    if (!liveSttGroups.has(key)) {
+      liveSttGroups.set(key, {
+        language: attempt.language,
+        model: attempt.model,
+        auto_finish_requested: attempt.auto_finish_requested,
+        pause_detection_used: attempt.pause_detection_used,
+        attempts: [],
+      });
+    }
+    liveSttGroups.get(key).attempts.push(attempt);
+  });
+  const reasonCounts = (attempts, field) => {
+    const counts = {};
+    attempts.forEach((attempt) => {
+      if (attempt[field]) counts[attempt[field]] = (counts[attempt[field]] || 0) + 1;
+    });
+    return counts;
+  };
+  const liveStt = [...liveSttGroups.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([, group]) => {
+      const completed = group.attempts.filter((attempt) => attempt.outcome === "completed");
+      const timing = (field) => {
+        const values = completed.map((attempt) => attempt[field]).filter(Number.isFinite);
+        return { sample_count: values.length, ...percentiles(values) };
+      };
+      return {
+        language: group.language,
+        model: group.model,
+        auto_finish_requested: group.auto_finish_requested,
+        pause_detection_used: group.pause_detection_used,
+        configuration: { transcription_delay: "low", capture_limit_s: 20, quiet_pause_s: 3,
+          activity_rms_threshold: 0.015, activity_minimum_ms: 250, quiet_rms_threshold: 0.008 },
+        attempt_count: group.attempts.length,
+        completed_count: completed.length,
+        failure_count: group.attempts.filter((attempt) => attempt.outcome === "failed").length,
+        cancellation_count: group.attempts.filter((attempt) => attempt.outcome === "cancelled").length,
+        failure_reasons: reasonCounts(group.attempts, "failure_reason"),
+        finish_reasons: reasonCounts(group.attempts, "finish_reason"),
+        pause_detection_fallback_reasons: reasonCounts(group.attempts, "pause_detection_fallback_reason"),
+        timing_scope: "Completed attempts only; software events, not acoustic speech-end latency",
+        connection: timing("connection_ms"),
+        listening_to_first_partial: timing("listening_to_first_partial_ms"),
+        listening_duration: timing("listening_duration_ms"),
+        commit_to_final: timing("commit_to_final_ms"),
+        total_duration: timing("total_duration_ms"),
+      };
+    });
   const modelStreamGroups = new Map();
   const getModelStreamGroup = (language, configuredModel) => {
     const key = JSON.stringify([language, configuredModel]);
@@ -746,13 +798,15 @@ function buildSpeechDiagnostics() {
       recognition_end_to_start: percentiles(group.samples),
     }));
   return {
-    schema_version: 6,
+    schema_version: 7,
     generated_at_utc: new Date().toISOString(),
     scope: "Current page only",
-    privacy: "Timing, request IDs, and tool outcomes only; no transcript text or audio.",
+    privacy: "Diagnostics metadata only; no learner text, audio, cookies, or credentials.",
     tts,
     stt,
     recorded_stt: recordedStt,
+    live_stt: liveStt,
+    live_stt_attempts: liveTranscriptionAttempts.slice(),
     model_streams: modelStreams,
     automatic_voice_turns: automaticVoiceTurns,
     tutor_turns: tutorTurnTraces.slice(),
@@ -1765,6 +1819,10 @@ liveSttButton.addEventListener("click", () => {
   const run = ++liveSttRun;
   liveSttOriginalInput = input.value;
   const capture = new window.BolPrepLiveTranscription({
+    metrics: (attempt) => {
+      liveTranscriptionAttempts.push(attempt);
+      if (liveTranscriptionAttempts.length > 500) liveTranscriptionAttempts.shift();
+    },
     partial: (text) => {
       if (run === liveSttRun) input.value = text;
     },
