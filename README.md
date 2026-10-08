@@ -119,6 +119,24 @@ Use headphones first: speaker echo or background noise can trigger a false inter
 
 Quiz scores are stored in a local SQLite database at `.codex/bolprep.sqlite3`, scoped to a random, HttpOnly browser cookie. Set `BOLPREP_DATABASE_PATH` in the server environment to use a different database file; the local smoke check uses this option for an isolated temporary database. Progress survives a server restart in the same browser. The app saves scores and rubric feedback, not the learner's raw answer text. A per-answer idempotency key makes network retries safe without retaining the answer or its hash. The **Saved progress** panel shows recent weak question areas; **Clear saved progress** deletes records for that browser cookie. This is a local prototype bound to `127.0.0.1`, not a multi-user hosted service with account authentication. Keep the cookie private on shared computers; deleting site cookies creates a new, separate progress history.
 
+## Local request limits
+
+The server applies rolling 60-second quotas shared by all local browsers. Admitted attempts count even when validation/provider work fails or an idempotent write is retried. A throttled request returns [HTTP 429](https://www.rfc-editor.org/rfc/rfc6585.html#section-4), a `Retry-After` header, and `retry_after_seconds` in JSON. Wait for that interval and retry manually; the browser does not automatically repeat paid requests.
+
+| Requests sharing a quota | Attempts per 60 seconds |
+| --- | ---: |
+| `/api/answer`, `/api/agent/turn` | 30 combined |
+| `/api/speech` | 60 |
+| `/api/transcribe` | 10 |
+| `/api/transcription/session` | 6 |
+| `/api/quiz/start`, `/api/quiz/score` | 60 combined |
+| `GET /api/progress` | 60 |
+| `DELETE /api/progress` | 6 |
+
+The limiter is thread-safe, uses monotonic time, and retains only bounded timestamp queues in server memory. Throttled attempts do not extend the retry interval, create a browser session, read an upload, or call a provider. The server closes their HTTP connection because the request body remains unread. Restarting the server resets quotas; changing cookies does not. Static files and `/health` remain available.
+
+These are local development defaults, not a billing cap or a hosted-service abuse defense. Direct WebRTC media traffic and token reuse happen at the provider, outside these HTTP quotas. Hosted authentication, per-account budgets, proxy controls, concurrency limits, and deployment hardening remain pending.
+
 ## Roadmap
 
 1. **Text tutor:** first local prototype is implemented; improve prompt behavior and expand the checked study corpus.

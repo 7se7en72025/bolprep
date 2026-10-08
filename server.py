@@ -18,6 +18,7 @@ from agent import run_agent_turn
 from progress import ProgressConflict, clear_progress, create_quiz_run, ensure_session, get_progress, save_answer
 from quiz import score_answer, start_quiz
 from retrieval import load_corpus, retrieval_query, retrieve
+from request_limits import RequestLimiter
 
 
 ROOT = Path(__file__).resolve().parent
@@ -26,6 +27,20 @@ HOST = "127.0.0.1"
 PORT = 8000
 MAX_BODY_BYTES = 256 * 1024
 MAX_AUDIO_BYTES = 5 * 1024 * 1024
+POST_QUOTAS = {
+    "/api/answer": "tutor",
+    "/api/agent/turn": "tutor",
+    "/api/speech": "speech",
+    "/api/transcribe": "recorded-stt",
+    "/api/transcription/session": "live-session",
+    "/api/quiz/start": "quiz-write",
+    "/api/quiz/score": "quiz-write",
+}
+# All local browsers share these quotas. Cookie changes cannot reset a quota.
+REQUEST_LIMITER = RequestLimiter({
+    "tutor": 30, "speech": 60, "recorded-stt": 10, "live-session": 6,
+    "quiz-write": 60, "progress-read": 60, "progress-delete": 6,
+})
 
 
 class BolPrepHandler(BaseHTTPRequestHandler):
@@ -57,6 +72,8 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             return
 
         if self.path == "/api/progress":
+            if not self._permit_api_request("progress-read"):
+                return
             self._ensure_browser_session()
             self._send_json(200, get_progress(self.session_id))
             return
@@ -87,19 +104,24 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         self._finish_response(payload)
 
     def do_DELETE(self) -> None:
-        self._ensure_browser_session()
         if self.path != "/api/progress":
             self.send_error(404, "Not found")
             return
+        if not self._permit_api_request("progress-delete"):
+            return
+        self._ensure_browser_session()
         clear_progress(self.session_id)
         ensure_session(self.session_id)
         self._send_json(200, {"ok": True})
 
     def do_POST(self) -> None:
-        self._ensure_browser_session()
-        if self.path not in {"/api/answer", "/api/agent/turn", "/api/quiz/start", "/api/quiz/score", "/api/speech", "/api/transcribe", "/api/transcription/session"}:
+        quota = POST_QUOTAS.get(self.path)
+        if quota is None:
             self.send_error(404, "Not found")
             return
+        if not self._permit_api_request(quota):
+            return
+        self._ensure_browser_session()
         if self.path == "/api/transcribe":
             self._handle_transcription()
             return
@@ -511,8 +533,25 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 f"bolprep_session={self.session_id}; HttpOnly; SameSite=Lax; Path=/; Max-Age=31536000",
             )
 
+    def _permit_api_request(self, bucket: str) -> bool:
+        retry_after = REQUEST_LIMITER.acquire(bucket)
+        if not retry_after:
+            return True
+        # The body has not been consumed. Close this HTTP connection rather than
+        # accidentally parsing leftover JSON/audio as another request.
+        self.close_connection = True
+        self._send_json(
+            429,
+            {"error": f"Too many requests. Wait {retry_after} seconds, then try again.",
+             "retry_after_seconds": retry_after},
+            include_session_cookie=False,
+            retry_after_seconds=retry_after,
+        )
+        return False
+
     def _send_json(
-        self, status: int, payload: dict[str, Any], include_session_cookie: bool = True
+        self, status: int, payload: dict[str, Any], include_session_cookie: bool = True,
+        retry_after_seconds: int | None = None,
     ) -> None:
         encoded = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
@@ -520,6 +559,9 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(encoded)))
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
+        if retry_after_seconds is not None:
+            self.send_header("Retry-After", str(retry_after_seconds))
+            self.send_header("Connection", "close")
         if include_session_cookie:
             self._send_session_cookie_if_needed()
         self._finish_response(encoded)

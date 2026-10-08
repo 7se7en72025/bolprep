@@ -349,6 +349,12 @@ class BolPrepLiveTranscription {
       });
       const token = await tokenResponse.json();
       if (this.closed) return;
+      if (tokenResponse.status === 429) {
+        const wait = Number.isInteger(token.retry_after_seconds) && token.retry_after_seconds > 0
+          && token.retry_after_seconds <= 60 ? token.retry_after_seconds : 60;
+        this.fail(`Live session limit reached. Wait ${wait} seconds, then start Live mic again.`, "rate-limited");
+        return;
+      }
       if (!tokenResponse.ok || typeof token.client_secret !== "string"
           || !Number.isFinite(token.expires_at) || token.expires_at * 1000 <= Date.now()) {
         throw new Error("Live transcription could not obtain a session. Try Record or type.");
