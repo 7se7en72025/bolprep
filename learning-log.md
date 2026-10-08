@@ -1186,3 +1186,8 @@
 - The local scorer now reports CER alongside WER, both by configuration/language and by prompt. CER uses Unicode NFC code points from the same lowercased, punctuation-stripped, whitespace-normalized text; spaces between words count. Failed attempts contribute deletion errors in the all-attempts rate.
 - This gives Devanagari and mixed-script comparisons a second view of recognition differences. It does not assess pronunciation or normalize transliteration; no real speech result is claimed.
 - Verification: `node --check evals/score_stt.js`, `git diff --check`, and a local two-attempt Hindi sample passed. The one-character deletion reported WER 1.0 and CER 0.1667; adding a `no-speech` failure changed all-attempts CER to 0.5833. No microphone or provider was used.
+
+## Explain recorded microphone capture failures - 2026-10-08
+
+- Recorded-file capture now recognizes common permission, blocked-page, missing-device, device-busy, and unsupported-input errors. It gives a direct recovery hint and keeps the bounded reason code in the existing per-language diagnostics instead of labeling every microphone setup error as a generic capture failure.
+- The messages follow the browser's standard `getUserMedia()` error categories. `node --check web/app.js` and `git diff --check` passed; real microphone permission and device failures still need browser/device verification.

@@ -222,6 +222,17 @@ function stopServerRecording(discard = false) {
   if (activeMediaRecorder.state === "recording") activeMediaRecorder.stop();
 }
 
+function recordingCaptureFailure(error) {
+  const failures = {
+    NotAllowedError: ["permission-denied", "Microphone access was denied or blocked. Allow it in browser settings, or type your question."],
+    SecurityError: ["microphone-blocked", "This browser page is not allowed to use the microphone. Open the local tutor page directly, or type your question."],
+    NotFoundError: ["no-microphone", "No microphone was found. Connect one and try again, or type your question."],
+    NotReadableError: ["microphone-unavailable", "The microphone could not be opened. Close other apps using it and try again, or type your question."],
+    OverconstrainedError: ["microphone-unsupported", "The browser could not start a supported microphone input. Try browser speech input or type your question."],
+  };
+  return failures[error?.name] || ["capture-failed", "Microphone capture could not start. Try again or type your question."];
+}
+
 async function startServerRecording() {
   if (!serverTranscriptionAvailable || activeMediaRecorder || activeTranscriptionController) return;
   if (!navigator.mediaDevices?.getUserMedia || typeof window.MediaRecorder !== "function") {
@@ -298,12 +309,13 @@ async function startServerRecording() {
   } catch (error) {
     stream?.getTracks().forEach((track) => track.stop());
     if (recordingRun !== serverRecordingRun || serverRecordingStartCancelled) return;
-    recordedTranscriptionFailures.push({ language: recordingLanguage, reason: "capture-failed" });
+    const [reason, message] = recordingCaptureFailure(error);
+    recordedTranscriptionFailures.push({ language: recordingLanguage, reason });
     if (recordedTranscriptionFailures.length > 500) recordedTranscriptionFailures.shift();
     activeMediaRecorder = null;
     activeMediaStream = null;
     updateServerTranscribeButton();
-    statusLine.textContent = `${error.message || "Microphone access failed."} Check browser permission or type your question.`;
+    statusLine.textContent = message;
   } finally {
     if (recordingRun === serverRecordingRun) serverRecordingStarting = false;
   }
