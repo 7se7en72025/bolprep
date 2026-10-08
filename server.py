@@ -75,6 +75,14 @@ class BolPrepHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         if self.path == "/health":
+            try:
+                study_notes = len(load_corpus())
+            except (ValueError, OSError):
+                self._send_json(503, {
+                    "ok": False, "code": "corpus-unavailable",
+                    "error": "Checked study notes are unavailable. Check the local corpus and restart the server.",
+                }, include_session_cookie=False)
+                return
             model_configured = api_is_configured()
             mode = "model" if model_configured else "offline"
             self._send_json(
@@ -83,7 +91,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                     "ok": True,
                     "mode": mode,
                     "model_name": os.getenv("OPENAI_MODEL", "gpt-6-astra") if model_configured else None,
-                    "study_notes": len(load_corpus()),
+                    "study_notes": study_notes,
                     "streaming_tts": model_configured,
                     "server_transcription": model_configured,
                     "live_transcription": model_configured,

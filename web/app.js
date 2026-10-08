@@ -2913,7 +2913,33 @@ serverTranscribeButton.addEventListener("click", () => {
   void startServerRecording();
 });
 
-apiFetch("/health").then((response) => response.json()).then((health) => {
+async function readServerHealth() {
+  const controller = new AbortController();
+  const deadline = window.setTimeout(() => controller.abort(), 20_000);
+  try {
+    const response = await apiFetch("/health", { signal: controller.signal });
+    const health = await readBoundedJson(response, controller.signal);
+    if (!response.ok) throw new Error("The local server is not ready.");
+    if (!health || typeof health !== "object" || Array.isArray(health) || health.ok !== true
+      || !["offline", "model"].includes(health.mode)
+      || !Number.isSafeInteger(health.study_notes) || health.study_notes < 1 || health.study_notes > 10_000
+      || !["streaming_tts", "server_transcription", "live_transcription", "access_protected"]
+        .every((field) => typeof health[field] === "boolean")
+      || !(health.model_name === null || (typeof health.model_name === "string"
+        && /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(health.model_name)))
+      || (health.mode === "model" && health.model_name === null)
+      || (health.mode === "offline" && (health.model_name !== null || health.streaming_tts
+        || health.server_transcription || health.live_transcription))) {
+      throw new Error("The local server returned invalid readiness data.");
+    }
+    return health;
+  } finally {
+    window.clearTimeout(deadline);
+  }
+}
+
+const healthStartupTurn = turn;
+readServerHealth().then((health) => {
   logoutButton.hidden = !health.access_protected;
   const mode = health.mode === "model" ? "Model answers enabled" : "Offline practice mode";
   modelModeAvailable = health.mode === "model";
@@ -2932,13 +2958,14 @@ apiFetch("/health").then((response) => response.json()).then((health) => {
     ? "Streams generated speech from the server. API usage may be billed."
     : "Add an API key to the local server configuration to enable streamed speech.";
   modeLabel.textContent = `${mode} · history stays in this tab`;
-  if (!recognitionAvailable) {
+  if (!recognitionAvailable && turn === healthStartupTurn) {
     statusLine.textContent = serverTranscriptionAvailable
       ? "Ready to type or record a question for server transcription."
       : "Ready to type. Speech recognition is not available in this browser.";
   }
 }).catch(() => {
-  modeLabel.textContent = "Start the local server to connect";
+  modeLabel.textContent = "Server readiness unavailable";
+  if (turn === healthStartupTurn) statusLine.textContent = "Could not confirm server readiness. Check the local server and study notes, then reload.";
 });
 window.addEventListener("bolprep-access-expired", () => stopTutor());
 logoutButton.addEventListener("click", async () => {

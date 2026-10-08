@@ -20,7 +20,7 @@ From the repository directory:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\run-local.ps1
 ```
 
-The launcher prepares `.venv`, installs dependencies, creates `.env` if missing, and starts the server. Open **http://127.0.0.1:8000**. Press **Ctrl+C** in the terminal to stop it.
+The launcher prepares `.venv`, installs dependencies, creates `.env` if missing, and starts the server. The page validates a bounded health response before enabling provider capabilities; missing or invalid study notes return a corpus-unavailable 503. Readiness describes configuration and corpus availability, not a successful provider session. Open **http://127.0.0.1:8000**. Press **Ctrl+C** in the terminal to stop it.
 
 Manual setup:
 

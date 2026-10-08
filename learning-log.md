@@ -1788,3 +1788,10 @@
 - Static route review found session initialization and several progress/quiz operations could escape without a JSON response on SQLite/filesystem errors. Added generic storage-unavailable 503 responses around those operations, before success headers are emitted.
 - Session setup now returns an explicit success flag; all four callers stop on failure. Error responses close the connection, including POST failures before body consumption, so unread bodies cannot desynchronize keep-alive requests. No exception/path details or rollback guarantees are exposed.
 - Verification: Python compilation and git diff whitespace checks only. No tests, requests, database writes, lock/corruption exercises, browser checks, or provider calls were performed. Added unperformed isolated-storage scenarios to the run sheet.
+
+
+## Validate corpus readiness before enabling capabilities - 2026-10-08
+
+- Static health review found missing/invalid notes could escape the route without a response. Corpus read/validation failures now return generic corpus-unavailable 503 with no session cookie.
+- Browser readiness now uses bounded strict JSON, a 20-second deadline, HTTP status checks, and typed/consistent mode/model/note/capability fields before applying controls. Failures show setup/reload guidance rather than being treated as offline readiness. This describes configuration, not provider/device/storage success.
+- Verification: Python compilation, JavaScript syntax, and git diff whitespace checks only. No tests, health requests, corpus mutation, browser/device checks, storage writes, or provider calls were performed.

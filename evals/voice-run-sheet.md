@@ -452,3 +452,8 @@ Inspect provider playback completion, explicit Stop, a new speech turn, fetch ab
 ### Study storage unavailable recovery (not yet verified)
 
 With an authorized isolated database, inspect locked/unwritable/corrupt storage during session initialization, progress GET/DELETE, quiz creation, and score persistence. Expect generic JSON 503 with storage-unavailable, no paths/exception text, and a closed connection. During POST setup failure before body consumption, send another request on the same socket: unread body bytes must not be parsed as a new request. No quiz/result success should be reported after a failed storage operation. A write or deletion may have completed before a later error; refresh before retrying. Matching retry keys must preserve existing replay behavior once storage recovers. Inspect browser control recovery and root-page setup failures. No databases were altered and none of these failure scenarios have been executed.
+
+
+### Corpus and readiness recovery (not yet verified)
+
+In an authorized isolated copy, inspect /health with missing, invalid-UTF-8, malformed, and metadata-invalid corpus files. Expect generic JSON 503, corpus-unavailable, ok:false, and no session cookie. Restore valid notes and inspect normal offline/model readiness. In the browser, inspect non-2xx, malformed/oversized JSON, nonboolean capability flags, invalid model/note counts, offline/provider contradictions, and a 20-second stalled request. Invalid readiness must not enable provider controls or masquerade as offline practice; show an actionable setup/reload message. Health does not verify credentials, provider latency, database storage, or microphone behavior. No corpus files were changed and these checks were not executed.
