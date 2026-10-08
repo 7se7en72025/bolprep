@@ -142,9 +142,10 @@ def retrieval_query(question: str, prior_questions: list[str]) -> str:
     current_question = question.strip()
     if ARTICLE_REFERENCE_PATTERN.search(current_question):
         return current_question
-    # Generic clarifications need context; a supported standalone topic does not.
-    # Use the baseline scorer here so evaluation candidates share query selection.
-    if _tokens(current_question) - GENERIC_ARTICLE_QUERY_TOKENS and retrieve(current_question):
+    # Only generic clarification requests inherit a prior topic. A new subject
+    # must stand on its own even when no note matches, or old words can create
+    # false evidence for an unsupported question. Both scorers share this rule.
+    if _tokens(current_question) - GENERIC_ARTICLE_QUERY_TOKENS:
         return current_question
     for previous in reversed(prior_questions[-4:]):
         references = _article_references(previous)

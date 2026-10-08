@@ -1895,3 +1895,9 @@
 - Live setup now reads credential JSON and SDP through a strict UTF-8 streaming reader capped at 64 KiB and 512 KiB respectively. It checks cancellation, cancels unfinished readers without awaiting cancellation, and releases reader locks.
 - Credentials require an object response, nonempty bounded visible ASCII secret, and safe-integer unexpired timestamp; empty SDP is rejected. Existing startup deadline and generic failure/capture cleanup handle malformed responses. Rate-limit/busy feedback remains.
 - Verification: Node syntax check and git diff whitespace checks, with static read/cleanup inspection. No tests, response injections, browser/device observations, recordings, network calls, or provider verification.
+
+## Prevent old topics backing unsupported new subjects - 2026-10-08
+
+- Retrieval query selection now uses current subject terms independently even when the current question has no lexical matches. Previously a failed current lookup could append prior topic words and retrieve old evidence for an unrelated unsupported question.
+- Generic clarification requests retain the bounded recent-topic fallback; explicit current article references still take precedence. Removed the extra baseline retrieval lookup from query selection. The generic-token vocabulary remains heuristic and may abstain conservatively on unrecognized follow-up wording.
+- Verification: Python compilation and git diff whitespace checks, with static branch inspection. No tests, retrieval cases/evaluation reports, browser turns, provider calls, or measured quality claims.
