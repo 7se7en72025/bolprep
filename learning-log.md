@@ -1809,3 +1809,10 @@
 - Static terminal review found the 20-message window retained unrestricted user text and full long answers. Added a 1,200-code-point question guard before retrieval/model calls and a 3,000-code-point assistant context prefix with an explicit clipping marker. Full output/citations remain visible, and rejected questions do not enter history.
 - Added /new to clear in-memory topic context with an explicit user confirmation message; /quit and /exit behavior remains. Reset does not erase terminal scrollback or any stored browser data.
 - Verification: Python compilation and git diff whitespace checks only. No tests, interactive sessions, model calls, boundary executions, database writes, or provider calls were performed.
+
+
+## Add terminal Hindi/Hinglish response preferences - 2026-10-08
+
+- Static review found terminal offline responses always selected English even when translated notes were available. Added explicit /language hi, /language en, and /language auto controls, then passed the current preference/question through offline summaries, unsupported answers, and model evidence/instructions.
+- Hindi/Hinglish selects Devanagari notes for Devanagari questions and Roman notes otherwise. Switching retains conversation context; /new retains preference. Auto preserves existing model inference/English offline fallback. Invalid commands show usage without entering history or calling retrieval/providers. Renamed browser-specific preference wording for shared terminal/browser use.
+- Verification: Python compilation and git diff whitespace checks only. No tests, interactive sessions, model calls, translation reviews, browser checks, or provider requests were performed.

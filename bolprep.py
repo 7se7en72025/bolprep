@@ -54,7 +54,7 @@ def response_instructions(language: str | None = None) -> str:
         "question uses Devanagari, otherwise use conversational Roman Hinglish"
     )
     return (
-        f"{INSTRUCTIONS} The current browser response preference is {preference}. "
+        f"{INSTRUCTIONS} The current response preference is {preference}. "
         "For this turn, use that preference unless the learner explicitly requests another "
         "language in the current question. Earlier turns and the language of the study notes "
         "must not override this current preference. Keep the relevant conversation context "
@@ -142,9 +142,11 @@ def run() -> int:
     """Run the interactive tutor until the learner enters /quit."""
     has_api_key = api_is_configured()
     history: list[dict[str, str]] = []
+    language: str | None = None
 
     print("BolPrep text tutor - type /quit to exit.")
     print("Questions can contain up to 1,200 characters. Type /new to clear conversation context.")
+    print("Language: /language hi for Hindi/Hinglish, /language en for English, /language auto for model inference (offline English).")
     if has_api_key:
         print("Model mode: using OPENAI_MODEL (or the default model).")
     else:
@@ -166,6 +168,16 @@ def run() -> int:
             history.clear()
             print("BolPrep: Started a new study conversation.")
             continue
+        command = question.casefold().split()
+        if command and command[0] == "/language":
+            choices = {"hi": "hi-IN", "en": "en-IN", "auto": None}
+            if len(command) != 2 or command[1] not in choices:
+                print("BolPrep: Use /language hi, /language en, or /language auto.")
+                continue
+            language = choices[command[1]]
+            label = {"hi": "Hindi/Hinglish", "en": "English", "auto": "automatic model language (offline English)"}[command[1]]
+            print(f"BolPrep: Response preference set to {label}; conversation context retained.")
+            continue
         if len(question) > 1200:
             print("BolPrep: Shorten your question to 1,200 characters before asking.")
             continue
@@ -174,11 +186,11 @@ def run() -> int:
             prior_questions = prior_queries(history)
             documents = retrieve(retrieval_query(question, prior_questions))
             if not documents:
-                answer = offline_answer([], question=question)
+                answer = offline_answer([], language or "en-IN", question)
             elif has_api_key:
-                answer = ask_model(question, history, documents)
+                answer = ask_model(question, history, documents, language)
             else:
-                answer = offline_answer(documents)
+                answer = offline_answer(documents, language or "en-IN", question)
         except Exception as exc:  # Keep the interactive process alive on provider errors.
             print(f"BolPrep: Request failed: {exc}", file=sys.stderr)
             continue

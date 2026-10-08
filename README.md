@@ -31,7 +31,7 @@ if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 .\.venv\Scripts\python.exe server.py
 ```
 
-For the terminal tutor, run `.\.venv\Scripts\python.exe bolprep.py`. Use `/new` to clear conversation context and `/quit` to leave. Questions are limited to 1,200 Unicode code points. Context retains up to 20 messages, with answers shortened to 3,000 code points and marked when clipped; full text stays in terminal output.
+For the terminal tutor, run `.\.venv\Scripts\python.exe bolprep.py`. Use `/new` to clear conversation context and `/quit` to leave. Select `/language hi` for Hindi/Hinglish or `/language en` for English; `/language auto` keeps model language inference and English offline fallback. Hindi/Hinglish mode uses Hindi notes for Devanagari questions and Roman Hinglish notes otherwise. Changing language keeps context, and `/new` keeps the chosen preference. Questions are limited to 1,200 Unicode code points. Context retains up to 20 messages, with answers shortened to 3,000 code points and marked when clipped; full text stays in terminal output.
 
 ## Configuration
 
