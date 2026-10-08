@@ -2331,6 +2331,22 @@ async function loadProgress() {
     for (const topic of progress.weak_topics) {
       const item = document.createElement("li");
       item.textContent = `${topic.topic}: ${topic.latest_score}% on the latest try (${topic.attempts} attempt${topic.attempts === 1 ? "" : "s"})`;
+      const articleNumber = /^art(\d+[a-z]?)_/i.exec(topic.question_id)?.[1];
+      if (articleNumber) {
+        const reviseButton = document.createElement("button");
+        reviseButton.type = "button";
+        reviseButton.className = "text-button";
+        reviseButton.textContent = `Revise Article ${articleNumber}`;
+        reviseButton.title = "Open an explanation with current speech settings; ends an active quiz";
+        reviseButton.addEventListener("click", () => {
+          if (!item.isConnected) return;
+          if (quizSession) endQuiz({ clearDraft: true });
+          else stopTutor();
+          input.value = "";
+          void sendQuestion(`Explain Article ${articleNumber}.`);
+        });
+        item.append(reviseButton);
+      }
       weakTopics.append(item);
     }
     if (!progress.weak_topics.length) {
