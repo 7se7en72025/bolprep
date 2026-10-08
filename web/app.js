@@ -155,6 +155,23 @@ function updateMicrophoneButton(listening, disabled = false) {
   micButton.disabled = disabled || unavailable;
 }
 
+function validStudySource(source) {
+  if (!source || typeof source !== "object" || Array.isArray(source)) return false;
+  for (const [field, limit] of [["title", 512], ["section", 128], ["url", 2048]]) {
+    if (typeof source[field] !== "string" || !source[field].trim()
+      || source[field].length > limit) return false;
+  }
+  try {
+    const url = new URL(source.url);
+    return source.url === source.url.trim() && url.protocol === "https:"
+      && Boolean(url.hostname) && !url.username && !url.password;
+  } catch { return false; }
+}
+
+function validStudySources(sources) {
+  return Array.isArray(sources) && sources.length <= 100 && sources.every(validStudySource);
+}
+
 function addMessage(role, text, sources = [], sourceLabel = "STUDY SOURCE") {
   const article = document.createElement("article");
   article.className = `message ${role === "user" ? "user-message" : "tutor-message"}`;
@@ -164,14 +181,16 @@ function addMessage(role, text, sources = [], sourceLabel = "STUDY SOURCE") {
   const paragraph = document.createElement("p");
   paragraph.textContent = text;
   article.append(speaker, paragraph);
-  if (sources.length) {
+  const sourceRecords = Array.isArray(sources) ? sources.slice(0, 100) : [];
+  const displaySources = sourceRecords.filter(validStudySource);
+  if (displaySources.length) {
     const sourceList = document.createElement("div");
     sourceList.className = "sources";
     const label = document.createElement("span");
     label.className = "sources-label";
     label.textContent = sourceLabel;
     sourceList.append(label);
-    for (const source of sources) {
+    for (const source of displaySources) {
       const link = document.createElement("a");
       link.href = source.url;
       link.target = "_blank";
@@ -180,6 +199,11 @@ function addMessage(role, text, sources = [], sourceLabel = "STUDY SOURCE") {
       sourceList.append(link);
     }
     article.append(sourceList);
+  }
+  if (!validStudySources(sources)) {
+    const warning = document.createElement("p");
+    warning.textContent = "Some source references could not be displayed.";
+    article.append(warning);
   }
   conversation.append(article);
   conversation.scrollTop = conversation.scrollHeight;
@@ -210,12 +234,12 @@ async function readAgentStream(response, onTextDelta, onSpeechMode, onActivity, 
     }
     if (event.type === "delta" && typeof event.text === "string") onTextDelta(event.text);
     else if (event.type === "speech_mode" && typeof event.progressive === "boolean") onSpeechMode?.(event.progressive);
-    else if (event.type === "retrieved_sources" && Array.isArray(event.sources)) onSources?.(event.sources);
+    else if (event.type === "retrieved_sources" && validStudySources(event.sources)) onSources?.(event.sources);
     else if (event.type === "complete") {
       const result = event.payload;
       if (!result || typeof result !== "object" || Array.isArray(result)
         || typeof result.answer !== "string" || !result.answer.trim()
-        || (result.sources !== undefined && !Array.isArray(result.sources))
+        || (result.sources !== undefined && !validStudySources(result.sources))
         || (result.tool_events !== undefined && !Array.isArray(result.tool_events))) {
         throw new Error("The tutor sent an invalid completed response.");
       }

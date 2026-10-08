@@ -242,6 +242,8 @@ Repeat with a long Unicode answer: history must stay within 3,000 code points pe
 
 ### Tutor stream validation checks (not yet performed)
 
+Use controlled retrieved_sources and completed-payload source lists containing null entries, missing title/section, empty text, oversized fields, relative/HTTP/non-web URLs, embedded credentials, and more than 100 records. These streamed lists should fail the turn instead of rendering invalid links. Valid HTTPS references should remain clickable. Exercise non-streamed quiz/message source paths separately: valid references should render and invalid ones should produce the unavailable-reference notice. Source format acceptance does not prove citation support; review actual answer claims against the cited section separately.
+
 Use controlled local NDJSON streams split across network chunks, including split Unicode characters and a final line without a newline. Valid delta/speech_mode/retrieved_sources/complete events should finish normally. Inspect failure recovery for invalid JSON, null/array events, unknown types, invalid required fields, empty final answers, duplicate completion, trailing delta, and EOF without completion. Exercise the 2 MiB byte and 262,144-unit line boundaries. On rejection, progressive audio should stop, the partial answer should be removed, controls restored, and a failed trace recorded. Check Stop/timeout while reading and ensure late events do not revive playback. No provider calls are needed for these controlled cases.
 
 ### Recorded transcript review checks (not yet performed)

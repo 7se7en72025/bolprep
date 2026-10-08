@@ -1428,3 +1428,9 @@
 - Added a 2 MiB total byte cap and 262,144-unit per-line cap to the browser NDJSON reader. It rejects invalid JSON/object shapes, unsupported or malformed events, invalid completed answer/list containers, empty answers, and events after completion. EOF without completion remains a failure.
 - Reader cleanup cancels unread input and releases its lock; existing request failure handling stops progressive playback and restores the UI. Limits do not bound transport buffers or one incoming chunk, and oversized legitimate replies can fail. Added README/manual fragmentation, boundary, malformed-event, and cancellation cases.
 - Verification: JavaScript syntax and git diff whitespace checks passed. No tests, controlled stream runs, browser interactions, or provider calls were performed; fragmented Unicode, valid server compatibility, rejection recovery, and cancellation remain unverified at runtime.
+
+## Validate browser study-source metadata - 2026-10-08
+
+- Added shared source validation for bounded nonempty title/section and absolute credential-free HTTPS URLs, with at most 100 records. Streamed retrieval/final lists fail on invalid metadata before completion handling; other message paths filter invalid links and show an unavailable-reference notice instead of crashing or displaying broken references.
+- Validation checks metadata/navigation only, not authority or answer support. Updated README and manual malformed-source/valid-corpus/rendering cases without broad citation-quality claims.
+- Verification: JavaScript syntax and git diff whitespace checks passed. No tests, browser interactions, controlled streams, or provider calls were run; source compatibility, failure recovery, quiz rendering, and notices remain unverified at runtime.
