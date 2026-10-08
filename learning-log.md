@@ -1191,3 +1191,8 @@
 
 - Recorded-file capture now recognizes common permission, blocked-page, missing-device, device-busy, and unsupported-input errors. It gives a direct recovery hint and keeps the bounded reason code in the existing per-language diagnostics instead of labeling every microphone setup error as a generic capture failure.
 - The messages follow the browser's standard `getUserMedia()` error categories. `node --check web/app.js` and `git diff --check` passed; real microphone permission and device failures still need browser/device verification.
+
+## Exercise saved quiz flow in the offline smoke check - 2026-10-08
+
+- The local progress database can now be selected with `BOLPREP_DATABASE_PATH`. The offline smoke check uses a unique temporary database to start a one-question quiz, score an answer, retry the same idempotency key, and verify only one saved progress entry appears, then removes its temporary database files.
+- This checks the local quiz and persistence path without changing a learner's saved progress or contacting a model provider. Verification: the offline smoke command reported quiz start, score, idempotent retry, and progress passed; the isolated database directory was removed, and nothing remained listening on port 8000.

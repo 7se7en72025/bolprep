@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -10,7 +11,8 @@ from pathlib import Path
 from typing import Any, Iterator
 
 
-DATABASE_PATH = Path(__file__).resolve().parent / ".codex" / "bolprep.sqlite3"
+DEFAULT_DATABASE_PATH = Path(__file__).resolve().parent / ".codex" / "bolprep.sqlite3"
+DATABASE_PATH = Path(os.getenv("BOLPREP_DATABASE_PATH") or DEFAULT_DATABASE_PATH).expanduser()
 
 
 class ProgressConflict(ValueError):

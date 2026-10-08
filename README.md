@@ -29,7 +29,7 @@ After setup, check the offline app end to end with:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\check-local.ps1
 ```
 
-The smoke check starts a temporary local server, forces offline mode without sending requests to a model provider, checks the health endpoint and tutor page, and asks a Hinglish Article 14 question to confirm a source comes back. It stops the temporary server when done. Port 8000 must be available.
+The smoke check starts a temporary local server in offline mode without sending requests to a model provider, checks the health endpoint and tutor page, asks a Hinglish Article 14 question to confirm a source comes back, then starts and scores a quiz and verifies an idempotent retry appears once in saved progress. The progress uses a temporary SQLite file that the script removes when finished, so it does not touch normal learner progress. Port 8000 must be available.
 
 The launcher reuses `.venv` when its Python interpreter runs and is version 3.11 or later. If `.venv` is missing, broken, or too old, it creates a fresh environment using the selected system Python; rebuilding clears only the project `.venv` directory. A linked `.venv` is left for manual repair rather than cleared. It installs `requirements.txt`, copies `.env.example` to `.env` only when `.env` does not already exist, and starts the server. Open <http://127.0.0.1:8000>; press Ctrl+C in PowerShell to stop. Add an API key to `.env` before starting if you want model answers. Offline mode works without a key.
 
@@ -97,7 +97,7 @@ python evals/run_retrieval_eval.py
 
 ## Saved quiz progress
 
-Quiz scores are stored in a local SQLite database at `.codex/bolprep.sqlite3`, scoped to a random, HttpOnly browser cookie. Progress survives a server restart in the same browser. The app saves scores and rubric feedback, not the learner's raw answer text. A per-answer idempotency key makes network retries safe without retaining the answer or its hash. The **Saved progress** panel shows recent weak question areas; **Clear saved progress** deletes records for that browser cookie. This is a local prototype bound to `127.0.0.1`, not a multi-user hosted service with account authentication. Keep the cookie private on shared computers; deleting site cookies creates a new, separate progress history.
+Quiz scores are stored in a local SQLite database at `.codex/bolprep.sqlite3`, scoped to a random, HttpOnly browser cookie. Set `BOLPREP_DATABASE_PATH` in the server environment to use a different database file; the local smoke check uses this option for an isolated temporary database. Progress survives a server restart in the same browser. The app saves scores and rubric feedback, not the learner's raw answer text. A per-answer idempotency key makes network retries safe without retaining the answer or its hash. The **Saved progress** panel shows recent weak question areas; **Clear saved progress** deletes records for that browser cookie. This is a local prototype bound to `127.0.0.1`, not a multi-user hosted service with account authentication. Keep the cookie private on shared computers; deleting site cookies creates a new, separate progress history.
 
 ## Roadmap
 
