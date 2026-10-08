@@ -319,6 +319,10 @@ Choose Maximum live speech segment before opening Live mic: 20 seconds (default)
 
 Schema 12 records capture_limit_ms per attempt and separates capture-limit configurations in summaries and the offline live report. Older exports lack that field and remain unknown/separate in the report. Real-device 60-second capture, natural pauses, final-word retention, timer behavior, and longer-answer quality remain unverified.
 
+## Recorded clip size limits
+
+Record requests chunks about once per second and retains at most 5 MiB of encoded chunk data, matching the server's upload limit. An oversized chunk/clip is discarded locally, tracks receive stop commands, and diagnostics records `recording-too-large`; no transcription upload is started. Canceled recordings skip final Blob construction, and late discarded chunks are ignored. The 20-second recording limit still applies. Chunk timing is a request to the browser: internal encoder buffers and one delivered chunk can exceed this retained-data cap. Chunk formats, delayed events, exact-boundary handling, and oversized recovery remain unverified at runtime.
+
 ## Recent-topic retrieval for follow-ups
 
 Common Hindi, English, and Hinglish language names (including Devanagari spellings), translation requests, and `bolo` are treated as clarification terms during retrieval. A request such as `Hindi mein samjhao` can retain the recent topic rather than failing its article support check. This only affects evidence selection; it does not change speech language controls or guarantee the model's answer language. Questions about constitutional language protections still need substantive topic words such as culture or minorities.

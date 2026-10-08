@@ -240,6 +240,10 @@ Let a tutor finish generating text while its browser/provider voice continues. S
 
 Repeat with a long Unicode answer: history must stay within 3,000 code points per assistant message while the displayed answer remains complete. Start New session and confirm earlier annotations do not enter new follow-ups. Do not infer exact heard words or provider cancellation from the note.
 
+### Recorded clip size checks (not yet performed)
+
+Inspect retained chunk bytes with local instrumentation at the exact 5 MiB boundary and above it. At the boundary, normal Stop should keep the upload path; above it, expect one recording-too-large failure, cleared retained chunks, track stop commands, and no upload. Deliver delayed/final chunks after discard and inspect whether they are ignored. Verify ordinary WebM/MP4 capture still creates a usable full clip across one-second chunks. Measure browser encoder memory separately; this cap covers retained chunks, not all browser buffers. Check explicit restart and normal 20-second capture afterward.
+
 ### Recorded microphone loss checks (not yet performed)
 
 While Record is capturing, unplug the microphone or revoke its permission. Check that the partial clip is discarded, no transcription upload starts, tracks close, and exactly one capture-ended failure is recorded. Repeat near the 20-second limit and just after pressing recording Stop to inspect track/recorder event ordering. Ordinary Stop and the limit with live tracks should still produce an editable transcript. Cancel/hide the page and check no extra device-loss failure is counted. Reconnect and explicitly start another recording; temporary mute should not be treated as permanent loss.

@@ -1410,3 +1410,9 @@
 - Added recorded-capture audio-track validation and ended-event watchers. Permanent loss marks discard before recorder cleanup, records capture-ended once, stops tracks, and prompts reconnect/type. Recorder completion checks track state as well so an earlier onstop event cannot send a truncated clip after device loss.
 - Watchers are removed on completion/start failure; existing cancellation and discard guards suppress duplicate failure reporting. Normal Stop/limit transcription remains available when tracks are live. Temporary mute is not classified as permanent loss.
 - Updated README and manual device/event-order checks. Verification: JavaScript syntax and git diff whitespace checks passed. No tests, browser interactions, recordings, or provider calls were run; real-device loss, permission revocation, event ordering, normal completion, and duplicate suppression remain unverified.
+
+## Bound retained recorded audio before upload - 2026-10-08
+
+- Recorded capture requests one-second chunks and checks accumulated bytes against the server's 5 MiB limit before retaining each chunk. Oversized capture clears retained chunks, marks discard, records recording-too-large once, and stops capture without upload. Discarded/stale chunks are ignored, and canceled clips skip final Blob construction.
+- This bounds retained encoded data only; browser encoder buffers, event delays, and the delivered chunk itself are outside that bound. Normal recording duration and server checks remain in place. Added README and manual boundary/format/recovery cases.
+- Verification: JavaScript syntax and git diff whitespace checks passed. No tests, recordings, browser interactions, or provider calls were run; chunk concatenation, limit boundaries, memory use, cancellation, and restart behavior remain unverified.

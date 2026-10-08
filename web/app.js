@@ -362,8 +362,23 @@ async function startServerRecording() {
     };
     audioTracks.forEach((track) => track.addEventListener("ended", captureEnded));
     detachTrackListeners = () => audioTracks.forEach((track) => track.removeEventListener("ended", captureEnded));
+    let recordedBytes = 0;
+    const maxRecordedBytes = 5 * 1024 * 1024; // Match server MAX_AUDIO_BYTES.
     recorder.ondataavailable = (event) => {
-      if (event.data?.size) serverRecordingChunks.push(event.data);
+      if (recordingRun !== serverRecordingRun || activeMediaRecorder !== recorder
+        || discardServerRecording || !event.data?.size) return;
+      recordedBytes += event.data.size;
+      if (recordedBytes > maxRecordedBytes) {
+        discardServerRecording = true;
+        serverRecordingChunks = [];
+        recordedTranscriptionFailures.push({ language: recordingLanguage, reason: "recording-too-large" });
+        if (recordedTranscriptionFailures.length > 500) recordedTranscriptionFailures.shift();
+        stopServerRecording(true);
+        stream.getTracks().forEach((track) => track.stop());
+        statusLine.textContent = "The recording exceeded 5 MiB and was discarded. Record a shorter question, or type it.";
+        return;
+      }
+      serverRecordingChunks.push(event.data);
     };
     recorder.onerror = () => {
       const unexpected = recordingRun === serverRecordingRun && !discardServerRecording;
@@ -383,7 +398,7 @@ async function startServerRecording() {
         serverRecordingTimer = null;
       }
       const discard = discardServerRecording;
-      const audio = new Blob(serverRecordingChunks, { type: recorder.mimeType });
+      const audio = discard ? null : new Blob(serverRecordingChunks, { type: recorder.mimeType });
       serverRecordingChunks = [];
       activeMediaRecorder = null;
       activeMediaStream?.getTracks().forEach((track) => track.stop());
@@ -399,7 +414,7 @@ async function startServerRecording() {
       }
       void transcribeRecordedAudio(audio, recordingLanguage);
     };
-    recorder.start();
+    recorder.start(1000);
     updateServerTranscribeButton("recording");
     statusLine.textContent = `Recording in ${speechLanguageLabel(recordingLanguage)}. Tap Stop or speak for up to 20 seconds.`;
     serverRecordingTimer = window.setTimeout(() => {
