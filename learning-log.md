@@ -1997,3 +1997,10 @@
 - Added a shared active-output predicate including the browser start/playback deadline. Installed voice changes now stop active/pending output before saving preferences; speech-backend changes also cancel ordinary browser playback rather than only progressive/provider output.
 - Language, provider-voice, and rate controls use the same predicate, retaining existing speech identities, queue/controller/deadline cleanup, and next-playback semantics. Static inspection confirmed progressive browser speech already captures its selected voice, language, and rate.
 - Verification: Node syntax check and git diff whitespace checks with static event/ownership inspection. No tests, audio, browser/race checks, provider calls, or measured acoustic/cancellation claims.
+
+
+## Display collected speech timings on the page - 2026-10-08
+
+- Added a refreshable diagnostics table using the existing export snapshot: TTS, browser/recorded/live STT, model-stream duration, and automatic voice turn timings stay grouped by configuration. Each metric shows its actual timing sample count, p50/p95 seconds, outcome counts, and available failure reasons. Recorded server-call counts exclude missing timing values; untracked cancellations/reasons are unavailable.
+- Opening the panel refreshes the view; later attempts require Refresh table. Scope, collection limits, repeated counts, software-event timing, empty state, and missing values are explicit. Cells use textContent, and the table has a caption, scoped headers, and a focusable horizontal scroll region. Existing JSON schema stays unchanged.
+- Verification: Node syntax and git diff whitespace checks with static snapshot/DOM review. No tests, browser rendering, recordings, runtime/evaluation runs, or provider calls; no benchmark or accessibility verification claims.

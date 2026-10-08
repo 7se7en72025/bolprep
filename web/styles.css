@@ -74,6 +74,11 @@ textarea::placeholder { color: #a3aaa2; }
 .diagnostics-content { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 8px; }
 .diagnostics-content p { margin: 0; line-height: 1.5; }
 .diagnostics-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.diagnostics-table-scroll { overflow-x: auto; max-width: 100%; }
+.diagnostics-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.diagnostics-table caption { text-align: left; padding: 8px 0; font-weight: 600; }
+.diagnostics-table th, .diagnostics-table td { text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); padding: 8px; min-width: 90px; overflow-wrap: anywhere; }
+.diagnostics-table th:first-child, .diagnostics-table td:first-child { min-width: 180px; }
 .progress-card { margin-top: 16px; padding: 18px 22px; background: var(--paper); border: 1px solid #ebe9e1; border-radius: 14px; }
 .tutor-traces summary { cursor: pointer; font-weight: 600; color: var(--green); }
 .tutor-trace-list { padding-left: 20px; font-size: 12px; line-height: 1.55; }

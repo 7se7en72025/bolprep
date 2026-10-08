@@ -112,14 +112,24 @@
         <p id="server-stt-note" class="server-stt-note" hidden>When you stop recording, the audio is sent to the configured transcription provider. BolPrep does not save the recording; review the transcript before asking.</p>
         <p id="live-stt-note" class="server-stt-note" hidden>Live mic sends audio to OpenAI while you speak (API usage may be billed). Tap Done for the final transcript; review it before sending. BolPrep does not save audio.</p>
         <p id="status" class="status" role="status">Ready when you are.</p>
-        <details class="speech-diagnostics">
+        <details class="speech-diagnostics" id="speech-diagnostics-panel">
           <summary>Speech diagnostics</summary>
           <div class="diagnostics-content">
             <p>Copy this page’s speech and model-stream timings and failure counts for the voice run sheet. Transcript text and audio are not included.</p>
             <div class="diagnostics-actions">
+              <button class="text-button" id="refresh-speech-diagnostics" type="button">Refresh table</button>
               <button class="text-button" id="copy-speech-diagnostics" type="button">Copy JSON</button>
               <button class="text-button" id="download-speech-diagnostics" type="button">Download JSON</button>
             </div>
+          </div>
+          <p>Current page only; reload clears samples. Completed samples determine p50/p95 (seconds). These are software events, not audible latency or accuracy scores. Each collection retains its latest 500 records.</p>
+          <p id="speech-dashboard-status" role="status">Open to view collected timings.</p>
+          <div class="diagnostics-table-scroll" tabindex="0" role="region" aria-label="Speech timing table">
+            <table class="diagnostics-table">
+              <caption>Observed speech and model timings by configuration</caption>
+              <thead><tr><th scope="col">Path / configuration</th><th scope="col">Metric</th><th scope="col">Timing samples</th><th scope="col">p50 / p95 (s)</th><th scope="col">Completed / failed / cancelled</th><th scope="col">Failure reasons</th></tr></thead>
+              <tbody id="speech-dashboard-rows"></tbody>
+            </table>
           </div>
         </details>
       </section>

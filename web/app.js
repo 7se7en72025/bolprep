@@ -1358,6 +1358,68 @@ function buildSpeechDiagnostics() {
   };
 }
 
+function renderSpeechDashboard() {
+  const snapshot = buildSpeechDiagnostics();
+  const rows = document.querySelector("#speech-dashboard-rows");
+  rows.replaceChildren();
+  const append = (configuration, metric, timing, sampleCount, completed, failed, cancelled, reasons = null) => {
+    const row = document.createElement("tr");
+    const seconds = (value) => Number.isFinite(value) ? value.toFixed(2) : "unavailable";
+    const values = [configuration, metric, sampleCount,
+      `${seconds(timing.p50_s)} / ${seconds(timing.p95_s)}`,
+      `${completed} / ${failed} / ${cancelled}`,
+      reasons === null ? "unavailable"
+        : Object.entries(reasons).map(([reason, count]) => `${reason}: ${count}`).join(", ") || "None recorded"];
+    values.forEach((value, index) => {
+      const cell = document.createElement(index === 0 ? "th" : "td");
+      if (index === 0) cell.scope = "row";
+      cell.textContent = String(value);
+      row.appendChild(cell);
+    });
+    rows.appendChild(row);
+  };
+  snapshot.tts.forEach((group) => {
+    const config = `TTS | ${group.language} | ${group.sample_type} | ${group.voice} | rate ${group.browser_rate ?? "provider"} | ${group.start_event}`;
+    append(config, "Speech queue to start event", group.start_delay, group.completed_count,
+      group.completed_count, group.failure_count, "unavailable", group.failure_reasons);
+    append(config, "Playback duration", group.playback_duration, group.completed_count,
+      group.completed_count, group.failure_count, "unavailable", group.failure_reasons);
+  });
+  snapshot.stt.forEach((group) => append(`Browser STT | ${group.language}`, "Listening to first final",
+    group.time_to_first_final, group.final_transcript_count, group.final_transcript_count,
+    group.failed_or_empty_count, "unavailable", group.failure_reasons));
+  snapshot.recorded_stt.forEach((group) => {
+    const config = `Recorded STT | ${group.language} | requested ${group.configured_model ?? "unknown"}`;
+    append(config, "Upload to result", group.upload_to_result, group.completed_count,
+      group.completed_count, group.failure_count, "unavailable", group.failure_reasons);
+    append(config, "Server transcription call", group.server_transcription_call,
+      group.completed_count - group.missing_server_call_timing_count,
+      group.completed_count, group.failure_count, "unavailable", group.failure_reasons);
+  });
+  snapshot.live_stt.forEach((group) => {
+    const config = `Live STT | ${group.language} | ${group.model ?? "unknown"} | auto finish ${group.auto_finish_requested} | pause detection ${group.pause_detection_used} | continuous ${group.continuous} | reused ${group.connection_reused} | quiet ${group.configuration.quiet_pause_s}s | capture ${group.configuration.capture_limit_s}s`;
+    [["Connection", group.connection], ["Listening to first partial", group.listening_to_first_partial],
+      ["Commit to final", group.commit_to_final], ["Total duration", group.total_duration]].forEach(([metric, timing]) =>
+      append(config, metric, timing, timing.sample_count, group.completed_count,
+        group.failure_count, group.cancellation_count, group.failure_reasons));
+  });
+  snapshot.model_streams.forEach((group) => append(`Model stream | ${group.language} | requested ${group.model ?? "unknown"}`,
+    "Total response duration", group.total_response_duration, group.completed_count,
+    group.completed_count, group.failure_count, group.cancellation_count));
+  snapshot.automatic_voice_turns.forEach((group) => append(
+    `Automatic voice | ${group.input_language} to ${group.output_language} | ${group.start_event}`,
+    "Recognition end to start event", group.recognition_end_to_start, group.sample_count,
+    group.sample_count, "unavailable", "unavailable"));
+  document.querySelector("#speech-dashboard-status").textContent = rows.children.length
+    ? `Snapshot updated ${snapshot.generated_at_utc}. Refresh after another attempt. Counts repeat across metrics for the same configuration; do not sum rows. Unavailable means this collection does not track that value.`
+    : "No completed or failed attempts recorded on this page. Use speech or a model stream, then refresh. No benchmark results are preloaded.";
+}
+
+document.querySelector("#refresh-speech-diagnostics").addEventListener("click", renderSpeechDashboard);
+document.querySelector("#speech-diagnostics-panel").addEventListener("toggle", (event) => {
+  if (event.currentTarget.open) renderSpeechDashboard();
+});
+
 copySpeechDiagnosticsButton.addEventListener("click", async () => {
   try {
     await navigator.clipboard.writeText(JSON.stringify(buildSpeechDiagnostics(), null, 2));
