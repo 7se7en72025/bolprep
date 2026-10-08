@@ -1961,3 +1961,9 @@
 - Added a shared bounded generic-question predicate and local English/Hindi/Hinglish clarification replies asking for an article/topic when no evidence or topic anchor exists. The selected retrieval query is passed through terminal/legacy/offline-agent replies so unsupported prior article anchors retain abstention.
 - Model-configured agent turns with unanchored generic requests now return the local clarification without a provider call; quiz/revision intent and source callbacks remain. Generic-token vocabulary and lexical scope limitations are explicit.
 - Verification: Python compilation, UTF-8 source inspection, and git diff whitespace checks with static selected-query/branch inspection. No tests, examples, browser/device checks, provider calls, or observed clarification-quality claims.
+
+## Separate recorded STT call and upload timings - 2026-10-08
+
+- Successful recorded transcription responses now include server SDK-call duration measured with perf_counter around create. Browser metadata validates optional timing and retains it only for successful transcript observations; absent/null timing stays unavailable.
+- Page summaries now use language/requested-model groups and show separate server-call p50/p95/sample coverage. Schema 13 export groups add server-call distributions and missing timing counts; upload-to-result timing remains independent. Documented transport/decoding and acoustic/compute limitations.
+- Verification: Python compilation, Node syntax check, and git diff whitespace checks with static timing-span/group/denominator inspection. No tests, actual timing samples, recordings, browser/device checks, provider calls, or benchmark reports.

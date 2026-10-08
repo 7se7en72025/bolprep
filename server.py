@@ -526,11 +526,13 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             from openai import OpenAI
 
             with OpenAI(timeout=60.0, max_retries=0) as client:
+                call_started = time.perf_counter()
                 response = client.audio.transcriptions.create(
                     model=configured_model,
                     file=(filename, audio, content_type),
                     language=language_code,
                 )
+                call_duration_ms = round((time.perf_counter() - call_started) * 1000, 2)
                 transcript = getattr(response, "text", "")
                 if not isinstance(transcript, str) or not transcript.strip():
                     self._send_json(502, {"error": "The transcription provider returned no text. Try again or type your question.", "configured_model": configured_model})
@@ -539,7 +541,8 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 if len(transcript) > MAX_RECORDED_TRANSCRIPT_CHARS:
                     self._send_json(422, {"error": "The transcript is over 6,000 characters and cannot be shown. Record a shorter clip or type your question.", "configured_model": configured_model})
                     return
-                self._send_json(200, {"transcript": transcript, "configured_model": configured_model})
+                self._send_json(200, {"transcript": transcript, "configured_model": configured_model,
+                                      "server_transcription_call_ms": call_duration_ms})
         except Exception as exc:
             print(f"Transcription request failed: {type(exc).__name__}")
             self._send_json(502, {"error": "The transcription provider could not return text. Check the server terminal and try again.", "configured_model": configured_model})

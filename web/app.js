@@ -801,6 +801,7 @@ async function transcribeRecordedAudio(audio, language) {
   let timedOut = false;
   let failureReason = "transcription-failed";
   let configuredModel = null;
+  let serverCallMs = null;
   activeTranscriptionController = controller;
   updateServerTranscribeButton("transcribing");
   statusLine.textContent = `Transcribing in ${speechLanguageLabel(language)}. Review the text before asking.`;
@@ -831,7 +832,14 @@ async function transcribeRecordedAudio(audio, language) {
       failureReason = "invalid-transcript";
       throw new Error("The server returned invalid transcription metadata.");
     }
+    if (payload.server_transcription_call_ms !== undefined && payload.server_transcription_call_ms !== null
+      && (typeof payload.server_transcription_call_ms !== "number" || !Number.isFinite(payload.server_transcription_call_ms)
+        || payload.server_transcription_call_ms < 0 || payload.server_transcription_call_ms > 86400000)) {
+      failureReason = "invalid-transcript";
+      throw new Error("The server returned invalid transcription timing metadata.");
+    }
     configuredModel = payload.configured_model ?? null;
+    serverCallMs = payload.server_transcription_call_ms ?? null;
     if (timedOut) throw new Error("Transcription timed out after 90 seconds.");
     if (!response.ok) {
       throw new Error(typeof payload?.error === "string" && payload.error.trim() && payload.error.length <= 2048
@@ -855,17 +863,17 @@ async function transcribeRecordedAudio(audio, language) {
     }
     input.value = transcript;
     input.focus();
-    recordedTranscriptionSamples.push({ language, configuredModel, elapsedMs: performance.now() - startedAt });
+    recordedTranscriptionSamples.push({ language, configuredModel, serverCallMs, elapsedMs: performance.now() - startedAt });
     if (recordedTranscriptionSamples.length > 500) recordedTranscriptionSamples.shift();
     statusLine.textContent = input.value.length > input.maxLength
-      ? `Transcript ready. Shorten it to ${input.maxLength} characters before sending. ${recordedTranscriptionTimingSummary(language)}`
-      : `Transcript ready. Review it, then ask. ${recordedTranscriptionTimingSummary(language)}`;
+      ? `Transcript ready. Shorten it to ${input.maxLength} characters before sending. ${recordedTranscriptionTimingSummary(language, configuredModel)}`
+      : `Transcript ready. Review it, then ask. ${recordedTranscriptionTimingSummary(language, configuredModel)}`;
   } catch (error) {
     if ((error.name !== "AbortError" || timedOut) && activeTranscriptionController === controller) {
       recordedTranscriptionFailures.push({ language, configuredModel, reason: timedOut ? "transcription-timeout" : failureReason });
       if (recordedTranscriptionFailures.length > 500) recordedTranscriptionFailures.shift();
       const message = timedOut ? "Transcription timed out after 90 seconds." : error.message;
-      statusLine.textContent = `${message} You can record again or type your question. ${recordedTranscriptionTimingSummary(language)}`;
+      statusLine.textContent = `${message} You can record again or type your question. ${recordedTranscriptionTimingSummary(language, configuredModel)}`;
     }
   } finally {
     window.clearTimeout(timeoutId);
@@ -1078,14 +1086,20 @@ function recordAutomaticVoiceTurnStart(sample, startedAt) {
   activeAutomaticVoiceTurn = null;
 }
 
-function recordedTranscriptionTimingSummary(language) {
-  const samples = recordedTranscriptionSamples.filter((item) => item.language === language);
-  const failures = recordedTranscriptionFailures.filter((item) => item.language === language);
-  if (!samples.length) return `Recorded STT ${language}: no completed transcripts, failures=${failures.length}.`;
+function recordedTranscriptionTimingSummary(language, configuredModel) {
+  const matches = (item) => item.language === language && (item.configuredModel ?? null) === configuredModel;
+  const samples = recordedTranscriptionSamples.filter(matches);
+  const failures = recordedTranscriptionFailures.filter(matches);
+  const label = `${language} / ${configuredModel ?? "unknown model"}`;
+  if (!samples.length) return `Recorded STT ${label}: no completed transcripts, failures=${failures.length}.`;
   const times = samples.map((item) => item.elapsedMs);
+  const calls = samples.filter((item) => Number.isFinite(item.serverCallMs)).map((item) => item.serverCallMs);
   const seconds = (milliseconds) => (milliseconds / 1000).toFixed(2);
-  return `Recorded STT ${language}: n=${samples.length}, upload-to-result p50/p95 `
-    + `${seconds(percentile(times, 0.5))}/${seconds(percentile(times, 0.95))}s, failures=${failures.length}.`;
+  const callSummary = calls.length
+    ? ` Server call n=${calls.length}, p50/p95 ${seconds(percentile(calls, 0.5))}/${seconds(percentile(calls, 0.95))}s.`
+    : " Server call timing unavailable.";
+  return `Recorded STT ${label}: n=${samples.length}, upload-to-result p50/p95 `
+    + `${seconds(percentile(times, 0.5))}/${seconds(percentile(times, 0.95))}s, failures=${failures.length}.` + callSummary;
 }
 
 function speechErrorMessage(error) {
@@ -1196,6 +1210,8 @@ function buildSpeechDiagnostics() {
       failure_count: group.failures,
       failure_reasons: group.failure_reasons,
       upload_to_result: percentiles(group.completed.map((sample) => sample.elapsedMs)),
+      server_transcription_call: percentiles(group.completed.filter((sample) => Number.isFinite(sample.serverCallMs)).map((sample) => sample.serverCallMs)),
+      missing_server_call_timing_count: group.completed.filter((sample) => !Number.isFinite(sample.serverCallMs)).length,
     }));
   const liveSttGroups = new Map();
   liveTranscriptionAttempts.forEach((attempt) => {
