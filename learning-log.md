@@ -1718,3 +1718,10 @@
 - Static recorder review found ordinary cancellation waited for onstop or the 10-second watchdog to release tracks. Discarding now sets its flag, requests recorder stop, and immediately stops owned microphone tracks. Late onstop/watchdog cleanup still owns buffers and callbacks, and normal non-discarding final audio collection is unchanged.
 - Added manual checks for delayed stop, stop exceptions, cancellation/device failures, late callbacks, microphone indicators, and normal final-chunk preservation.
 - Verification: JavaScript syntax and git diff whitespace checks only. No tests, device/browser checks, recordings, uploads, or provider calls were performed. Immediate hardware release and normal recording behavior remain unverified.
+
+
+## Bound recorded transcription JSON before parsing - 2026-10-08
+
+- Replaced unbounded response.json() on recorded transcription with a 128 KiB byte-counted reader and strict streaming UTF-8 decoder. This bounds response allocation before the existing transcript validation, including when Content-Length is absent. Invalid bodies use existing generic invalid-transcript recovery.
+- Preserved AbortError semantics and the 90-second request deadline; canceled readers release their lock without awaiting an unresponsive cancellation promise. Added manual response-boundary/cancellation scenarios, with no claimed runtime pass.
+- Verification: JavaScript syntax and git diff whitespace checks only. No tests, browser/device checks, recordings, server requests, or provider calls were performed.

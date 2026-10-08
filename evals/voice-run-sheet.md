@@ -407,3 +407,8 @@ For an authorized configured tutor turn, compare the requested model with the mo
 ### Immediate recorded-input discard (not yet verified)
 
 Cancel a recording through Stop, another study control, and page navigation while the recorder delays its stop event. The discard flag should be set before microphone tracks are stopped, buffers should never upload, and owned recorder cleanup should still complete or time out. Inspect the browser microphone indicator immediately after cancellation; issuing track.stop() does not prove immediate hardware release. Repeat with a stop exception, late data/stop events, and device disconnection. Cancellation should not count as an unexpected capture failure or overwrite a newer draft. For a normal non-discarding Stop/20-second limit, final recorder data must still be collected before tracks close and transcription starts. These device and lifecycle checks have not been performed.
+
+
+### Bounded recorded-transcription response (not yet verified)
+
+With authorized local browser checks, inspect responses split across UTF-8 character boundaries, invalid/truncated UTF-8, malformed JSON, missing bodies, and bodies just below/above 128 KiB. The client must count received bytes even without a Content-Length header, stop reading oversized data, release its reader, and show generic invalid-response recovery without echoing response text. Repeat with canceled/timed-out fetches, a late response after another turn, and a cancellation promise that does not resolve: recovery must not wait on that promise or replace the newer draft. Valid transcripts still use the existing 6,000-code-point review limit and remain drafts until explicit submission. No browser or response-stream checks have been performed.

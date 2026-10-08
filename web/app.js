@@ -719,6 +719,31 @@ async function startServerRecording() {
   }
 }
 
+async function readRecordedTranscriptResponse(response, signal) {
+  if (!response.body) throw new Error("Transcription response body is unavailable.");
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder("utf-8", { fatal: true });
+  let bytes = 0;
+  let text = "";
+  try {
+    while (true) {
+      if (signal.aborted) throw new DOMException("Transcription canceled.", "AbortError");
+      const { value, done } = await reader.read();
+      if (done) break;
+      bytes += value.byteLength;
+      if (bytes > 128 * 1024) throw new Error("Transcription response exceeded its size limit.");
+      text += decoder.decode(value, { stream: true });
+    }
+    text += decoder.decode();
+    if (signal.aborted) throw new DOMException("Transcription canceled.", "AbortError");
+    return JSON.parse(text);
+  } finally {
+    // Do not delay recovery on an unresponsive stream cancellation promise.
+    void reader.cancel().catch(() => {});
+    reader.releaseLock();
+  }
+}
+
 async function transcribeRecordedAudio(audio, language) {
   const startedAt = performance.now();
   const controller = new AbortController();
@@ -742,7 +767,8 @@ async function transcribeRecordedAudio(audio, language) {
       body: audio,
       signal: controller.signal,
     });
-    const payload = await response.json().catch(() => {
+    const payload = await readRecordedTranscriptResponse(response, controller.signal).catch((error) => {
+      if (error.name === "AbortError") throw error;
       failureReason = "invalid-transcript";
       throw new Error("The server returned an invalid transcription response.");
     });
