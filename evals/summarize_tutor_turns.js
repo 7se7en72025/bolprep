@@ -79,9 +79,9 @@ function summarize(paths) {
       if (fs.statSync(path).size > 4 * 1024 * 1024) throw new Error("large");
       document = JSON.parse(fs.readFileSync(path, "utf8").replace(/^\uFEFF/, ""));
     } catch { throw new Error(`${label} must be readable JSON no larger than 4 MiB.`); }
-    if (!object(document) || document.schema_version !== 12
+    if (!object(document) || ![12, 13].includes(document.schema_version)
       || !Array.isArray(document.tutor_turns) || document.tutor_turns.length > 500) {
-      throw new Error(`${label} must be a schema 12 export with at most 500 tutor turns.`);
+      throw new Error(`${label} must be a schema 12-13 export with at most 500 tutor turns.`);
     }
     document.tutor_turns.forEach((raw, index) => {
       const turn = record(raw, `${label}, turn ${index + 1}`);

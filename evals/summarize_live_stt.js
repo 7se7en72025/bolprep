@@ -91,9 +91,9 @@ function summarize(paths) {
     } catch {
       throw new Error(`${label} must be a readable JSON file no larger than 4 MiB.`);
     }
-    if (!document || ![8, 9, 10, 11, 12].includes(document.schema_version)
+    if (!document || ![8, 9, 10, 11, 12, 13].includes(document.schema_version)
       || !Array.isArray(document.live_stt_attempts) || document.live_stt_attempts.length > 500) {
-      throw new Error(`${label} must be a schema 8-12 diagnostics export with at most 500 live attempts.`);
+      throw new Error(`${label} must be a schema 8-13 diagnostics export with at most 500 live attempts.`);
     }
     schemas.add(document.schema_version);
     document.live_stt_attempts.forEach((raw, index) => {

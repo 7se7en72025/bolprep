@@ -54,9 +54,9 @@ function summarize(paths) {
     } catch {
       throw new Error(`${label} must be readable JSON no larger than 4 MiB.`);
     }
-    if (!document || ![11, 12].includes(document.schema_version)
+    if (!document || ![11, 12, 13].includes(document.schema_version)
       || !Array.isArray(document.speech_stops) || document.speech_stops.length > 500) {
-      throw new Error(`${label} must be a schema 11-12 export with at most 500 speech stops.`);
+      throw new Error(`${label} must be a schema 11-13 export with at most 500 speech stops.`);
     }
     schemas.add(document.schema_version);
     document.speech_stops.forEach((raw, index) => {

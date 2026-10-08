@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import hashlib
 import os
+import re
 import sqlite3
 import time
 import uuid
@@ -495,27 +496,31 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             self._send_json(503, {"error": "Server transcription needs an API key. Browser speech recognition remains available."})
             return
 
+        configured_model = os.getenv("BOLPREP_STT_MODEL", "gpt-transcribe")
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}", configured_model):
+            self._send_json(503, {"error": "Recorded transcription model configuration is invalid. Check BOLPREP_STT_MODEL and restart the server."})
+            return
         try:
             from openai import OpenAI
 
             with OpenAI(timeout=60.0, max_retries=0) as client:
                 response = client.audio.transcriptions.create(
-                    model="gpt-transcribe",
+                    model=configured_model,
                     file=(filename, audio, content_type),
                     language=language_code,
                 )
                 transcript = getattr(response, "text", "")
                 if not isinstance(transcript, str) or not transcript.strip():
-                    self._send_json(502, {"error": "The transcription provider returned no text. Try again or type your question."})
+                    self._send_json(502, {"error": "The transcription provider returned no text. Try again or type your question.", "configured_model": configured_model})
                     return
                 transcript = transcript.strip()
                 if len(transcript) > MAX_RECORDED_TRANSCRIPT_CHARS:
-                    self._send_json(422, {"error": "The transcript is over 6,000 characters and cannot be shown. Record a shorter clip or type your question."})
+                    self._send_json(422, {"error": "The transcript is over 6,000 characters and cannot be shown. Record a shorter clip or type your question.", "configured_model": configured_model})
                     return
-                self._send_json(200, {"transcript": transcript})
+                self._send_json(200, {"transcript": transcript, "configured_model": configured_model})
         except Exception as exc:
             print(f"Transcription request failed: {type(exc).__name__}")
-            self._send_json(502, {"error": "The transcription provider could not return text. Check the server terminal and try again."})
+            self._send_json(502, {"error": "The transcription provider could not return text. Check the server terminal and try again.", "configured_model": configured_model})
 
     def _read_json_body(self) -> dict[str, Any] | None:
         try:

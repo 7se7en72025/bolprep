@@ -784,6 +784,7 @@ async function transcribeRecordedAudio(audio, language) {
   const controller = new AbortController();
   let timedOut = false;
   let failureReason = "transcription-failed";
+  let configuredModel = null;
   activeTranscriptionController = controller;
   updateServerTranscribeButton("transcribing");
   statusLine.textContent = `Transcribing in ${speechLanguageLabel(language)}. Review the text before asking.`;
@@ -807,6 +808,14 @@ async function transcribeRecordedAudio(audio, language) {
       failureReason = "invalid-transcript";
       throw new Error("The server returned an invalid transcription response.");
     });
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)
+      || (payload.configured_model !== undefined && (typeof payload.configured_model !== "string"
+        || payload.configured_model.trim() !== payload.configured_model
+        || !/^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(payload.configured_model)))) {
+      failureReason = "invalid-transcript";
+      throw new Error("The server returned invalid transcription metadata.");
+    }
+    configuredModel = payload.configured_model ?? null;
     if (timedOut) throw new Error("Transcription timed out after 90 seconds.");
     if (!response.ok) {
       throw new Error(typeof payload?.error === "string" && payload.error.trim() && payload.error.length <= 2048
@@ -830,14 +839,14 @@ async function transcribeRecordedAudio(audio, language) {
     }
     input.value = transcript;
     input.focus();
-    recordedTranscriptionSamples.push({ language, elapsedMs: performance.now() - startedAt });
+    recordedTranscriptionSamples.push({ language, configuredModel, elapsedMs: performance.now() - startedAt });
     if (recordedTranscriptionSamples.length > 500) recordedTranscriptionSamples.shift();
     statusLine.textContent = input.value.length > input.maxLength
       ? `Transcript ready. Shorten it to ${input.maxLength} characters before sending. ${recordedTranscriptionTimingSummary(language)}`
       : `Transcript ready. Review it, then ask. ${recordedTranscriptionTimingSummary(language)}`;
   } catch (error) {
     if ((error.name !== "AbortError" || timedOut) && activeTranscriptionController === controller) {
-      recordedTranscriptionFailures.push({ language, reason: timedOut ? "transcription-timeout" : failureReason });
+      recordedTranscriptionFailures.push({ language, configuredModel, reason: timedOut ? "transcription-timeout" : failureReason });
       if (recordedTranscriptionFailures.length > 500) recordedTranscriptionFailures.shift();
       const message = timedOut ? "Transcription timed out after 90 seconds." : error.message;
       statusLine.textContent = `${message} You can record again or type your question. ${recordedTranscriptionTimingSummary(language)}`;
@@ -1154,22 +1163,26 @@ function buildSpeechDiagnostics() {
       time_to_first_final: percentiles(group.completed.map((sample) => sample.firstFinalMs)),
     }));
   const recordedSttGroups = new Map();
-  const getRecordedSttGroup = (language) => {
-    if (!recordedSttGroups.has(language)) {
-      recordedSttGroups.set(language, { language, completed: [], failures: 0, failure_reasons: {} });
+  const getRecordedSttGroup = (sample) => {
+    const configuredModel = sample.configuredModel ?? null;
+    const key = JSON.stringify([sample.language, configuredModel]);
+    if (!recordedSttGroups.has(key)) {
+      recordedSttGroups.set(key, { language: sample.language, configuredModel, completed: [], failures: 0, failure_reasons: {} });
     }
-    return recordedSttGroups.get(language);
+    return recordedSttGroups.get(key);
   };
-  recordedTranscriptionSamples.forEach((sample) => getRecordedSttGroup(sample.language).completed.push(sample));
+  recordedTranscriptionSamples.forEach((sample) => getRecordedSttGroup(sample).completed.push(sample));
   recordedTranscriptionFailures.forEach((sample) => {
-    const group = getRecordedSttGroup(sample.language);
+    const group = getRecordedSttGroup(sample);
     group.failures += 1;
     group.failure_reasons[sample.reason] = (group.failure_reasons[sample.reason] || 0) + 1;
   });
   const recordedStt = [...recordedSttGroups.values()]
-    .sort((left, right) => left.language.localeCompare(right.language))
+    .sort((left, right) => left.language.localeCompare(right.language)
+      || (left.configuredModel || "").localeCompare(right.configuredModel || ""))
     .map((group) => ({
       language: group.language,
+      configured_model: group.configuredModel,
       completed_count: group.completed.length,
       failure_count: group.failures,
       failure_reasons: group.failure_reasons,
@@ -1284,7 +1297,7 @@ function buildSpeechDiagnostics() {
       recognition_end_to_start: percentiles(group.samples),
     }));
   return {
-    schema_version: 12,
+    schema_version: 13,
     generated_at_utc: new Date().toISOString(),
     scope: "Current page only",
     privacy: "Diagnostics metadata only; no learner text, audio, cookies, or credentials.",

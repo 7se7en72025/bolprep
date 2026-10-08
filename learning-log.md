@@ -1925,3 +1925,9 @@
 - Added an explicit Devanagari cardinal vocabulary for article numbers 12-22, including two spellings of 15. It shares English number-word normalization, list/range handling, exact corpus lookup, and spaced Latin suffix handling; no phonetic or ordinal inference was added.
 - Replaced article-ID word boundaries with a guard covering word characters and relevant Devanagari combining marks, preventing a known number token from ending immediately before a Hindi vowel sign. Documented bounded vocabulary and pending voice/retrieval observations.
 - Verification: Python compilation, UTF-8 source inspection, and git diff whitespace checks only. No tests, parser cases, retrieval benchmarks, speech recordings/transcripts, browser/device checks, or provider calls were performed.
+
+## Retain recorded STT requested-model configuration - 2026-10-08
+
+- Added server-side BOLPREP_STT_MODEL with the existing recorded-model default and bounded identifier validation. Provider success/failure results retain the requested model, not a claimed resolved version. Inspected the installed SDK transcription model parameter's string support; account/model availability remains unverified.
+- Browser recorded-STT diagnostics now group by language/requested model; missing metadata and early failures remain null. Export schema is 13, and existing live/tutor/stop readers accept the new export while retaining their own validation. Added setup/comparison boundaries and pending scenarios.
+- Verification: Python compilation, Node syntax checks, and git diff whitespace checks with static metadata/grouping inspection. No tests, provider calls, model comparisons, reports, recordings, browser/device checks, or measured quality claims.
