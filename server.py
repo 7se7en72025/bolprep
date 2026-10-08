@@ -33,6 +33,7 @@ PORT = 8000
 MAX_BODY_BYTES = 256 * 1024
 MAX_AUDIO_BYTES = 5 * 1024 * 1024
 MAX_RECORDED_TRANSCRIPT_CHARS = 6000
+MAX_SPEECH_PCM_BYTES = 24000 * 2 * 300  # Mono 16-bit PCM, five minutes per request.
 POST_QUOTAS = {
     "/api/login": "login",
     "/api/logout": "logout",
@@ -397,9 +398,13 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                     self._send_session_cookie_if_needed()
                     self.end_headers()
                     response_started = True
+                    audio_bytes = 0
                     for chunk in response.iter_bytes(chunk_size=4096):
                         if not chunk:
                             continue
+                        audio_bytes += len(chunk)
+                        if audio_bytes > MAX_SPEECH_PCM_BYTES:
+                            raise RuntimeError("Speech audio exceeded the per-request limit.")
                         self.wfile.write(f"{len(chunk):X}\r\n".encode("ascii"))
                         self.wfile.write(chunk)
                         self.wfile.write(b"\r\n")

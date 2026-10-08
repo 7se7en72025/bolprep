@@ -1907,3 +1907,9 @@
 - Answer-review CLI reports now use output schema 2 while retaining input schema 1. They include declared reviewer count, exact label/rubric/runner SHA-256 fingerprints, input byte count, Python version/implementation, and UTC generation time.
 - Captures runner bytes before reporting functions are defined and rejects detected file changes before output. Documented raw-byte/line-ending sensitivity, CLI versus internal aggregation, reproduction archives, and hash/stability-check limitations.
 - Verification: Python compilation, CLI help, and git diff whitespace checks with static metadata/guard inspection. No tests, reports, human labels, provider calls, or reproducibility experiments were performed.
+
+## Bound total PCM responses and playback requests - 2026-10-08
+
+- Server and browser cap each 24 kHz mono 16-bit PCM response at 14,400,000 bytes (five minutes of audio). Server rejects excess before forwarding and closes an already-started stream; browser rejects before allocating its combined sample buffer.
+- Added a seven-minute browser request deadline across download/resume/backpressure/playback, separate from existing idle and stalled-playback timers. Timeout/byte-limit diagnostics and existing source/reader cleanup apply; progressive segments retain separate per-request limits.
+- Verification: Python compilation, Node syntax check, and git diff whitespace checks with static limit/cleanup inspection. No tests, generated audio, long-running playback, response injections, browser/device checks, provider calls, or billing/cancellation verification.

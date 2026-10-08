@@ -1,5 +1,6 @@
 const form = document.querySelector("#question-form");
 const apiFetch = window.BolPrepFetch;
+const MAX_SPEECH_PCM_BYTES = 24000 * 2 * 300; // Five minutes of mono 16-bit PCM.
 const logoutButton = document.querySelector("#logout-button");
 const input = document.querySelector("#question-input");
 const conversation = document.querySelector("#conversation");
@@ -1434,6 +1435,13 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
   controller.signal.addEventListener("abort", onAbort, { once: true });
   let timedOut = false;
   let playbackTimedOut = false;
+  let overallTimedOut = false;
+  let audioLimitExceeded = false;
+  let audioBytes = 0;
+  const overallTimer = window.setTimeout(() => {
+    overallTimedOut = true;
+    controller.abort();
+  }, 420_000);
   let idleTimer = null;
   let playbackTimer = null;
   let speechReader = null;
@@ -1475,6 +1483,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
       controller.signal.removeEventListener("abort", onResumeAbort);
     }
     if (controller.signal.aborted) {
+      if (overallTimedOut) throw new Error("Streamed speech exceeded its seven-minute request deadline.");
       if (timedOut) throw new Error("Streamed speech timed out.");
       return;
     }
@@ -1530,6 +1539,11 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
       const { value, done } = await speechReader.read();
       if (done) { speechReadEnded = true; break; }
       if (!value.length) continue;
+      audioBytes += value.byteLength;
+      if (audioBytes > MAX_SPEECH_PCM_BYTES) {
+        audioLimitExceeded = true;
+        throw new Error("Streamed audio exceeded the five-minute per-request limit.");
+      }
       resetIdleDeadline();
       const combined = new Uint8Array(pending.length + value.length);
       combined.set(pending);
@@ -1563,6 +1577,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
       controller.abort();
     }, remainingPlaybackMs + 10_000);
     await playbackDone;
+    if (overallTimedOut) throw new Error("Streamed speech exceeded its seven-minute request deadline.");
     if (playbackTimedOut) throw new Error("Streamed audio did not finish playing.");
     if (timedOut) throw new Error("Streamed speech timed out.");
     if (requestSpeechTurn !== speechTurn || controller.signal.aborted) return;
@@ -1575,16 +1590,17 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
       + speechTimingSummary(sample);
     return true;
   } catch (error) {
-    if ((error.name === "AbortError" && !timedOut && !playbackTimedOut) || requestSpeechTurn !== speechTurn) return;
+    if ((error.name === "AbortError" && !timedOut && !playbackTimedOut && !overallTimedOut) || requestSpeechTurn !== speechTurn) return;
     controller.abort();
     requestSources.forEach((source) => {
       try { source.stop(); } catch { /* The source may already have ended. */ }
       scheduledSpeechSources.delete(source);
     });
     requestSources.clear();
-    speechFailures.push({ ...sample, reason: playbackTimedOut ? "playback-timeout" : timedOut ? "stream-timeout" : "stream-failed" });
+    speechFailures.push({ ...sample, reason: overallTimedOut ? "overall-timeout" : audioLimitExceeded ? "audio-limit" : playbackTimedOut ? "playback-timeout" : timedOut ? "stream-timeout" : "stream-failed" });
     if (speechFailures.length > 500) speechFailures.shift();
-    const message = playbackTimedOut ? "Audio playback stalled. Try again or reload the page."
+    const message = overallTimedOut ? "Streamed speech exceeded its seven-minute request deadline."
+      : playbackTimedOut ? "Audio playback stalled. Try again or reload the page."
       : timedOut ? "Streamed speech stopped progressing for 90 seconds." : error.message;
     if (firstAudioAt === null && allowFallback) {
       statusLine.textContent = `${message} Falling back to the browser voice.`;
@@ -1595,6 +1611,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
     }
     return false;
   } finally {
+    window.clearTimeout(overallTimer);
     window.clearTimeout(idleTimer);
     window.clearTimeout(playbackTimer);
     if (speechReader) {
