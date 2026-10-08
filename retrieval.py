@@ -19,24 +19,34 @@ for tens, word in ((20, "twenty"), (30, "thirty"), (40, "forty"), (50, "fifty"),
                    (60, "sixty"), (70, "seventy"), (80, "eighty"), (90, "ninety")):
     ARTICLE_WORD_IDS[word] = str(tens)
     ARTICLE_WORD_IDS.update({f"{word} {ENGLISH_ONES[one]}": str(tens + one) for one in range(1, 10)})
+# Common spoken references in the opening fundamental-rights/quiz topics.
+# This is an explicit vocabulary, not Hindi number-word or phonetic inference.
+ARTICLE_WORD_IDS.update({
+    "बारह": "12", "तेरह": "13", "चौदह": "14",
+    "पंद्रह": "15", "पन्द्रह": "15", "सोलह": "16", "सत्रह": "17",
+    "अठारह": "18", "उन्नीस": "19", "बीस": "20", "इक्कीस": "21", "बाईस": "22",
+})
 ARTICLE_WORD_EXPRESSION = "|".join(
     r"[\s-]+".join(re.escape(part) for part in word.split())
     for word in sorted(ARTICLE_WORD_IDS, key=lambda word: (-len(word), word))
 )
 ARTICLE_ID_EXPRESSION = rf"(?:\d+[a-z]?|(?:{ARTICLE_WORD_EXPRESSION})(?:[\s-]+[a-z])?)"
+# Python's \w excludes vowel signs/other combining marks. A plain \b can
+# therefore accept a known word immediately followed by a Hindi vowel sign.
+ARTICLE_ID_END = r"(?![\w\u0900-\u0903\u093a-\u094f\u0951-\u0957\u0962-\u0963])"
 ARTICLE_REFERENCE_PATTERN = re.compile(
-    rf"(?:\b(?:articles?|arts?|anuchhed)\s*[-.]?\s*(?P<article_id>{ARTICLE_ID_EXPRESSION})\b|"
-    rf"\u0905\u0928\u0941\u091a\u094d\u091b\u0947\u0926\s*[-.]?\s*(?P<hindi_id>{ARTICLE_ID_EXPRESSION})\b)",
+    rf"(?:\b(?:articles?|arts?|anuchhed)\s*[-.]?\s*(?P<article_id>{ARTICLE_ID_EXPRESSION}){ARTICLE_ID_END}|"
+    rf"\u0905\u0928\u0941\u091a\u094d\u091b\u0947\u0926\s*[-.]?\s*(?P<hindi_id>{ARTICLE_ID_EXPRESSION}){ARTICLE_ID_END})",
     re.IGNORECASE,
 )
 ARTICLE_LIST_CONTINUATION_PATTERN = re.compile(
     r"\s*(?:,\s*(?:(?:and|aur|\u0914\u0930)\s+)?|&\s*|"
-    rf"(?:and|aur|\u0914\u0930|vs\.?|versus)\s+)(?P<article_id>{ARTICLE_ID_EXPRESSION})\b",
+    rf"(?:and|aur|\u0914\u0930|vs\.?|versus)\s+)(?P<article_id>{ARTICLE_ID_EXPRESSION}){ARTICLE_ID_END}",
     re.IGNORECASE,
 )
 ARTICLE_RANGE_CONTINUATION_PATTERN = re.compile(
     r"\s*(?:[-\u2013\u2014]\s*|(?:to|through|se|\u0938\u0947)\s+)"
-    rf"(?P<article_id>{ARTICLE_ID_EXPRESSION})\b",
+    rf"(?P<article_id>{ARTICLE_ID_EXPRESSION}){ARTICLE_ID_END}",
     re.IGNORECASE,
 )
 HINDI_STOPWORDS = {

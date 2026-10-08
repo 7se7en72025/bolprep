@@ -1919,3 +1919,9 @@
 - Added a shared completed-status guard for terminal/legacy model replies and each streamed/non-streamed agent response. Incomplete/failed/cancelled/pending/missing statuses fail before accepting answers or executing tools from that response; stream completion events also validate their contained response status.
 - Inspected the installed SDK's Response.status and ResponseStatus declarations. They expose completed, failed, in_progress, cancelled, queued, and incomplete states. Existing partial text does not establish completion, and earlier speech/tool effects still cannot be rolled back.
 - Verification: Python compilation and git diff whitespace checks, with static SDK/status/order inspection. No tests, status injections, provider calls, model/tool runs, or browser/device verification.
+
+## Recognize common spoken Hindi article references - 2026-10-08
+
+- Added an explicit Devanagari cardinal vocabulary for article numbers 12-22, including two spellings of 15. It shares English number-word normalization, list/range handling, exact corpus lookup, and spaced Latin suffix handling; no phonetic or ordinal inference was added.
+- Replaced article-ID word boundaries with a guard covering word characters and relevant Devanagari combining marks, preventing a known number token from ending immediately before a Hindi vowel sign. Documented bounded vocabulary and pending voice/retrieval observations.
+- Verification: Python compilation, UTF-8 source inspection, and git diff whitespace checks only. No tests, parser cases, retrieval benchmarks, speech recordings/transcripts, browser/device checks, or provider calls were performed.
