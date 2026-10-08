@@ -192,6 +192,16 @@ Use headphones first: speaker echo or background noise can trigger a false inter
 
 Quiz scores are stored in a local SQLite database at `.codex/bolprep.sqlite3`, scoped to a random, HttpOnly browser cookie. Set `BOLPREP_DATABASE_PATH` in the server environment to use a different database file; the local smoke check uses this option for an isolated temporary database. Progress survives a server restart in the same browser. The app saves scores and rubric feedback, not the learner's raw answer text. A per-answer idempotency key makes network retries safe without retaining the answer or its hash. The **Saved progress** panel shows recent weak question areas; **Clear saved progress** deletes records for that browser cookie. This is a local prototype bound to `127.0.0.1`, not a multi-user hosted service with account authentication. Keep the cookie private on shared computers; deleting site cookies creates a new, separate progress history.
 
+## Compare quiz scores with human reviews
+
+A local review report is available for the current lexical quiz scorer. Follow [quiz review rubric version 1](evals/QUIZ_REVIEW_RUBRIC.md) to collect independent human concept judgments on the same self-authored answers across scoring configurations, languages, paraphrases, contradictions, negation, and STT substitutions. Freeze the question-bank hash and keep raw answer text/ID mappings private. Store only bounded review metadata in ignored `evals/local-quiz-reviews.json`, then run:
+
+```powershell
+node evals/score_quiz_reviews.js evals/local-quiz-reviews.json
+```
+
+The report gives per-configuration/language score MAE, signed error, nearest-rank p95 absolute error, exact score agreement, completeness confusion counts, distinct-answer failures, and matched all/completed answer-reviewer coverage. It rejects wrong bank versions, duplicates, unknown questions, inconsistent results/reviews, extra trial fields, and out-of-range values. No answer/reviewer IDs or text are printed, and no provider is called. Multiple reviewers of one answer are correlated; manually supplied IDs/labels/results are not authenticated. No consensus, significance, semantic quality, or winner is inferred. Human collection and report runtime remain unverified; these are evaluation tools, not measured benchmark results.
+
 ## Optional local demo sign-in
 
 Set `BOLPREP_ACCESS_PASSWORD` in your ignored `.env` file to a private, separate passphrase of 16-256 characters, then restart the server. Leave it empty for the existing open localhost setup. Do not use a model API key as the demo password. With the gate enabled, visiting the tutor opens a sign-in page; protected tutor, speech, transcription, quiz, and progress APIs require the access cookie. `/health`, scripts, styles, and the sign-in page are public.
