@@ -1416,6 +1416,16 @@ async function startQuiz() {
   }
 }
 
+function isNextQuizCommand(text) {
+  const command = text.normalize("NFC").toLowerCase()
+    .replace(/[\p{P}\p{S}]/gu, " ").replace(/\s+/g, " ").trim();
+  return new Set([
+    "next", "next question", "next question please", "please next question",
+    "agla sawal", "agla sawaal", "agla prashn", "agla prashna", "agla sawal pucho",
+    "अगला सवाल", "अगला प्रश्न", "अगला सवाल पूछो", "अगला प्रश्न पूछो",
+  ]).has(command);
+}
+
 function showQuizQuestion(speakPrompt = true) {
   if (!quizSession || quizSession.index >= quizSession.questions.length) return;
   const current = quizSession.questions[quizSession.index];
@@ -1426,7 +1436,9 @@ function showQuizQuestion(speakPrompt = true) {
   input.maxLength = 1000;
   input.placeholder = "Speak or type your answer…";
   addMessage("assistant", `Question ${quizSession.index + 1} of ${quizSession.questions.length}: ${current.prompt}`, [current.source]);
-  const readyText = "Your answer is ready when you are.";
+  const readyText = activeLiveTranscription?.continuous
+    ? "Speak your answer. After feedback, say next question or agla sawal to continue."
+    : "Your answer is ready when you are.";
   statusLine.textContent = readyText;
   if (speakPrompt) speak(current.prompt, readyText);
 }
@@ -1478,7 +1490,10 @@ async function submitQuizAnswer(answer, { preserveLive = false } = {}) {
       statusLine.textContent = `Quiz complete: ${completeCount} of ${totalQuestions} answers covered the rubric. Results are saved for this browser.`;
       speak(feedback, statusLine.textContent);
     } else {
-      statusLine.textContent = `Answer checked. ${quizSession.index} of ${quizSession.questions.length} complete; tap Next question when ready.`;
+      const nextStep = activeLiveTranscription?.continuous
+        ? "say next question or agla sawal, or tap Next question"
+        : "tap Next question";
+      statusLine.textContent = `Answer checked. ${quizSession.index} of ${quizSession.questions.length} complete; ${nextStep} when ready.`;
       nextQuestionButton.hidden = false;
       speak(feedback, statusLine.textContent);
     }
@@ -1844,6 +1859,17 @@ liveSttButton.addEventListener("click", () => {
       if (run !== liveSttRun) return;
       input.value = text;
       if (continuous) {
+        if (quizSession && isNextQuizCommand(text)) {
+          stopTutor({ preserveLive: true });
+          input.value = "";
+          liveSttOriginalInput = "";
+          if (quizSession.awaitingAnswer) {
+            statusLine.textContent = "Answer the current question before moving on. Next question does not skip an unanswered question.";
+          } else {
+            showQuizQuestion();
+          }
+          return;
+        }
         if (text.length > input.maxLength || (quizSession && !quizSession.awaitingAnswer)) {
           stopLiveTranscription(false);
           statusLine.textContent = text.length > input.maxLength
