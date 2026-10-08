@@ -93,7 +93,7 @@ def save_conversation(session_id: str, body: dict[str, Any], path: Path = DATABA
     save_id = _save_id(body.get("save_id"))
     snapshot = _snapshot(body)
     encoded = json.dumps(snapshot, ensure_ascii=False, sort_keys=True)
-    title = next(message["content"] for message in snapshot["messages"] if message["role"] == "user")[:80]
+    title = next(message["content"] for message in snapshot["messages"] if message["role"] == "user").strip()[:80]
     saved_at = datetime.now(timezone.utc).isoformat()
     with _connection(path) as connection:
         # Serialize lookup/insert/retention so concurrent unchanged retries write once.

@@ -137,10 +137,25 @@
         <ul id="weak-topics" class="weak-topics"></ul>
       </section>
 
+      <section class="progress-card" aria-labelledby="history-title">
+        <div class="progress-head">
+          <div><p class="eyebrow">RETURN TO A QUESTION</p><h2 id="history-title">Saved conversations</h2></div>
+          <div class="progress-actions">
+            <button class="text-button" id="save-conversation" type="button" disabled>Save conversation</button>
+            <button class="text-button" id="refresh-history" type="button">Refresh</button>
+            <button class="text-button" id="clear-history" type="button">Delete saved conversations</button>
+          </div>
+        </div>
+        <p class="progress-summary">Saving stores up to 20 recent text messages and source references on this computer, without audio. Long text is shortened to 1,200 characters per question and 3,000 per tutor message. The newest 20 saves are kept. Open replaces the current conversation; quiz state is not resumed. Nothing is saved automatically.</p>
+        <p id="history-status" class="progress-summary" role="status">Loading saved conversations...</p>
+        <ol id="saved-conversations" class="saved-conversations"></ol>
+      </section>
+
       <footer><span>Start with one question. Follow-ups are welcome.</span><span class="privacy-note">The microphone starts only when you choose Speak, Record, or Live mic. Speech services may process audio; questions go to the configured AI provider in model mode.</span></footer>
     </main>
     <script src="/access.js" defer></script>
     <script src="/live-stt.js" defer></script>
+    <script src="/session-history.js" defer></script>
     <script src="/app.js" defer></script>
   </body>
 </html>

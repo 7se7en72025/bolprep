@@ -58,6 +58,9 @@ const progressRefreshButton = document.querySelector("#refresh-progress");
 const clearProgressButton = document.querySelector("#clear-progress");
 
 const history = [];
+const conversationMessages = [];
+let conversationRevision = 0;
+let savedConversations = null;
 let activeRequest = null;
 let activePartialMessage = null;
 let recognition = null;
@@ -287,6 +290,12 @@ function addMessage(role, text, sources = [], sourceLabel = "STUDY SOURCE", repl
   }
   conversation.append(article);
   conversation.scrollTop = conversation.scrollHeight;
+  if (text.trim()) {
+    conversationMessages.push({ role, content: text, sources: displaySources, historyEntry: replay?.historyEntry });
+    if (conversationMessages.length > 20) conversationMessages.splice(0, conversationMessages.length - 20);
+    conversationRevision += 1;
+    savedConversations?.conversationChanged();
+  }
   return article;
 }
 
@@ -2243,6 +2252,7 @@ document.querySelector("#clear-button").addEventListener("click", () => {
   stopTutor();
   quizSession = null;
   history.length = 0;
+  conversationMessages.length = 0;
   input.value = "";
   conversation.replaceChildren();
   addMessage("assistant", "Namaste! Fundamental Rights ke baare mein kya jaan-na hai?");
@@ -2790,5 +2800,49 @@ logoutButton.addEventListener("click", async () => {
     clearTimeout(deadline);
     logoutButton.disabled = false;
   }
+});
+function savedConversationSnapshot() {
+  return {
+    language: speechLanguage.value,
+    messages: conversationMessages.map((message) => {
+      const content = message.historyEntry && history.includes(message.historyEntry)
+        ? message.historyEntry.content : message.content;
+      const sourceIds = message.sources.map((source) => {
+        if (/^article-\d+[a-z]?$/.test(source.id || "")) return source.id;
+        const article = /\bArticle\s+(\d+[a-z]?)(?![a-z\d])/i.exec(source.section);
+        return article ? `article-${article[1].toLowerCase()}` : null;
+      }).filter(Boolean);
+      return { role: message.role, content: [...content].slice(0, message.role === "user" ? 1200 : 3000).join(""),
+        source_ids: [...new Set(sourceIds)] };
+    }),
+  };
+}
+
+function restoreSavedConversation(snapshot) {
+  stopTutor();
+  quizSession = null;
+  resetTutorComposer();
+  history.length = 0;
+  conversationMessages.length = 0;
+  conversation.replaceChildren();
+  input.value = "";
+  speechLanguage.value = snapshot.language;
+  refreshSpeechVoices();
+  saveSpeechPreferences();
+  for (const message of snapshot.messages) {
+    const historyEntry = { role: message.role, content: message.content };
+    history.push(historyEntry);
+    addMessage(message.role, message.content, message.sources, "SAVED STUDY SOURCE",
+      message.role === "assistant" ? { historyEntry } : null);
+  }
+  statusLine.textContent = "Saved text opened. Ask a follow-up or choose Listen again. Quiz state is not resumed.";
+  input.focus();
+}
+
+input.addEventListener("input", () => { conversationRevision += 1; });
+savedConversations = window.BolPrepSavedConversations({
+  apiFetch, snapshot: savedConversationSnapshot, restore: restoreSavedConversation, validStudySources,
+  revision: () => JSON.stringify([conversationRevision, turn, speechTurn, liveSttRun,
+    serverRecordingRun, recognitionRun, input.value, speechLanguage.value]),
 });
 loadProgress();

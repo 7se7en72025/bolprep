@@ -112,6 +112,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         routes = {
             "/": (WEB_ROOT / "index.html", "text/html; charset=utf-8"),
             "/app.js": (WEB_ROOT / "app.js", "text/javascript; charset=utf-8"),
+            "/session-history.js": (WEB_ROOT / "session-history.js", "text/javascript; charset=utf-8"),
             "/live-stt.js": (WEB_ROOT / "live-stt.js", "text/javascript; charset=utf-8"),
             "/styles.css": (WEB_ROOT / "styles.css", "text/css; charset=utf-8"),
             "/login": (WEB_ROOT / "login.html", "text/html; charset=utf-8"),
