@@ -12,19 +12,31 @@ from typing import Any
 
 
 CORPUS_PATH = Path(__file__).resolve().parent / "data" / "fundamental_rights.json"
+ENGLISH_ONES = ("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
+ENGLISH_TEENS = ("ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen")
+ARTICLE_WORD_IDS = {word: str(number) for number, word in enumerate(ENGLISH_ONES + ENGLISH_TEENS)}
+for tens, word in ((20, "twenty"), (30, "thirty"), (40, "forty"), (50, "fifty"),
+                   (60, "sixty"), (70, "seventy"), (80, "eighty"), (90, "ninety")):
+    ARTICLE_WORD_IDS[word] = str(tens)
+    ARTICLE_WORD_IDS.update({f"{word} {ENGLISH_ONES[one]}": str(tens + one) for one in range(1, 10)})
+ARTICLE_WORD_EXPRESSION = "|".join(
+    r"[\s-]+".join(re.escape(part) for part in word.split())
+    for word in sorted(ARTICLE_WORD_IDS, key=lambda word: (-len(word), word))
+)
+ARTICLE_ID_EXPRESSION = rf"(?:\d+[a-z]?|(?:{ARTICLE_WORD_EXPRESSION})(?:[\s-]+[a-z])?)"
 ARTICLE_REFERENCE_PATTERN = re.compile(
-    r"(?:\b(?:articles?|arts?|anuchhed)\s*[-.]?\s*(?P<article_id>\d+[a-z]?)\b|"
-    r"\u0905\u0928\u0941\u091a\u094d\u091b\u0947\u0926\s*[-.]?\s*(?P<hindi_id>\d+[a-z]?)\b)",
+    rf"(?:\b(?:articles?|arts?|anuchhed)\s*[-.]?\s*(?P<article_id>{ARTICLE_ID_EXPRESSION})\b|"
+    rf"\u0905\u0928\u0941\u091a\u094d\u091b\u0947\u0926\s*[-.]?\s*(?P<hindi_id>{ARTICLE_ID_EXPRESSION})\b)",
     re.IGNORECASE,
 )
 ARTICLE_LIST_CONTINUATION_PATTERN = re.compile(
     r"\s*(?:,\s*(?:(?:and|aur|\u0914\u0930)\s+)?|&\s*|"
-    r"(?:and|aur|\u0914\u0930|vs\.?|versus)\s+)(?P<article_id>\d+[a-z]?)\b",
+    rf"(?:and|aur|\u0914\u0930|vs\.?|versus)\s+)(?P<article_id>{ARTICLE_ID_EXPRESSION})\b",
     re.IGNORECASE,
 )
 ARTICLE_RANGE_CONTINUATION_PATTERN = re.compile(
     r"\s*(?:[-\u2013\u2014]\s*|(?:to|through|se|\u0938\u0947)\s+)"
-    r"(?P<article_id>\d+[a-z]?)\b",
+    rf"(?P<article_id>{ARTICLE_ID_EXPRESSION})\b",
     re.IGNORECASE,
 )
 HINDI_STOPWORDS = {
@@ -74,6 +86,12 @@ def _tokens(text: str) -> set[str]:
 
 
 def _normalize_article_id(raw_id: str) -> str:
+    words = " ".join(raw_id.casefold().replace("-", " ").split())
+    if words in ARTICLE_WORD_IDS:
+        return ARTICLE_WORD_IDS[words]
+    number, _, suffix = words.rpartition(" ")
+    if number in ARTICLE_WORD_IDS and len(suffix) == 1 and "a" <= suffix <= "z":
+        return ARTICLE_WORD_IDS[number] + suffix
     return "".join(
         str(unicodedata.decimal(character)) if character.isdecimal() else character
         for character in raw_id.casefold()
