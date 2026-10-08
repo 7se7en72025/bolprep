@@ -20,6 +20,34 @@ class BolPrepLiveTranscription {
     this.trackEndListeners = [];
   }
 
+  async readHandshakeText(response, maxBytes) {
+    if (!response.body) throw new Error("Live setup returned no response body.");
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8", { fatal: true });
+    let bytes = 0;
+    let text = "";
+    let finished = false;
+    try {
+      while (true) {
+        if (this.controller.signal.aborted) throw new DOMException("Live setup canceled.", "AbortError");
+        const { value, done } = await reader.read();
+        if (done) {
+          finished = true;
+          break;
+        }
+        bytes += value.byteLength;
+        if (bytes > maxBytes) throw new Error("Live setup exceeded its response limit.");
+        text += decoder.decode(value, { stream: true });
+      }
+      text += decoder.decode();
+      if (this.controller.signal.aborted) throw new DOMException("Live setup canceled.", "AbortError");
+      return text;
+    } finally {
+      if (!finished) void reader.cancel().catch(() => {});
+      reader.releaseLock();
+    }
+  }
+
   later(callback, delay) {
     const timer = setTimeout(() => {
       this.timers.delete(timer);
@@ -400,7 +428,10 @@ class BolPrepLiveTranscription {
         body: JSON.stringify({ language }),
         signal: this.controller.signal,
       });
-      const token = await tokenResponse.json();
+      const token = JSON.parse(await this.readHandshakeText(tokenResponse, 64 * 1024));
+      if (!token || typeof token !== "object" || Array.isArray(token)) {
+        throw new Error("Live setup returned invalid session data.");
+      }
       if (this.closed) return;
       if (tokenResponse.status === 429) {
         const wait = Number.isInteger(token.retry_after_seconds) && token.retry_after_seconds > 0
@@ -411,7 +442,9 @@ class BolPrepLiveTranscription {
         return;
       }
       if (!tokenResponse.ok || typeof token.client_secret !== "string"
-          || !Number.isFinite(token.expires_at) || token.expires_at * 1000 <= Date.now()) {
+          || token.client_secret.length < 1 || token.client_secret.length > 4096
+          || /[^\x21-\x7e]/.test(token.client_secret)
+          || !Number.isSafeInteger(token.expires_at) || token.expires_at * 1000 <= Date.now()) {
         throw new Error("Live transcription could not obtain a session. Try Record or type.");
       }
       stage = "connection";
@@ -427,7 +460,8 @@ class BolPrepLiveTranscription {
       });
       token.client_secret = null;
       if (!response.ok) throw new Error("The live speech provider rejected the connection. Try Record or type.");
-      const sdp = await response.text();
+      const sdp = await this.readHandshakeText(response, 512 * 1024);
+      if (!sdp.trim()) throw new Error("Live setup returned no connection description.");
       if (this.closed) return;
       await peer.setRemoteDescription({ type: "answer", sdp });
     } catch (error) {

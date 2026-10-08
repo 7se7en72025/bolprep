@@ -512,3 +512,8 @@ In authorized model checks, inspect terminal and legacy tutor requests plus agen
 ### Model stream completion order (not yet verified)
 
 During authorized stream checks, inspect normal deltas followed by one completion; missing response data; duplicate completion; text after completion; and error, failed, or incomplete events both before and after completion. Malformed streams must fail the turn and close their reader/client scope rather than generating a completed answer or continuing tool rounds. Unknown ancillary events remain ignored. Include callback interruption and premature end. Server and terminal tutor error output should show exception types without raw provider messages; browser errors remain generic. Already displayed/spoken deltas and prior successful tool writes cannot be rolled back by this guard. No stream injection, provider, browser, speech, or runtime checks were performed.
+
+
+### Bounded live setup responses (not yet verified)
+
+In authorized live setup checks, inspect credential JSON at/beyond 64 KiB, connection SDP at/beyond 512 KiB, damaged UTF-8 across chunks, absent/empty bodies, invalid/non-object JSON, empty/oversized/whitespace credentials, and missing/non-integer/expired expiry times. Invalid credentials must fail before the provider connection; invalid SDP must fail before adopting the remote description. Cancel during either read and check prompt reader cleanup, microphone/peer cleanup, generic recovery feedback, and no stale success callback. Inspect valid rate-limited/busy responses for retained retry feedback. Limits bound wire bytes and do not verify credential authenticity, provider cancellation, or billing. No injected-response, browser, network, microphone, or provider checks were performed.

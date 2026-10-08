@@ -1889,3 +1889,9 @@
 - Reject duplicate completion events, missing completion response data, and text deltas after completion. Error/failed/incomplete events now raise generic failures instead of forwarding provider messages. Existing stream-finally cleanup and owned-client closure still apply.
 - Server/terminal tutor failure logs now show exception types rather than raw exception content. Documented pending malformed-stream checks and the lack of rollback for already emitted speech/text or persisted tools.
 - Verification: Python compilation and git diff whitespace checks, with static event/cleanup inspection. No tests, stream injections, provider calls, browser/device checks, or observed interruption measurements.
+
+## Bound live transcription setup responses - 2026-10-08
+
+- Live setup now reads credential JSON and SDP through a strict UTF-8 streaming reader capped at 64 KiB and 512 KiB respectively. It checks cancellation, cancels unfinished readers without awaiting cancellation, and releases reader locks.
+- Credentials require an object response, nonempty bounded visible ASCII secret, and safe-integer unexpired timestamp; empty SDP is rejected. Existing startup deadline and generic failure/capture cleanup handle malformed responses. Rate-limit/busy feedback remains.
+- Verification: Node syntax check and git diff whitespace checks, with static read/cleanup inspection. No tests, response injections, browser/device observations, recordings, network calls, or provider verification.
