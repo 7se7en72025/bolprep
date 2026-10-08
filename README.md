@@ -312,3 +312,11 @@ Live mic watches audio tracks for unexpected ended events and rejects missing or
 Choose Maximum live speech segment before opening Live mic: 20 seconds (default) or 60 seconds. The selector is session-only and disabled while connecting/capturing/finalizing/clearing. Standard live capture starts the limit when listening begins; Conversation mode starts it after detected activity and retains the choice on reused turns. Done and quiet-pause completion can finish earlier. The five-minute conversation session and sixty-second no-activity limits remain in place. Recorded-file capture keeps its separate 20-second limit. Longer live capture can incur more provider usage; transcript/question length limits still apply.
 
 Schema 12 records capture_limit_ms per attempt and separates capture-limit configurations in summaries and the offline live report. Older exports lack that field and remain unknown/separate in the report. Real-device 60-second capture, natural pauses, final-word retention, timer behavior, and longer-answer quality remain unverified.
+
+## Recent-topic retrieval for follow-ups
+
+Retrieval still gives an article named in the current question first priority. Otherwise it scans the last four user questions from newest to oldest, skips generic clarification-only turns, and uses the first substantive topic. A prior article contributes its article reference rather than the full old question, so unrelated older keywords cannot satisfy the current article support check. Older questions are not pooled into that retrieval query. The model still receives the separately bounded conversation history.
+
+Common example/repeat/clarification words in English, Hindi, and Roman Hinglish are treated as generic for article queries. This lets a recent article remain the anchor for a request such as give an example; substantive words must still overlap the selected note. This is a lexical recency rule, not semantic topic resolution. Topic changes without an explicit article may still need clarification, and unsupported recent references do not fall back to older articles.
+
+Python compilation and whitespace checks passed. Multi-article follow-ups, repeated clarification, unsupported-topic handling, and multilingual behavior have not been exercised at runtime; historical retrieval figures were not rerun after this change.

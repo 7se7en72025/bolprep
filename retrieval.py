@@ -29,6 +29,10 @@ STOPWORDS = {
     *HINDI_STOPWORDS,
 }
 GENERIC_ARTICLE_QUERY_TOKENS = {
+    "example", "examples", "give", "show", "again", "simpler", "repeat", "detail", "details",
+    "samjhao", "dobara", "udaharan", "misal", "aasaan", "asan", "ek", "aur",
+    "\u0909\u0926\u093e\u0939\u0930\u0923", "\u0926\u094b", "\u092b\u093f\u0930",
+    "\u0938\u092e\u091d\u093e\u0913", "\u0906\u0938\u093e\u0928", "\u090f\u0915",
     "cover", "protect", "guarantee", "list", "mean", "say", "provide", "provides",
     "karta", "karti", "kehta", "kehti", "kehte", "क्या", "है", "हैं",
     "कहता", "कहती", "कहते", "written", "said", "में", "likha", "likhi", "likhe",
@@ -52,11 +56,17 @@ def _tokens(text: str) -> set[str]:
 
 
 def retrieval_query(question: str, prior_questions: list[str]) -> str:
-    """Prioritize an explicit article reference in the current question."""
+    """Keep current article priority and the most recent substantive user topic."""
     current_question = question.strip()
     if ARTICLE_REFERENCE_PATTERN.search(current_question):
         return current_question
-    return " ".join([*prior_questions[-4:], current_question])
+    for previous in reversed(prior_questions[-4:]):
+        reference = ARTICLE_REFERENCE_PATTERN.search(previous)
+        if reference:
+            return f"{reference.group(0)} {current_question}"
+        if _tokens(previous) - GENERIC_ARTICLE_QUERY_TOKENS:
+            return f"{previous} {current_question}"
+    return current_question
 
 
 def load_corpus(path: Path = CORPUS_PATH) -> list[dict[str, Any]]:

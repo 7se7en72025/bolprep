@@ -273,3 +273,9 @@ Compare normal Done, Stop, Escape, and the capture limit: local track cleanup sh
 Repeat a short prompt at 20 and 60 seconds, then use a longer self-authored quiz answer. Confirm standard capture limits start on listening, while continuous limits start after detected activity. Done and selected quiet-pause completion should work earlier; Stop/Escape must cancel either length. The selector should remain disabled throughout one connection and re-enable after closure. Recorded-file capture must still stop at its own 20-second limit.
 
 Export schema 12: attempts should carry capture_limit_ms, summary capture_limit_s should match, and different limits should stay separate. Keep old unknown-limit exports separate. Verify the five-minute session/sixty-second idle limits, long-transcript review safeguards, and final-word retention. Record actual failures; a longer capture option is not evidence of better STT or quiz scoring.
+
+### Recent-topic follow-up checks (not yet performed)
+
+Ask about Article 14, then Article 21, then ask for an example without naming an article. Retrieval should anchor Article 21. Repeat with another generic clarification, Hindi/Roman Hinglish wording, and an explicit current Article 19 request; the current explicit article must win. Switch to a newer substantive topic without an article, and inspect whether its note is supported or clarification is needed.
+
+Try an unsupported recent article and an unrelated substantive question: do not use an older note merely to force evidence. Check full model history separately from the retrieval query, and record false context carryover/abstention cases before claiming multi-turn accuracy.
