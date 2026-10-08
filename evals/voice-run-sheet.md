@@ -300,6 +300,8 @@ Export schema 12: attempts should carry capture_limit_ms, summary capture_limit_
 
 ### Recent-topic follow-up checks (not yet performed)
 
+Repeat the topic-switch and clarification cases in the offline terminal tutor (`python bolprep.py`) as well as the browser. Inspect printed source sections after Article 14, then Article 21, then an example request, and after a new personal-liberty question. Unsupported current articles should not inherit old sources. Compare source IDs, not natural wording; terminal offline summaries use the default English language setting. No model calls are needed for offline cases.
+
 Ask about Article 14, then send language-only requests such as "Hindi mein samjhao", "in English please", and "Hinglish mein bolo". Repeat with Devanagari language names. Inspect whether Article 14 sources remain available, then send a generic example request to check language-only turns were skipped as topic anchors. Separately check answer text language and speech settings; retained evidence alone does not prove either one changed. Also try a substantive question about minority language/culture protections and inspect whether it selects its own evidence.
 
 After asking about Article 14, ask "personal liberty kya hai?" without an article number. Inspect whether Article 21 evidence is selected from the current question instead of inheriting Article 14. Then ask for an example and check the new topic remains the anchor. Repeat with Hindi and English wording, and record weak lexical matches or false topic switches.

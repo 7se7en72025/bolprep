@@ -1434,3 +1434,9 @@
 - Added shared source validation for bounded nonempty title/section and absolute credential-free HTTPS URLs, with at most 100 records. Streamed retrieval/final lists fail on invalid metadata before completion handling; other message paths filter invalid links and show an unavailable-reference notice instead of crashing or displaying broken references.
 - Validation checks metadata/navigation only, not authority or answer support. Updated README and manual malformed-source/valid-corpus/rendering cases without broad citation-quality claims.
 - Verification: JavaScript syntax and git diff whitespace checks passed. No tests, browser interactions, controlled streams, or provider calls were run; source compatibility, failure recovery, quiz rendering, and notices remain unverified at runtime.
+
+## Share recent-topic retrieval with the terminal tutor - 2026-10-08
+
+- Inspection found the interactive terminal path still pooled the last four questions, allowing an earlier article to override current evidence. It now delegates query selection to the same helper used by browser turns and retrieval evaluation. Unsupported terminal questions also use the shared offline insufficient-evidence response.
+- Added README and manual offline terminal/browser context cases. This does not add terminal speech input or change its default English offline summaries; current lexical retrieval limitations remain.
+- Verification: terminal/retrieval/agent/server Python compilation and git diff whitespace checks passed. No tests, interactive sessions, evaluation dataset runs, or provider calls were performed; terminal topic switching, multilingual clarification, unsupported handling, and historical metrics remain unverified at runtime.

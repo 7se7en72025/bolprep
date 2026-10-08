@@ -6,7 +6,7 @@ import os
 import re
 import sys
 
-from retrieval import retrieve
+from retrieval import retrieval_query, retrieve
 
 try:
     from dotenv import load_dotenv
@@ -123,9 +123,9 @@ def run() -> int:
 
         try:
             prior_questions = [item["content"] for item in history if item["role"] == "user"][-4:]
-            documents = retrieve(" ".join([*prior_questions, question]))
+            documents = retrieve(retrieval_query(question, prior_questions))
             if not documents:
-                answer = "Mere checked study notes mein is question ka jawab abhi nahi hai."
+                answer = offline_answer([], question=question)
             elif has_api_key:
                 answer = ask_model(question, history, documents)
             else:
