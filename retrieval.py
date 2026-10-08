@@ -92,10 +92,15 @@ def _normalize_article_id(raw_id: str) -> str:
     number, _, suffix = words.rpartition(" ")
     if number in ARTICLE_WORD_IDS and len(suffix) == 1 and "a" <= suffix <= "z":
         return ARTICLE_WORD_IDS[number] + suffix
-    return "".join(
+    normalized = "".join(
         str(unicodedata.decimal(character)) if character.isdecimal() else character
         for character in raw_id.casefold()
     )
+    numeric = re.fullmatch(r"([0-9]+)([a-z]?)", normalized)
+    if numeric:
+        # Strip zeros as text, without converting an arbitrarily long integer.
+        return (numeric.group(1).lstrip("0") or "0") + numeric.group(2)
+    return normalized
 
 
 def _range_article_ids(start: str, end: str) -> list[str]:

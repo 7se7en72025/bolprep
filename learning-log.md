@@ -1837,3 +1837,10 @@
 - Added SQLite/file-access recovery around offline quiz creation and weak-topic lookup. Instead of escaping as a generic tutor failure, these paths return one failed tool event and an English/Roman Hinglish reply stating that the requested action did not complete.
 - Successful quiz/revision behavior remains unchanged. A completed recovery reply is explicitly separate from tool success; no quiz result, save success, rollback, or automatic retry is claimed.
 - Verification: Python compilation and git diff whitespace checks only. No tests, offline tool executions, storage failure exercises, database writes, browser checks, or provider calls were performed.
+
+
+## Normalize padded numeric article references - 2026-10-08
+
+- Static draft review confirmed edit cancellation already protects recorded transcripts; no edit was made to that path. Article parsing review then found numeric leading zeros survived normalization and prevented otherwise canonical note lookup.
+- Numeric IDs now normalize Unicode decimal digits and strip leading zeros as text, retaining Latin suffixes and avoiding large integer conversion. Unknown/all-zero IDs and existing range guards remain; no corpus records or evaluation labels changed.
+- Verification: Python compilation and git diff whitespace checks only. No tests, parser executions, retrieval evaluations, browser checks, database writes, or provider calls were performed. Added unperformed reference-boundary scenarios to the run sheet.

@@ -482,3 +482,8 @@ In authorized isolated tool-loop checks, cause SQLite/file-access failures durin
 ### Offline quiz/revision data failure (not yet verified)
 
 In authorized isolated offline checks, cause SQLite/file-access failure during a quiz request and a saved weak-topic/revision request. Expect a recovery reply in English or Roman Hinglish according to preference, one failed start_quiz/get_weak_topics event, no successful tool result, and no quiz UI adoption. The tutor reply may complete while the tool outcome is false; diagnostics must retain that distinction. Inspect reader/controls/speech recovery and subsequent ordinary study questions without persistence. After data becomes available, explicit quiz/revision requests should work normally. Do not infer rollback or erase records during review. These tool, storage, browser, and narration checks have not been performed.
+
+
+### Leading-zero article references (not yet verified)
+
+In authorized retrieval/browser checks, compare Article 021 with Article 21, Article 021A with Article 21A, connected lists with repeated padded/canonical IDs, and supported padded numeric ranges. Include Devanagari decimal digits, all-zero IDs, unknown padded articles, descending ranges, suffix ranges, and more-than-64-element ranges. Canonicalization should strip leading zeros as text while preserving Latin suffixes; all-zero/unknown IDs must not acquire support, range guards remain, and duplicate references should not duplicate notes. Inspect citations and contextual follow-ups with these references. No retrieval evaluation, parser examples, browser, or provider checks have been executed.
