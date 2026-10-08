@@ -35,3 +35,10 @@ Follow [README verification commands](README.md#verification). The browser suite
 No provider API key was configured during this run. No external model calls, real recordings, consented speech sample collection, native-speaker ratings, human scoring/support reviews, acoustic latency measurements, or voice demo recording were performed. Actual multilingual STT → model → TTS, natural pauses, audible interruption, device recovery, paired speech comparisons, and the recorded voice demonstration remain open. Publisher reuse permission also remains unresolved.
 
 The passing checks above cannot be used to mark those gates complete or claim production readiness.
+
+
+## Expanded regression and automation coverage
+
+A follow-up verification passed 44 Python tests (three additional actual HTTP saved-data checks), all four headless Chrome tests, and all four mocked live-STT tests. Storage checks cover cookie ownership, idempotent retries/conflicts, HTTP-server restart persistence, separate conversation/progress deletion, and malformed input without writes or response leaks. The added Chrome recording test uses fake permission/capture/upload responses to check draft preservation and track cleanup; it does not collect real microphone audio.
+
+The new tools/check-browser.ps1 runner passed locally on a free port with an isolated database and restored its environment/removed its owned process and temporary run files. The GitHub push/PR workflow repeats provider-free checks and retains retrieval output. Action revisions were checked against their upstream v7 tags and pinned to those commit hashes. Cloud execution is not established by these local results; no recurring schedule was created.

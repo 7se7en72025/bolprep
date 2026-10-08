@@ -11,7 +11,7 @@ const executablePath = process.env.BOLPREP_BROWSER_PATH || [
   "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
 ].find((candidate) => fs.existsSync(candidate));
 
-async function openOfflinePage(page) {
+async function openOfflinePage(page, { configure = null, displayedMode = "Offline practice mode" } = {}) {
   const url = new URL(baseURL);
   assert.equal(url.protocol, "http:");
   assert.ok(["127.0.0.1", "localhost", "[::1]"].includes(url.hostname));
@@ -25,8 +25,9 @@ async function openOfflinePage(page) {
   assert.equal(health.ok, true);
   assert.equal(health.mode, "offline");
   assert.equal(health.access_protected, false);
+  if (configure) await configure(health);
   await page.goto(url.href, { waitUntil: "domcontentloaded" });
-  await page.waitForFunction(() => document.querySelector("#mode-label")?.textContent.includes("Offline practice mode"));
+  await page.waitForFunction((mode) => document.querySelector("#mode-label")?.textContent.includes(mode), displayedMode);
 }
 
 test("offline browser flow: tutor, saved conversation, quiz, and diagnostics", { skip: !baseURL }, async () => {
@@ -108,6 +109,8 @@ test("mocked browser speech counts pending cancellation once and rejects stale c
   const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
   try {
     const page = await browser.newPage();
+    const pageErrors = [];
+    page.on("pageerror", (error) => pageErrors.push(error.message));
     await page.addInitScript(() => {
       const utterances = [];
       const synthesis = {
@@ -176,6 +179,115 @@ test("mocked browser speech counts pending cancellation once and rejects stale c
     assert.equal(diagnostic.tts[0].completed_count, 1);
     assert.equal(diagnostic.tts[0].cancellation_count, 2);
     assert.equal(diagnostic.speech_stops.length, 2);
+    assert.deepEqual(pageErrors, []);
+  } finally {
+    await browser.close();
+  }
+});
+
+test("mocked recorded input preserves drafts after permission and upload cancellation", { skip: !baseURL }, async () => {
+  const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
+  try {
+    const page = await browser.newPage();
+    const pageErrors = [];
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+    await page.addInitScript(() => {
+      const requests = [];
+      const tracks = [];
+      const recorders = [];
+      Object.defineProperty(navigator, "mediaDevices", {
+        configurable: true,
+        value: { getUserMedia: () => new Promise((resolve) => requests.push(resolve)) },
+      });
+      class FakeMediaRecorder {
+        static isTypeSupported() { return true; }
+        constructor(stream, options) {
+          this.stream = stream;
+          this.mimeType = options?.mimeType || "audio/webm";
+          this.state = "inactive";
+          recorders.push(this);
+        }
+        start() { this.state = "recording"; }
+        stop() {
+          this.state = "inactive";
+          queueMicrotask(() => {
+            this.ondataavailable?.({ data: new Blob(["mock-audio"], { type: this.mimeType }) });
+            this.onstop?.();
+          });
+        }
+      }
+      window.MediaRecorder = FakeMediaRecorder;
+      window.__recordingProbe = {
+        requests, tracks, recorders,
+        resolveRequest(index) {
+          const track = {
+            readyState: "live", stops: 0,
+            addEventListener() {}, removeEventListener() {},
+            stop() { this.stops += 1; this.readyState = "ended"; },
+          };
+          tracks.push(track);
+          requests[index]({ getTracks: () => [track], getAudioTracks: () => [track] });
+        },
+      };
+    });
+    let uploaded = 0;
+    let releaseResponse;
+    const release = new Promise((resolve) => { releaseResponse = resolve; });
+    let uploadReady;
+    const intercepted = new Promise((resolve) => { uploadReady = resolve; });
+    await openOfflinePage(page, {
+      displayedMode: "Model answers enabled",
+      configure: async (health) => {
+        await page.route("**/health", (route) => route.fulfill({ json: {
+          ...health, mode: "model", model_name: "mock-browser", server_transcription: true,
+        } }));
+        await page.route("**/api/transcribe", async (route) => {
+          uploaded += 1;
+          uploadReady();
+          await release;
+          try {
+            await route.fulfill({ json: {
+              transcript: "late mocked transcript", configured_model: "mock-stt",
+              server_transcription_call_ms: 1,
+            } });
+          } catch { /* Editing the draft may abort the routed request. */ }
+        });
+      },
+    });
+    const record = page.locator("#server-transcribe-button");
+    await page.locator("#question-input").fill("Original draft");
+    await record.click();
+    await page.waitForFunction(() => window.__recordingProbe.requests.length === 1);
+    assert.match(await record.innerText(), /Cancel/);
+    await record.click();
+    await page.evaluate(() => window.__recordingProbe.resolveRequest(0));
+    await page.waitForFunction(() => window.__recordingProbe.tracks[0]?.stops === 1);
+    assert.equal(await page.locator("#question-input").inputValue(), "Original draft");
+    assert.equal(await page.evaluate(() => window.__recordingProbe.recorders.length), 0);
+
+    await record.click();
+    await page.waitForFunction(() => window.__recordingProbe.requests.length === 2);
+    await page.evaluate(() => window.__recordingProbe.resolveRequest(1));
+    await page.waitForFunction(() => window.__recordingProbe.recorders[0]?.state === "recording");
+    await page.locator("#question-input").fill("Edited draft");
+    await page.waitForFunction(() => window.__recordingProbe.tracks[1]?.stops >= 1);
+    assert.equal(await page.locator("#question-input").inputValue(), "Edited draft");
+    assert.equal(uploaded, 0);
+
+    await page.waitForFunction(() => !document.querySelector("#server-transcribe-button").disabled);
+    await record.click();
+    await page.waitForFunction(() => window.__recordingProbe.requests.length === 3);
+    await page.evaluate(() => window.__recordingProbe.resolveRequest(2));
+    await page.waitForFunction(() => window.__recordingProbe.recorders[1]?.state === "recording");
+    await record.click();
+    await intercepted;
+    await page.locator("#question-input").fill("Typed after upload");
+    releaseResponse();
+    await page.waitForTimeout(200);
+    assert.equal(await page.locator("#question-input").inputValue(), "Typed after upload");
+    assert.equal(uploaded, 1);
+    assert.equal(await page.evaluate(() => window.__recordingProbe.tracks[2].stops), 1);
+    assert.deepEqual(pageErrors, []);
   } finally {
     await browser.close();
   }

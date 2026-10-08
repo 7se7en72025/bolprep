@@ -122,11 +122,12 @@ See [VERIFICATION.md](VERIFICATION.md) for the actual environment, results, fixe
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\check-local.ps1 -Port 18080
 npm ci
 npm run test:voice
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\check-browser.ps1
 ```
 
-The smoke check owns a temporary offline server/database and removes them afterward. The Python suite currently contains 41 passing tests, including loopback HTTP/origin checks. Protocol tests use mocked transcription events; they do not prove microphone or provider behavior.
+The smoke check owns a temporary offline server/database and removes them afterward. The Python suite currently contains 44 passing tests, including loopback HTTP/origin checks and actual HTTP saved-data ownership, retry, restart, and deletion checks. Protocol tests use mocked transcription events; they do not prove microphone or provider behavior.
 
-For headless browser checks, start a separate offline server with a disposable database in one terminal, then run the checks in another:
+The browser runner above selects a free local port, starts its own offline server with a disposable database, runs all four Chrome/Edge checks, and restores environment/process state afterward. Microphone/recording/speech callbacks in its race tests are mocked; no real audio is collected. To run the browser checks manually, start a separate offline server with a disposable database in one terminal, then run the checks in another:
 
 ```powershell
 # Terminal 1: use an otherwise unused port and disposable database.
@@ -140,6 +141,10 @@ npm run test:browser
 ```
 
 Browser checks save conversations and quiz scores to the supplied server's database. Use a disposable database; do not target a personal study session. Set BOLPREP_BROWSER_PATH to your browser executable if automatic discovery cannot find it. These checks cover offline UI behavior, not audible speech, real recordings, or provider quality. Stop the server with Ctrl+C after the run. The normal launcher also accepts -Port, and server.py accepts --port; access-origin checks follow the actual bound port.
+
+## Automatic checks
+
+[GitHub Actions](.github/workflows/verify.yml) runs the provider-free Python, voice-state, retrieval, and headless browser checks on pushes and pull requests. It uses Windows, locked dependencies, pinned action revisions, a disposable offline database, and no provider secrets. The retrieval report is retained as a workflow artifact. This workflow is configured and locally exercised; a passing cloud run must be observed separately. It has no scheduled trigger and does not run autonomous code edits or real microphone/provider benchmarks.
 
 ## Repository map
 

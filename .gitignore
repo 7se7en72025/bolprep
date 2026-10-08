@@ -22,3 +22,5 @@ evals/local-answer-*.json
 .codex/*.sqlite3-*
 
 .codex/setup-verification/
+
+.codex/browser-check/
