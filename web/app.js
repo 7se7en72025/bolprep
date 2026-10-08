@@ -393,7 +393,7 @@ async function readAgentStream(response, onTextDelta, onSpeechMode, onActivity, 
   }
   if (!response.body) throw new Error("This browser cannot receive the tutor response stream.");
   const reader = response.body.getReader();
-  const decoder = new TextDecoder();
+  const decoder = new TextDecoder("utf-8", { fatal: true });
   let pending = "";
   let payload = null;
   let receivedBytes = 0;
@@ -435,7 +435,11 @@ async function readAgentStream(response, onTextDelta, onSpeechMode, onActivity, 
       receivedBytes += value?.length || 0;
       if (receivedBytes > maxStreamBytes) throw new Error("The tutor response exceeded the 2 MiB limit.");
       if (value?.length) onActivity?.();
-      pending += decoder.decode(value || new Uint8Array(), { stream: !done });
+      try {
+        pending += decoder.decode(value || new Uint8Array(), { stream: !done });
+      } catch {
+        throw new Error("The tutor response contained invalid UTF-8 text. Try again.");
+      }
       const lines = pending.split("\n");
       pending = lines.pop();
       lines.forEach(consumeLine);
@@ -446,7 +450,8 @@ async function readAgentStream(response, onTextDelta, onSpeechMode, onActivity, 
     if (!payload) throw new Error("The tutor response stream ended early. Try again.");
     return payload;
   } finally {
-    if (!streamEnded) await reader.cancel().catch(() => {});
+    // A broken cancellation promise must not keep the turn's controls waiting.
+    if (!streamEnded) void reader.cancel().catch(() => {});
     reader.releaseLock();
   }
 }

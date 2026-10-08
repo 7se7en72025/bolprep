@@ -1767,3 +1767,10 @@
 - Static persistence review found migrated attempts without retry keys returned their historical result for every submission. Such submissions now raise ProgressConflict with an explicit preserved-score/new-quiz instruction, instead of presenting old feedback as if it described a fresh answer. Direct HTTP scoring already maps this to 409 and model tools map it to failure.
 - Historical records/progress remain intact; matching-key replay and different-key conflict behavior are unchanged. Added isolated legacy migration/retry review instructions without modifying any database.
 - Verification: Python compilation and git diff whitespace checks only. No tests, migrations, score executions, database writes, browser checks, or provider calls were performed.
+
+
+## Keep tutor stream recovery responsive - 2026-10-08
+
+- Static parser review confirmed terminal-event ordering but found finally awaited reader.cancel(), potentially holding recovery after malformed/oversized data. Cancellation is now dispatched without awaiting its promise before releasing the reader lock.
+- Added strict streaming UTF-8 decoding with a generic encoding failure, so invalid or truncated character bytes cannot silently become replacement characters in completed answers. Existing turn failure handling owns progressive speech cancellation and context recovery.
+- Verification: JavaScript syntax and git diff whitespace checks only. No tests, stream injection, browser/device checks, server requests, or provider calls were performed. Added explicit unperformed encoding/cancellation scenarios to the run sheet.
