@@ -240,6 +240,10 @@ Let a tutor finish generating text while its browser/provider voice continues. S
 
 Repeat with a long Unicode answer: history must stay within 3,000 code points per assistant message while the displayed answer remains complete. Start New session and confirm earlier annotations do not enter new follow-ups. Do not infer exact heard words or provider cancellation from the note.
 
+### Tutor stream validation checks (not yet performed)
+
+Use controlled local NDJSON streams split across network chunks, including split Unicode characters and a final line without a newline. Valid delta/speech_mode/retrieved_sources/complete events should finish normally. Inspect failure recovery for invalid JSON, null/array events, unknown types, invalid required fields, empty final answers, duplicate completion, trailing delta, and EOF without completion. Exercise the 2 MiB byte and 262,144-unit line boundaries. On rejection, progressive audio should stop, the partial answer should be removed, controls restored, and a failed trace recorded. Check Stop/timeout while reading and ensure late events do not revive playback. No provider calls are needed for these controlled cases.
+
 ### Recorded transcript review checks (not yet performed)
 
 Use controlled recorded-transcription responses below/at/above the active composer limit, then at/above 6,000 Unicode code points. Returned bounded text should remain editable without truncation or automatic submission; oversized composer text should show a shortening warning and fail submission until edited. Repeat in quiz mode with its 1,000-character limit. Above the hard server cap, expect a 422 error and the prior draft to remain available. Include supplementary Unicode characters to document browser UTF-16 versus server code-point length differences. Check edited/canceled attempts still ignore late responses.

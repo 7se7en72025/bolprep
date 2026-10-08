@@ -196,31 +196,59 @@ async function readAgentStream(response, onTextDelta, onSpeechMode, onActivity, 
   const decoder = new TextDecoder();
   let pending = "";
   let payload = null;
+  let receivedBytes = 0;
+  let streamEnded = false;
+  const maxStreamBytes = 2 * 1024 * 1024;
+  const maxLineCharacters = 256 * 1024;
   function consumeLine(line) {
+    if (line.length > maxLineCharacters) throw new Error("A tutor response event exceeded the size limit.");
     if (!line.trim()) return;
-    const event = JSON.parse(line);
+    let event;
+    try { event = JSON.parse(line); } catch { throw new Error("The tutor sent an invalid response event."); }
+    if (!event || typeof event !== "object" || Array.isArray(event) || payload !== null) {
+      throw new Error("The tutor response event order or format was invalid.");
+    }
     if (event.type === "delta" && typeof event.text === "string") onTextDelta(event.text);
     else if (event.type === "speech_mode" && typeof event.progressive === "boolean") onSpeechMode?.(event.progressive);
     else if (event.type === "retrieved_sources" && Array.isArray(event.sources)) onSources?.(event.sources);
-    else if (event.type === "complete") payload = event.payload;
-    else if (event.type === "error") {
-      const error = new Error(event.error || "Tutor request failed.");
+    else if (event.type === "complete") {
+      const result = event.payload;
+      if (!result || typeof result !== "object" || Array.isArray(result)
+        || typeof result.answer !== "string" || !result.answer.trim()
+        || (result.sources !== undefined && !Array.isArray(result.sources))
+        || (result.tool_events !== undefined && !Array.isArray(result.tool_events))) {
+        throw new Error("The tutor sent an invalid completed response.");
+      }
+      payload = result;
+    } else if (event.type === "error") {
+      const error = new Error(typeof event.error === "string" ? event.error : "Tutor request failed.");
       error.trace = event.trace;
       throw error;
+    } else {
+      throw new Error("The tutor sent an unsupported or malformed response event.");
     }
   }
-  while (true) {
-    const { value, done } = await reader.read();
-    if (value?.length) onActivity?.();
-    pending += decoder.decode(value || new Uint8Array(), { stream: !done });
-    const lines = pending.split("\n");
-    pending = lines.pop();
-    lines.forEach(consumeLine);
-    if (done) break;
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) streamEnded = true;
+      receivedBytes += value?.length || 0;
+      if (receivedBytes > maxStreamBytes) throw new Error("The tutor response exceeded the 2 MiB limit.");
+      if (value?.length) onActivity?.();
+      pending += decoder.decode(value || new Uint8Array(), { stream: !done });
+      const lines = pending.split("\n");
+      pending = lines.pop();
+      lines.forEach(consumeLine);
+      if (pending.length > maxLineCharacters) throw new Error("A tutor response event exceeded the size limit.");
+      if (done) break;
+    }
+    if (pending.trim()) consumeLine(pending);
+    if (!payload) throw new Error("The tutor response stream ended early. Try again.");
+    return payload;
+  } finally {
+    if (!streamEnded) await reader.cancel().catch(() => {});
+    reader.releaseLock();
   }
-  if (pending.trim()) consumeLine(pending);
-  if (!payload || typeof payload.answer !== "string") throw new Error("The tutor response stream ended early. Try again.");
-  return payload;
 }
 
 function rememberTurn(userMessage, assistantMessage) {

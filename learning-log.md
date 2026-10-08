@@ -1422,3 +1422,9 @@
 - Replaced the recorded-transcription 1,200-character response rejection with a 6,000-code-point review cap. Longer responses fail explicitly without replacing the draft; bounded longer text can be edited rather than discarded. Question/quiz submission limits remain in place.
 - The recorded transcript status now warns against the active composer limit, including quiz mode. Recorded transcripts remain review-only. Documented browser UTF-16 versus server code-point counting and manual boundary/late-response cases.
 - Verification: server Python compilation, browser JavaScript syntax, and git diff whitespace checks passed. No tests, browser interactions, recordings, or provider calls were run; response boundaries, editable review, quiz limits, Unicode behavior, and stale-result isolation remain unverified.
+
+## Bound and validate streamed tutor responses - 2026-10-08
+
+- Added a 2 MiB total byte cap and 262,144-unit per-line cap to the browser NDJSON reader. It rejects invalid JSON/object shapes, unsupported or malformed events, invalid completed answer/list containers, empty answers, and events after completion. EOF without completion remains a failure.
+- Reader cleanup cancels unread input and releases its lock; existing request failure handling stops progressive playback and restores the UI. Limits do not bound transport buffers or one incoming chunk, and oversized legitimate replies can fail. Added README/manual fragmentation, boundary, malformed-event, and cancellation cases.
+- Verification: JavaScript syntax and git diff whitespace checks passed. No tests, controlled stream runs, browser interactions, or provider calls were performed; fragmented Unicode, valid server compatibility, rejection recovery, and cancellation remain unverified at runtime.
