@@ -169,7 +169,7 @@ Each phase should be small enough to run, inspect, and explain before moving on.
 
 ### Constructed retrieval evaluation
 
-The 180-example constructed evaluation, rerun on 2026-10-08 after adding Article 51A, updating the broad-corpus labels, and adding three Article 19 co-operative-society examples, reports 100% exact match, 100% supported recall@3, and 0% unsupported false positives across 172 supported and 8 unsupported examples. English (58 examples), Hindi (58), and Hinglish (64) each report 100% exact match, 100% supported recall@3, and 0% unsupported false positives. Three constructed multi-turn context examples check current-turn article priority and unreferenced follow-ups; these figures do not estimate learner or speech performance. Reproduce the expanded evaluation from the project root with:
+The 180-example constructed evaluation, rerun on 2026-10-08 after adding Article 51A, updating the broad-corpus labels, and adding three Article 19 co-operative-society examples, reports 100% exact match, 100% support recall over all returned notes (not strict recall@3), and 0% unsupported false positives across 172 supported and 8 unsupported examples. English (58 examples), Hindi (58), and Hinglish (64) each report 100% exact match, 100% support recall over all returned notes (not strict recall@3), and 0% unsupported false positives. Three constructed multi-turn context examples check current-turn article priority and unreferenced follow-ups; these figures do not estimate learner or speech performance. Reproduce the expanded evaluation from the project root with:
 
 ```powershell
 .\.venv\Scripts\python.exe evals\run_retrieval_eval.py
@@ -285,3 +285,18 @@ No recordings or model calls are made by the scorer. Anonymous IDs and prompt te
 Tutor requests now emit a retrieved_sources event immediately after lexical retrieval, before offline/tool handling or model generation. When notes match, the browser displays their links under **Retrieved notes** in the partial answer while text and speech arrive. This label describes retrieved evidence, not a verified answer citation. The completed answer replaces the partial message and displays its final sources as before. Unsupported retrieval adds no early source links.
 
 Canceled/stale turns cannot create a new early-source message, and failure/cancellation removes the incomplete message through existing turn cleanup. The event contains only the existing source title/section/URL metadata; note summaries and quiz rubrics are not added to the stream. Stream rendering, ordering, final replacement, interrupted-turn isolation, and live-model answer support remain unverified in a browser.
+
+## Compare lexical retrieval configurations
+
+The app keeps its existing overlap scorer. An experimental alternative is available through `retrieve(question, scoring="rarity")`, or the evaluator:
+
+```powershell
+.\.venv\Scripts\python.exe evals/run_retrieval_eval.py --scoring rarity
+.\.venv\Scripts\python.exe evals/run_retrieval_eval.py --compare
+```
+
+Rarity weighting uses log(1 + N/(1 + df)) for each query token, where N is corpus size and df counts notes containing the token in keywords or the English title/summary. Keyword matches retain double weight. The original raw-overlap eligibility gate, explicit-article checks, broad-topic handling, deterministic tie order, top-match relative floor of 60%, and default three-result limit remain in place. Broad topic queries still return the corpus. This is a local heuristic, not embeddings or BM25, and has not been shown to improve retrieval.
+
+The comparison reports each configuration, changed example IDs, exact-match gains/regressions, and dataset/corpus SHA-256 hashes; changed inputs abort the run. Strict supported_recall_at_3 now uses only the first three results, while retrieved_support_recall uses all results. Broad-topic labels expecting the full corpus will therefore have lower strict top-three recall even when full-set exact match passes. The historical 100% support-recall result above used all returned notes; it was previously mislabeled recall@3. No corrected top-three or rarity results have been measured in this turn.
+
+Only Python compilation, evaluator help, and whitespace checks were performed. Comparison execution and alternative runtime behavior remain unverified; constructed examples do not measure learner questions, speech, or answer quality.

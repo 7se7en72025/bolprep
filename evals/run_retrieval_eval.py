@@ -1,8 +1,10 @@
-"""Run the small labeled lexical-retrieval evaluation without external services."""
+"""Evaluate or compare lexical scoring on labeled questions without external services."""
 
 from __future__ import annotations
 
 import json
+import argparse
+import hashlib
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -12,15 +14,19 @@ from typing import Any
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
 
-from retrieval import load_corpus, retrieval_query, retrieve  # noqa: E402
+from retrieval import CORPUS_PATH, load_corpus, retrieval_query, retrieve  # noqa: E402
 
 
 DATASET_PATH = Path(__file__).with_name("retrieval_examples.json")
 SUPPORTED_LANGUAGES = {"English", "Hindi", "Hinglish"}
 
 
-def evaluate(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
-    examples = json.loads(dataset_path.read_text(encoding="utf-8"))
+def evaluate(dataset_path: Path = DATASET_PATH, *, scoring: str = "overlap") -> dict[str, Any]:
+    if scoring not in {"overlap", "rarity"}:
+        raise ValueError("Retrieval scoring must be overlap or rarity.")
+    dataset_bytes = dataset_path.read_bytes()
+    corpus_bytes = CORPUS_PATH.read_bytes()
+    examples = json.loads(dataset_bytes.decode("utf-8"))
     if not isinstance(examples, list) or not examples:
         raise ValueError("Retrieval evaluation dataset must be a non-empty JSON list.")
 
@@ -68,7 +74,7 @@ def evaluate(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
 
         expected = set(example["expected_doc_ids"])
         query = retrieval_query(example["question"], example.get("history_questions", []))
-        actual = [document["id"] for document in retrieve(query)]
+        actual = [document["id"] for document in retrieve(query, scoring=scoring)]
         actual_set = set(actual)
         if expected:
             matched = expected & actual_set
@@ -84,6 +90,7 @@ def evaluate(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
             "retrieved_doc_ids": actual,
             "passed": passed,
             "retrieved_expected": sorted(matched),
+            "retrieved_expected_at_3": sorted(expected & set(actual[:3])),
         }
         if example.get("history_questions"):
             row["history_questions"] = example["history_questions"]
@@ -94,18 +101,24 @@ def evaluate(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
     unsupported_rows = [row for row in rows if not row["expected_doc_ids"]]
     expected_total = sum(len(row["expected_doc_ids"]) for row in supported_rows)
     retrieved_expected_total = sum(len(row["retrieved_expected"]) for row in supported_rows)
+    retrieved_expected_at_3_total = sum(len(row["retrieved_expected_at_3"]) for row in supported_rows)
     per_language_metrics: dict[str, dict[str, Any]] = {}
     for language, language_rows in sorted(per_language.items()):
         language_supported = [row for row in language_rows if row["expected_doc_ids"]]
         language_unsupported = [row for row in language_rows if not row["expected_doc_ids"]]
         language_expected_total = sum(len(row["expected_doc_ids"]) for row in language_supported)
         language_retrieved_total = sum(len(row["retrieved_expected"]) for row in language_supported)
+        language_retrieved_at_3_total = sum(len(row["retrieved_expected_at_3"]) for row in language_supported)
         per_language_metrics[language] = {
             "example_count": len(language_rows),
             "supported_count": len(language_supported),
             "unsupported_count": len(language_unsupported),
             "exact_match_rate": round(sum(row["passed"] for row in language_rows) / len(language_rows), 4),
             "supported_recall_at_3": (
+                round(language_retrieved_at_3_total / language_expected_total, 4)
+                if language_expected_total else None
+            ),
+            "retrieved_support_recall": (
                 round(language_retrieved_total / language_expected_total, 4)
                 if language_expected_total else None
             ),
@@ -115,13 +128,19 @@ def evaluate(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
             ),
         }
 
+    if dataset_path.read_bytes() != dataset_bytes or CORPUS_PATH.read_bytes() != corpus_bytes:
+        raise ValueError("Dataset or corpus changed during evaluation; rerun against stable inputs.")
     return {
+        "scoring": scoring,
+        "dataset_sha256": hashlib.sha256(dataset_bytes).hexdigest(),
+        "corpus_sha256": hashlib.sha256(corpus_bytes).hexdigest(),
         "dataset": str(dataset_path.relative_to(REPO_ROOT)),
         "example_count": len(rows),
         "supported_count": len(supported_rows),
         "unsupported_count": len(unsupported_rows),
         "exact_match_rate": round(sum(row["passed"] for row in rows) / len(rows), 4),
-        "supported_recall_at_3": round(retrieved_expected_total / expected_total, 4) if expected_total else 1.0,
+        "supported_recall_at_3": round(retrieved_expected_at_3_total / expected_total, 4) if expected_total else None,
+        "retrieved_support_recall": round(retrieved_expected_total / expected_total, 4) if expected_total else None,
         "unsupported_false_positive_rate": round(
             sum(bool(row["retrieved_doc_ids"]) for row in unsupported_rows) / len(unsupported_rows), 4
         ) if unsupported_rows else 0.0,
@@ -137,11 +156,36 @@ def evaluate(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description="Evaluate local retrieval on constructed labeled questions.")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--scoring", choices=("overlap", "rarity"), default="overlap")
+    mode.add_argument("--compare", action="store_true", help="Compare both scorers on the same dataset and corpus.")
+    args = parser.parse_args()
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
-    report = evaluate()
+    if args.compare:
+        baseline = evaluate(scoring="overlap")
+        candidate = evaluate(scoring="rarity")
+        if any(baseline[key] != candidate[key] for key in ("dataset_sha256", "corpus_sha256")):
+            raise ValueError("Comparison inputs changed between configurations; rerun against stable inputs.")
+        changed = []
+        for before, after in zip(baseline["results"], candidate["results"]):
+            if before["retrieved_doc_ids"] != after["retrieved_doc_ids"]:
+                changed.append({"id": before["id"], "language": before["language"],
+                                "overlap_doc_ids": before["retrieved_doc_ids"],
+                                "rarity_doc_ids": after["retrieved_doc_ids"],
+                                "overlap_passed": before["passed"], "rarity_passed": after["passed"]})
+        report = {"comparison_schema_version": 1, "baseline": baseline, "candidate": candidate,
+                  "changed_examples": changed,
+                  "exact_match_gains": sum(not row["overlap_passed"] and row["rarity_passed"] for row in changed),
+                  "exact_match_regressions": sum(row["overlap_passed"] and not row["rarity_passed"] for row in changed),
+                  "note": "Experimental rarity weighting is not assumed better; inspect gains, regressions, and failures."}
+        passed = not baseline["failures"] and not candidate["failures"]
+    else:
+        report = evaluate(scoring=args.scoring)
+        passed = not report["failures"]
     print(json.dumps(report, ensure_ascii=False, indent=2))
-    return 0 if not report["failures"] else 1
+    return 0 if passed else 1
 
 
 if __name__ == "__main__":

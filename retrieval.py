@@ -1,8 +1,9 @@
-"""Small lexical retrieval baseline over the checked local study notes."""
+"""Local lexical retrieval with overlap and experimental rarity scoring."""
 
 from __future__ import annotations
 
 import json
+import math
 import re
 import unicodedata
 from datetime import date
@@ -113,8 +114,8 @@ def load_corpus(path: Path = CORPUS_PATH) -> list[dict[str, Any]]:
     return documents
 
 
-def retrieve(question: str, limit: int | None = None) -> list[dict[str, Any]]:
-    """Rank notes with a transparent keyword overlap score and article-number boost."""
+def retrieve(question: str, limit: int | None = None, *, scoring: str = "overlap") -> list[dict[str, Any]]:
+    """Rank notes with shared article checks and a selected lexical scoring rule."""
     if (
         not isinstance(question, str)
         or not question.strip()
@@ -122,6 +123,8 @@ def retrieve(question: str, limit: int | None = None) -> list[dict[str, Any]]:
     ):
         return []
 
+    if scoring not in {"overlap", "rarity"}:
+        raise ValueError("Retrieval scoring must be overlap or rarity.")
     query_tokens = {token for token in _tokens(question) if not token.isdigit()}
     informative_tokens = {
         token for token in query_tokens
@@ -146,16 +149,24 @@ def retrieve(question: str, limit: int | None = None) -> list[dict[str, Any]]:
     if any(phrase in normalized_question for phrase in ("fundamental rights", "\u092e\u094c\u0932\u093f\u0915 \u0905\u0927\u093f\u0915\u093e\u0930", "maulik adhikar")):
         return documents if limit is None else documents[:limit]
 
-    scored: list[tuple[int, dict[str, Any]]] = []
-    for document in documents:
-        keyword_tokens = _tokens(" ".join(document["keywords"]))
-        body_tokens = _tokens(f"{document['title']} {document['summary']}")
+    token_fields = [(_tokens(" ".join(document["keywords"])),
+                     _tokens(f"{document['title']} {document['summary']}")) for document in documents]
+    weights: dict[str, float] = {}
+    if scoring == "rarity":
+        for token in query_tokens:
+            frequency = sum(token in keywords | body for keywords, body in token_fields)
+            weights[token] = math.log1p(len(documents) / (1 + frequency))
+    scored: list[tuple[float, dict[str, Any]]] = []
+    for document, (keyword_tokens, body_tokens) in zip(documents, token_fields):
         score = 2 * len(query_tokens & keyword_tokens) + len(query_tokens & body_tokens)
         if score >= 2:
+            if scoring == "rarity":
+                score = 2 * sum(weights[token] for token in query_tokens & keyword_tokens)
+                score += sum(weights[token] for token in query_tokens & body_tokens)
             scored.append((score, document))
     scored.sort(key=lambda result: (-result[0], result[1]["id"]))
     if not scored:
         return []
-    relevance_floor = max(2, scored[0][0] * 0.6)
+    relevance_floor = max(2 if scoring == "overlap" else 0, scored[0][0] * 0.6)
     result_limit = 3 if limit is None else limit
     return [document for score, document in scored if score >= relevance_floor][:result_limit]
