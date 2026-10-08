@@ -1799,6 +1799,12 @@ async function startQuiz() {
   const requestTurn = turn;
   const controller = new AbortController();
   activeRequest = controller;
+  let timedOut = false;
+  const deadlineTimer = window.setTimeout(() => {
+    if (requestTurn !== turn || activeRequest !== controller) return;
+    timedOut = true;
+    controller.abort();
+  }, 30_000);
   quizButton.disabled = true;
   nextQuestionButton.hidden = true;
   statusLine.textContent = "Preparing a three-question Fundamental Rights quiz…";
@@ -1810,6 +1816,7 @@ async function startQuiz() {
       signal: controller.signal,
     });
     const payload = await response.json();
+    if (timedOut) throw new Error("Quiz preparation timed out after 30 seconds. Try again.");
     if (!response.ok) throw new Error(payload?.error || "Could not start the quiz.");
     if (requestTurn !== turn) return;
     if (!validTutorToolEvents([{ name: "start_quiz", ok: true, result: payload }])) {
@@ -1820,10 +1827,11 @@ async function startQuiz() {
     showQuizQuestion();
   } catch (error) {
     if (requestTurn === turn) {
-      addMessage("assistant", error.message);
+      addMessage("assistant", timedOut ? "Quiz preparation timed out after 30 seconds. Try again." : error.message);
       statusLine.textContent = "Quiz could not start. Your conversation is still open.";
     }
   } finally {
+    window.clearTimeout(deadlineTimer);
     if (requestTurn === turn) {
       quizButton.disabled = false;
       if (quizSession && !quizSession.awaitingAnswer) nextQuestionButton.hidden = false;
@@ -1874,6 +1882,12 @@ async function submitQuizAnswer(answer, { preserveLive = false } = {}) {
   const requestTurn = ++turn;
   activeRequest = new AbortController();
   const controller = activeRequest;
+  let timedOut = false;
+  const deadlineTimer = window.setTimeout(() => {
+    if (requestTurn !== turn || activeRequest !== controller) return;
+    timedOut = true;
+    controller.abort();
+  }, 30_000);
   sendButton.disabled = true;
   micButton.disabled = true;
   statusLine.textContent = "Checking your answer against the rubric…";
@@ -1886,6 +1900,7 @@ async function submitQuizAnswer(answer, { preserveLive = false } = {}) {
       signal: controller.signal,
     });
     const result = await response.json();
+    if (timedOut) throw new Error("Scoring timed out after 30 seconds.");
     if (!response.ok) throw new Error(result?.error || "Could not score the answer.");
     if (requestTurn !== turn) return;
     if (!validTutorToolEvents([{ name: "score_answer", ok: true, result }]) || result.question_id !== current.id) {
@@ -1921,13 +1936,17 @@ async function submitQuizAnswer(answer, { preserveLive = false } = {}) {
       quizSession.awaitingAnswer = true;
       quizSession.pendingAnswer = "";
       if (!input.value.trim()) input.value = answer;
-      addMessage("assistant", error.message);
-      statusLine.textContent = error.message.toLowerCase().includes("already saved")
+      const message = timedOut
+        ? "Scoring timed out after 30 seconds. The score may already be saved. Retry the same answer to check it."
+        : error.message;
+      addMessage("assistant", message);
+      statusLine.textContent = message.toLowerCase().includes("already saved")
         ? "This quiz question already has a saved score. Start a new quiz to try a revised answer."
         : "Scoring failed. You can try submitting the answer again.";
       input.focus();
     }
   } finally {
+    window.clearTimeout(deadlineTimer);
     if (requestTurn === turn) {
       sendButton.disabled = false;
       micButton.disabled = !recognitionAvailable;

@@ -1524,3 +1524,9 @@
 - Reused tutor tool-result validation for direct quiz start/scoring before replacing quiz state or advancing results. Score validation now requires question_id and a boolean complete flag; direct responses must match the current question. Null HTTP error payloads fall back to readable errors.
 - Existing failure recovery retains the earlier quiz or restores the answer/retry key. Client rejection does not roll back progress, and unchanged-answer retries rely on server idempotency. Added README/manual direct/tool compatibility, malformed state, wrong-question, and retry cases.
 - Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, controlled responses, browser interactions, or provider calls were performed; state retention, compatible scores, post-write recovery, and duplicate prevention remain unverified at runtime.
+
+## Recover from stalled direct quiz requests - 2026-10-08
+
+- Added guarded 30-second client deadlines to direct quiz start/scoring through response JSON parsing. Timeout aborts locally and uses existing control/state recovery; finally clears each timer, and old turn/controller guards protect newer requests. Late completed responses after the deadline are rejected.
+- Scoring timeout preserves the unchanged-answer retry key and explains uncertain saved status. There is no automatic retry or rollback claim. Added README/manual headers/body stalls, cancellation, late responses, newer requests, and post-write retry cases.
+- Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, controlled stalls, browser interactions, or provider calls were performed; deadline timing, restored quiz/draft state, stale isolation, and idempotent recovery remain unverified at runtime.
