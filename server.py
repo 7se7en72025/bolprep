@@ -18,7 +18,7 @@ from typing import Any
 from bolprep import api_is_configured, ask_model, offline_answer
 from conversation_history import clean_history, prior_queries
 from agent import run_agent_turn
-from progress import ProgressConflict, clear_progress, create_quiz_run, ensure_session, get_progress, save_answer
+from progress import ProgressConflict, clear_progress, create_quiz_run, get_progress, save_answer
 from quiz import QUIZ_PRESETS, score_answer, start_quiz
 from retrieval import load_corpus, retrieval_query, retrieve
 from request_limits import RequestLimiter
@@ -106,8 +106,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 return
             if not self._permit_api_request("history-read" if self.path == "/api/history" else "progress-read"):
                 return
-            if not self._ensure_browser_session():
-                return
+            self._ensure_browser_session()
             if self.path == "/api/history":
                 self._handle_saved_history()
             else:
@@ -139,8 +138,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             self.send_error(404, "Not found")
             return
         if self.path == "/":
-            if not self._ensure_browser_session():
-                return
+            self._ensure_browser_session()
         path, content_type = route
         try:
             payload = path.read_bytes()
@@ -164,14 +162,12 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             return
         if not self._permit_api_request("history-delete" if self.path == "/api/history" else "progress-delete"):
             return
-        if not self._ensure_browser_session():
-            return
+        self._ensure_browser_session()
         if self.path == "/api/history":
             self._handle_saved_history()
             return
         try:
             clear_progress(self.session_id)
-            ensure_session(self.session_id)
         except (sqlite3.Error, OSError):
             self._storage_unavailable()
             return
@@ -203,8 +199,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 return
             self._handle_access(body)
             return
-        if not self._ensure_browser_session():
-            return
+        self._ensure_browser_session()
         if self.path == "/api/transcribe":
             self._handle_transcription()
             return
@@ -672,14 +667,15 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                         access_cookie=f"{ACCESS_COOKIE}={new_token}; HttpOnly; SameSite=Strict; Path=/; Max-Age={ACCESS_LIFETIME_SECONDS}")
 
     def _storage_unavailable(self) -> None:
-        # Setup may fail before a POST body is consumed. Do not reuse that socket.
+        # End failed storage requests instead of reusing their connection.
         self.close_connection = True
         self._send_json(503, {
             "error": "Saved study data is unavailable. Try again later; check saved progress before retrying a score or deletion.",
             "code": "storage-unavailable",
         })
 
-    def _ensure_browser_session(self) -> bool:
+    def _ensure_browser_session(self) -> None:
+        """Assign cookie identity without requiring a writable database."""
         cookie = SimpleCookie()
         try:
             cookie.load(self.headers.get("Cookie", ""))
@@ -694,12 +690,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 session_id = None
         self.new_session_cookie = session_id is None
         self.session_id = session_id or str(uuid.uuid4())
-        try:
-            ensure_session(self.session_id)
-        except (sqlite3.Error, OSError):
-            self._storage_unavailable()
-            return False
-        return True
+        # Storage is opened only by progress/history/quiz operations.
 
     def _send_session_cookie_if_needed(self) -> None:
         if self.new_session_cookie:

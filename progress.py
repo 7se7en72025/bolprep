@@ -113,6 +113,12 @@ def create_quiz_run(
 ) -> None:
     initialize(path)
     with _connection(path) as connection:
+        # Cookie identity does not require storage. Create its persisted owner
+        # together with the quiz so a failed quiz insert cannot leave a new owner.
+        connection.execute(
+            "INSERT OR IGNORE INTO sessions (id, created_at) VALUES (?, ?)",
+            (session_id, _now()),
+        )
         connection.execute(
             "INSERT INTO quiz_runs (id, session_id, topic, created_at) VALUES (?, ?, ?, ?)",
             (quiz_id, session_id, topic, _now()),

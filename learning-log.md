@@ -1816,3 +1816,10 @@
 - Static review found terminal offline responses always selected English even when translated notes were available. Added explicit /language hi, /language en, and /language auto controls, then passed the current preference/question through offline summaries, unsupported answers, and model evidence/instructions.
 - Hindi/Hinglish selects Devanagari notes for Devanagari questions and Roman notes otherwise. Switching retains conversation context; /new retains preference. Auto preserves existing model inference/English offline fallback. Invalid commands show usage without entering history or calling retrieval/providers. Renamed browser-specific preference wording for shared terminal/browser use.
 - Verification: Python compilation and git diff whitespace checks only. No tests, interactive sessions, model calls, translation reviews, browser checks, or provider requests were performed.
+
+
+## Keep ordinary tutoring independent of progress storage - 2026-10-08
+
+- Static session review found every browser request initialized SQLite, blocking root/text/speech on storage failure. Cookie identity is now assigned without storage; progress/history operations retain their own error paths. Quiz creation inserts its owner and quiz in one transaction, so direct/model quizzes no longer depend on earlier root-page initialization.
+- Removed redundant owner recreation after progress deletion; a later quiz creates it when needed. Existing history ownership and quiz foreign-key/retry checks remain. Updated the recent storage review procedure to reflect lazy persistence and transactional owner creation.
+- Verification: Python compilation and git diff whitespace checks only. No tests, requests, transaction/failure exercises, database writes, browser checks, or provider calls were performed. Degraded operation and persistence recovery remain unverified.
