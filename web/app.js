@@ -1078,7 +1078,14 @@ function speak(text, completionText = "Ready when you are.", kind = "tutor", his
   activeSpeechHistoryEntry = historyEntry;
   if (streamedTtsOption.checked && streamingTtsAvailable) {
     if (text.length > 4096) {
-      statusLine.textContent = "This answer is too long for streamed speech; using the browser voice.";
+      const session = createProgressiveStreamedSpeech(completionText);
+      if (session) {
+        activeProgressiveSpeech = session;
+        session.consume(text);
+        session.finish();
+        return;
+      }
+      statusLine.textContent = "This browser cannot start segmented streamed speech; using the browser voice.";
       speakWithBrowser(text, completionText, kind);
       return;
     }
