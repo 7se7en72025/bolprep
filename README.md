@@ -225,3 +225,17 @@ A failed progressive speech segment clears pending speech and leaves the answer 
 The 3-, 5-, and 8-second options let a learner allow more thinking time before automatic completion. The choice is session-only and does not change speech-activity thresholds, transcription configuration, or the 20-second speech/capture limit. That limit can end a turn before a longer quiet pause completes. Manual Done remains available; standard Live mic still requires transcript review, while Conversation mode sends a final transcript automatically. These durations are options rather than tuned or validated defaults.
 
 Schema 9 adds quiet_pause_ms to each live STT attempt, and summary configuration.quiet_pause_s reports that group?s actual setting. Different durations are grouped separately. Existing exported schema 8 files do not contain this attempt field; external analysis should treat it as unknown rather than infer a measured configuration. Real-device pause behavior remains unverified.
+
+## Summarize saved live-STT diagnostics
+
+Download Speech diagnostics from actual browser sessions and keep the files private as `evals/local-live-run1.json`, `evals/local-live-run2.json`, and so on. Summarize one or more exports offline:
+
+```powershell
+node evals/summarize_live_stt.js evals/local-live-run1.json evals/local-live-run2.json | Out-File -Encoding utf8 evals/local-live-report.json
+```
+
+The command accepts 1-100 UTF-8 JSON exports (schema 8 or 9, at most 4 MiB and 500 live attempts each). It recomputes nearest-rank p50/p95 in milliseconds from individual completed attempts, with a sample count for each available timing. Failures and cancellations stay separate. Groups preserve language, configured model, requested/used pause detection, conversation mode, connection reuse, and quiet-pause duration. Schema 8 pause duration stays unknown. Empty exports produce no measured groups.
+
+Identical selected attempt metadata is deduplicated across overlapping snapshots; counts report how many records were removed. Exports have no globally unique attempt ID, so distinct attempts with identical metadata may collapse, and different snapshots of one attempt may remain separate. This is not a paired experiment: keep device/environment and prompt pairing in your run sheet, and do not average existing p50/p95 summaries or claim accuracy/acoustic latency from software timings. Only known diagnostic fields and codes are used; input paths, raw text, audio, and arbitrary export fields are not printed. The tool makes no provider requests. Local live exports/reports matching `evals/local-live-*.json` are ignored by Git.
+
+Only syntax and command-help checks have been performed for this tool; imported real-session aggregation and malformed-input handling remain unverified. No speech performance results are claimed.

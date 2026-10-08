@@ -216,3 +216,7 @@ Repeat the same self-authored utterance with 3-, 5-, and 8-second settings, firs
 - The pause selector should be unavailable during connecting/listening/finalizing/clearing, then re-enable at session end. Reused conversation turns should retain the connection?s selected duration.
 - Manual Done and Stop should work at each setting. Standard mode should retain the final transcript for review; Conversation mode should auto-submit once.
 - Export schema 9 diagnostics: each attempt should carry quiet_pause_ms, and summaries should separate settings with the correct configuration.quiet_pause_s. Do not combine their timing distributions or claim a setting is better without comparable measured samples.
+
+### Save and combine live diagnostics
+
+Save each page export as an ignored local-live JSON file and note its corresponding device, browser, prompts, voice and microphone environment in this run sheet. Keep overlapping exports identifiable. Run `node evals/summarize_live_stt.js` with the export paths to recompute completed-attempt distributions, configuration groups, and separate failure/cancellation counts. Check input/unique/deduplicated counts against your session records before using a report. Schema 8 quiet-pause settings remain unknown. Identical metadata deduplication cannot establish globally unique attempts, and exports retain at most 500 attempts per page. Imported session/report behavior is not yet verified; do not treat this command as evidence of accuracy or an acoustic latency benchmark.
