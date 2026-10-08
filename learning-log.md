@@ -1,5 +1,10 @@
 # Learning log
 
+## Recognize Roman Hinglish revision requests - 2026-10-08
+
+- The tutor now recognizes `kamzor`, `kamzori`, `dohra`, `dohrao`, and `dohraana` as revision intent in both offline command handling and the model tool gate. Previously, `kamzor topics batao` and `dohrao fundamental rights` were not recognized.
+- A focused local intent check now recognizes those revision phrases while keeping ordinary questions out of the tool path. No API call, browser microphone, or learner audio was used.
+
 ## Show prompt-level STT errors - 2026-10-07
 
 - The local STT scorer now includes attempts, failures, and success-only and all-attempts WER for each prompt ID within a configuration and language. This helps locate phrases behind an aggregate error rate without printing reference or transcript text.
