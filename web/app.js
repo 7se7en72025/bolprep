@@ -190,7 +190,8 @@ function validTutorToolEvents(events) {
       return new Set(result.questions.map((question) => question.id)).size === result.questions.length;
     }
     if (event.name === "score_answer") {
-      return text(result.feedback, 4096) && typeof result.score === "number"
+      return text(result.question_id, 128) && typeof result.complete === "boolean"
+        && text(result.feedback, 4096) && typeof result.score === "number"
         && Number.isFinite(result.score) && result.score >= 0 && result.score <= 100
         && validStudySource(result.source);
     }
@@ -1809,8 +1810,11 @@ async function startQuiz() {
       signal: controller.signal,
     });
     const payload = await response.json();
-    if (!response.ok) throw new Error(payload.error || "Could not start the quiz.");
+    if (!response.ok) throw new Error(payload?.error || "Could not start the quiz.");
     if (requestTurn !== turn) return;
+    if (!validTutorToolEvents([{ name: "start_quiz", ok: true, result: payload }])) {
+      throw new Error("The server returned an invalid quiz. Try starting it again.");
+    }
     quizSession = { quizId: payload.quiz_id, questions: payload.questions, index: 0, results: [], awaitingAnswer: false };
     input.value = "";
     showQuizQuestion();
@@ -1882,8 +1886,11 @@ async function submitQuizAnswer(answer, { preserveLive = false } = {}) {
       signal: controller.signal,
     });
     const result = await response.json();
-    if (!response.ok) throw new Error(result.error || "Could not score the answer.");
+    if (!response.ok) throw new Error(result?.error || "Could not score the answer.");
     if (requestTurn !== turn) return;
+    if (!validTutorToolEvents([{ name: "score_answer", ok: true, result }]) || result.question_id !== current.id) {
+      throw new Error("The server returned an invalid score response. Your answer remains available for retry.");
+    }
     quizSession.pendingAnswer = "";
     quizSession.results.push(result);
     loadProgress();

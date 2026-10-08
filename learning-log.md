@@ -1518,3 +1518,9 @@
 - Inspection found completed payloads accepted arbitrary tool-event entries, allowing null/malformed successful results to fail after a completed trace was recorded. Added bounded entry/result validation, six-event cap, distinct quiz IDs/prompts/sources, and finite score/feedback/source checks before accepting stream completion.
 - Malformed results use existing request-failure recovery. Server argument validation and idempotent writes remain separate; client rejection does not roll back completed writes. Added README/manual malformed and compatible tool-response cases.
 - Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, controlled responses, browser interactions, or provider calls were performed; valid server compatibility, quiz state, failure traces, score rendering, and post-write recovery remain unverified at runtime.
+
+## Validate direct quiz and score responses before state changes - 2026-10-08
+
+- Reused tutor tool-result validation for direct quiz start/scoring before replacing quiz state or advancing results. Score validation now requires question_id and a boolean complete flag; direct responses must match the current question. Null HTTP error payloads fall back to readable errors.
+- Existing failure recovery retains the earlier quiz or restores the answer/retry key. Client rejection does not roll back progress, and unchanged-answer retries rely on server idempotency. Added README/manual direct/tool compatibility, malformed state, wrong-question, and retry cases.
+- Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, controlled responses, browser interactions, or provider calls were performed; state retention, compatible scores, post-write recovery, and duplicate prevention remain unverified at runtime.
