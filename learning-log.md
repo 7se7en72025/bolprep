@@ -1753,3 +1753,10 @@
 - Added minimum/total concept counts to newly computed scores. The browser now validates bounded disjoint matched/missing labels and, when counts are present, verifies total coverage, percentage with Python half-even rounding, and completion against the matched count. Direct scores and model score tool events share this validator.
 - Older retained score records remain accepted without the optional counts and are not rewritten; arithmetic validation for those records remains unavailable. Documented malformed metadata, boundaries, rounding, and retry scenarios without claiming semantic correctness.
 - Verification: Python compilation, JavaScript syntax, and git diff whitespace checks only. No tests, scoring runs, storage writes, browser checks, or provider calls were performed.
+
+
+## Keep model quiz starts aligned with the browser - 2026-10-08
+
+- Static review found the tool loop could create several quizzes in one turn while the browser selected only the first successful start event. Added an explicit instruction and execution guard: after one successful start, subsequent start_quiz calls receive a failed result without calling the storage-creating tool.
+- Failed starts remain correctable, other tools retain their existing bounds, and the guard resets for each tutor turn. Documented duplicate calls within/across rounds and remaining cancellation/failure orphan limits; no cross-turn idempotency or rollback is claimed.
+- Verification: Python compilation and git diff whitespace checks only. No tests, tool executions, database writes, browser checks, or provider calls were performed.

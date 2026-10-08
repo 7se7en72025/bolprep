@@ -130,6 +130,7 @@ def run_agent_turn(
             f"{instructions} You may use start_quiz to start a quiz, score_answer to score an answer "
             "with the server's fixed rubric, and get_weak_topics to read this browser session's saved results. "
             "Never claim a tool succeeded unless its result says ok."
+            " Start at most one successful quiz per turn; use its returned questions and quiz ID."
             f" The current quiz preset is {quiz_difficulty}; use it unless the current question explicitly requests another preset."
         )
     input_items: list[Any] = [
@@ -175,12 +176,19 @@ def run_agent_turn(
             name = _field(call, "name", "")
             if not isinstance(call_id, str) or not call_id or not isinstance(name, str) or not name:
                 raise RuntimeError("The model returned a tool call without its required identifiers.")
-            output, event = _execute_tool(
-                name,
-                _field(call, "arguments", ""),
-                call_id,
-                session_id,
-            )
+            if name == "start_quiz" and any(
+                event["name"] == "start_quiz" and event["ok"] for event in tool_events
+            ):
+                message = "A quiz already started in this turn. Use its returned quiz ID and questions."
+                output = {"ok": False, "error": message}
+                event = {"name": name, "ok": False, "error": message}
+            else:
+                output, event = _execute_tool(
+                    name,
+                    _field(call, "arguments", ""),
+                    call_id,
+                    session_id,
+                )
             input_items.append(
                 {"type": "function_call_output", "call_id": call_id, "output": json.dumps(output, ensure_ascii=False)}
             )
