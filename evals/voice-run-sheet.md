@@ -176,3 +176,7 @@ With a configured key and a WebRTC-capable browser, try a short Hindi, English, 
 - Leave a capture running: it should finish at 20 seconds. Block the connection or final event: the connection/finalization deadline should restore the controls.
 - Start live input during tutor playback: old audio should stop. This requires clicking Live mic; automatic speech interruption is pending.
 - Verify the last words survive Done across network conditions; the media drain delay needs real-device validation.
+- Enable optional quiet-pause completion before capture. Speak, pause for one second, then continue: capture should continue. After finishing, stay quiet for at least three seconds: finalization should begin and the completed transcript should remain for review.
+- Repeat with quiet speech and background noise. Record premature endings or failure to finish; thresholds are heuristics and have not been tuned against real recordings.
+- Keep silent from the start: pause detection should not finish before activity is detected; the 20-second limit still applies. If audio analysis is unavailable or suspended, check the manual-Done message and finish manually.
+- Cancel automatic capture and start another: old polling must not finish the new turn. Changing the pause option is disabled during capture.

@@ -8,6 +8,7 @@ const serverTranscribeButton = document.querySelector("#server-transcribe-button
 const serverSttNote = document.querySelector("#server-stt-note");
 const liveSttButton = document.querySelector("#live-stt-button");
 const liveSttNote = document.querySelector("#live-stt-note");
+const liveAutoFinish = document.querySelector("#live-auto-finish");
 const stopButton = document.querySelector("#stop-button");
 const modeLabel = document.querySelector("#mode-label");
 const speechLanguage = document.querySelector("#speech-language");
@@ -195,6 +196,7 @@ function rememberTurn(userMessage, assistantMessage) {
 function updateLiveSttButton(state = "idle") {
   liveSttButton.hidden = !liveTranscriptionAvailable;
   liveSttButton.disabled = !liveTranscriptionAvailable;
+  liveAutoFinish.disabled = !liveTranscriptionAvailable || state !== "idle";
   const listening = state === "listening";
   const label = listening ? "Done" : state === "idle" ? "Live mic" : "Cancel";
   liveSttButton.querySelector(".button-label").textContent = label;
@@ -1788,7 +1790,7 @@ liveSttButton.addEventListener("click", () => {
       activeLiveTranscription = null;
       updateLiveSttButton();
     },
-  });
+  }, { autoFinish: liveAutoFinish.checked });
   activeLiveTranscription = capture;
   updateLiveSttButton("connecting");
   statusLine.textContent = "Connecting live microphone…";

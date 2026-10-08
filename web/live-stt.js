@@ -1,8 +1,9 @@
 // One microphone turn per connection. The server mints a short-lived credential;
 // media goes directly to the provider over WebRTC and is never saved by BolPrep.
 class BolPrepLiveTranscription {
-  constructor(callbacks) {
+  constructor(callbacks, { autoFinish = false } = {}) {
     this.callbacks = callbacks;
+    this.autoFinish = autoFinish;
     this.controller = new AbortController();
     this.timers = new Set();
     this.closed = false;
@@ -33,6 +34,7 @@ class BolPrepLiveTranscription {
     this.controller.abort();
     this.timers.forEach(clearTimeout);
     this.timers.clear();
+    this.stopSpeechDetection();
     this.stream?.getTracks().forEach((track) => track.stop());
     this.channel?.close();
     this.peer?.close();
@@ -42,6 +44,7 @@ class BolPrepLiveTranscription {
   finish() {
     if (this.closed || this.state !== "listening") return;
     this.state = "finalizing";
+    this.stopSpeechDetection();
     clearTimeout(this.captureTimer);
     this.timers.delete(this.captureTimer);
     this.stream.getTracks().forEach((track) => { track.enabled = false; });
@@ -62,7 +65,7 @@ class BolPrepLiveTranscription {
     if (this.closed) return;
     let event;
     try { event = JSON.parse(data); } catch { return; }
-    if (!event || typeof event !== "object") return;
+    if (!event || typeof event !== "object" || typeof event.type !== "string") return;
     if (event.type === "error" || event.type === "conversation.item.input_audio_transcription.failed") {
       this.fail("The live transcription provider could not finish. Try Record or type your question.");
       return;
@@ -94,8 +97,96 @@ class BolPrepLiveTranscription {
     }
   }
 
+  stopSpeechDetection() {
+    clearTimeout(this.detectionTimer);
+    this.timers.delete(this.detectionTimer);
+    this.detectionSource?.disconnect();
+    this.detectionSource = null;
+    this.detector?.disconnect();
+    this.detector = null;
+    const context = this.detectionContext;
+    this.detectionContext = null;
+    if (context && context.state !== "closed") void context.close().catch(() => {});
+  }
+
+  startSpeechDetection() {
+    if (!this.autoFinish) return;
+    const manual = () => {
+      this.stopSpeechDetection();
+      this.callbacks.status("Automatic pause detection is unavailable. Tap Done when finished (20-second limit).", this.state);
+    };
+    const context = this.detectionContext;
+    if (!context || context.state !== "running") {
+      manual();
+      return;
+    }
+    try {
+      this.detector = context.createAnalyser();
+      this.detector.fftSize = 2048;
+      this.detectionSource = context.createMediaStreamSource(this.stream);
+      // No speaker connection: inspect microphone energy without playing it.
+      this.detectionSource.connect(this.detector);
+      const samples = new Float32Array(this.detector.fftSize);
+      let previousTime = performance.now();
+      let speechMs = 0;
+      let quietMs = 0;
+      let heardSpeech = false;
+      const poll = () => {
+        if (this.closed || this.state !== "listening") return;
+        if (context.state !== "running") {
+          manual();
+          return;
+        }
+        try {
+          this.detector.getFloatTimeDomainData(samples);
+          let energy = 0;
+          for (const sample of samples) energy += sample * sample;
+          const rms = Math.sqrt(energy / samples.length);
+          const now = performance.now();
+          const elapsed = now - previousTime;
+          previousTime = now;
+          // A delayed timer is not evidence that the intervening audio was quiet.
+          if (elapsed > 250) {
+            quietMs = 0;
+            speechMs = 0;
+          } else {
+            const observedMs = Math.min(100, Math.max(0, elapsed));
+            if (!heardSpeech) {
+              speechMs = rms >= 0.015 ? speechMs + observedMs : 0;
+              heardSpeech = speechMs >= 250;
+            }
+            quietMs = heardSpeech && rms < 0.008 ? quietMs + observedMs : 0;
+            if (quietMs >= 3000) {
+              this.finish();
+              return;
+            }
+          }
+          this.detectionTimer = this.later(poll, 50);
+        } catch {
+          manual();
+        }
+      };
+      this.callbacks.status("Live listening. A 3-second quiet pause finishes your transcript; Done also works (20-second limit).", this.state);
+      this.detectionTimer = this.later(poll, 50);
+    } catch {
+      manual();
+    }
+  }
+
   async start(language) {
     this.later(() => this.fail("Live transcription connection timed out. Try Record or type."), 45000);
+    // Begin resume from the button gesture, before awaiting microphone access.
+    if (this.autoFinish) {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          this.detectionContext = new AudioContext();
+          void this.detectionContext.resume().catch(() => {});
+        }
+      } catch {
+        this.stopSpeechDetection();
+      }
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
@@ -129,6 +220,7 @@ class BolPrepLiveTranscription {
         stream.getAudioTracks().forEach((track) => { track.enabled = true; });
         this.callbacks.status("Live listening. Tap Done when you finish (20-second limit).", this.state);
         this.captureTimer = this.later(() => this.finish(), 20000);
+        this.startSpeechDetection();
       });
       const tokenResponse = await fetch("/api/transcription/session", {
         method: "POST",
