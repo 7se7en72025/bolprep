@@ -2012,3 +2012,10 @@
 - Browser progressive playback begins its attempt when the first chunk is queued and stays active between chunks until text/playback completion. This ownership now also makes a stop during an inter-sentence gap mark speech history incomplete. Provider progressive playback counts active segments; future queued segments are excluded.
 - Schema 13 TTS groups gain optional cancellation_count/cancellation_reasons and an explicit scope. Dashboard counts/reasons reflect these observations, retaining completed-only percentiles. Older exports lacking the fields cannot be interpreted as zero cancellations.
 - Verification: Node syntax and git diff whitespace checks; static completion/failure/stop/fallback identity review. No tests, browser/device/race checks, recordings, evaluation computations, or provider calls; no measured cancellation/acoustic claims. Publisher policy retrieval was retried with web and public page/script reads, but readable applicable terms were not established, so reuse status remains unresolved.
+
+
+## Keep the smoke utility on its own temporary server - 2026-10-08
+
+- Static review found that the existing check-local launcher could accept health from a different offline server already on port 8000, then send quiz writes to that server rather than the temporary database. Added listener ownership inspection outside the readiness request catch and before each later request. Foreign ownership or unavailable ownership inspection stops the script; only the spawned process is cleaned up.
+- Launch now explicitly passes --offline and quotes the server path, preserving the existing temporary database and environment restoration. Readiness waits for the child to own the exact loopback listener. These OS observations are not atomic protection against process exit/rebinding after a check.
+- Verification: PowerShell AST parse and git diff whitespace checks with static request/cleanup review. No tests, process launches, listener queries, HTTP requests, evaluation computations, or provider calls were executed. Runtime verification and test authorization remain pending.

@@ -21,11 +21,36 @@ $previousAccessPassword = $env:BOLPREP_ACCESS_PASSWORD
 $hadProgressDatabasePath = Test-Path Env:BOLPREP_DATABASE_PATH
 $previousProgressDatabasePath = $env:BOLPREP_DATABASE_PATH
 
+function Test-CheckServerListener {
+    if (-not $process -or $process.HasExited) {
+        throw 'The temporary check server is not running. No HTTP request was sent.'
+    }
+    # Inspect ownership before requesting health: another offline server can
+    # otherwise satisfy readiness and receive this check's quiz writes.
+    $listeners = @(Get-NetTCPConnection -ErrorAction Stop | Where-Object {
+        $_.State -eq 'Listen' -and $_.LocalPort -eq 8000 -and $_.LocalAddress -in @('127.0.0.1', '0.0.0.0', '::', '::1')
+    })
+    if (@($listeners | Where-Object { $_.OwningProcess -ne $process.Id }).Count -gt 0) {
+        throw 'Port 8000 belongs to another process. Stop that server yourself, then rerun the check. No HTTP request was sent.'
+    }
+    return @($listeners | Where-Object {
+        $_.OwningProcess -eq $process.Id -and $_.LocalAddress -eq '127.0.0.1'
+    }).Count -eq 1
+}
+
+function Assert-CheckServerListener {
+    if (-not (Test-CheckServerListener)) {
+        throw 'The temporary check server no longer owns its listener. No HTTP request was sent.'
+    }
+}
+
 try {
     $env:OPENAI_API_KEY = ''
     $env:BOLPREP_ACCESS_PASSWORD = ''
     $env:BOLPREP_DATABASE_PATH = $progressDatabasePath
-    $process = Start-Process -FilePath $pythonPath -ArgumentList (Join-Path $repoRoot 'server.py') `
+    $process = Start-Process -FilePath $pythonPath -ArgumentList @(
+        '-u', ('"{0}"' -f (Join-Path $repoRoot 'server.py')), '--offline'
+    ) `
         -WorkingDirectory $repoRoot -WindowStyle Hidden -PassThru `
         -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
 
@@ -34,6 +59,10 @@ try {
     while ([DateTimeOffset]::UtcNow -lt $deadline) {
         if ($process.HasExited) {
             throw "The local server exited during startup. See $stderrPath."
+        }
+        if (-not (Test-CheckServerListener)) {
+            Start-Sleep -Milliseconds 250
+            continue
         }
         try {
             $health = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/health' -TimeoutSec 2
@@ -48,6 +77,7 @@ try {
         throw "Unexpected health response: $($health | ConvertTo-Json -Compress)"
     }
 
+    Assert-CheckServerListener
     $page = Invoke-WebRequest -Uri 'http://127.0.0.1:8000/' -UseBasicParsing -TimeoutSec 5
     if ($page.StatusCode -ne 200 -or $page.Content -notmatch 'BolPrep') {
         throw 'The tutor page did not load correctly.'
@@ -58,6 +88,7 @@ try {
         language = 'hi-IN'
         history = @()
     } | ConvertTo-Json -Depth 4
+    Assert-CheckServerListener
     $answer = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/api/answer' `
         -Method Post -ContentType 'application/json' -Body $body -TimeoutSec 10
     if ($answer.answer -notmatch 'Article 14' -or -not $answer.sources -or $answer.sources.Count -lt 1) {
@@ -65,6 +96,7 @@ try {
     }
 
     $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+    Assert-CheckServerListener
     $quizPage = Invoke-WebRequest -Uri 'http://127.0.0.1:8000/' -UseBasicParsing -WebSession $session -TimeoutSec 5
     if ($quizPage.StatusCode -ne 200) { throw 'The quiz browser session could not be created.' }
     $quizBody = @{
@@ -72,6 +104,7 @@ try {
         question_count = 1
         language = 'hi-IN'
     } | ConvertTo-Json -Depth 4
+    Assert-CheckServerListener
     $quiz = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/api/quiz/start' `
         -Method Post -ContentType 'application/json' -Body $quizBody -WebSession $session -TimeoutSec 10
     if (-not $quiz.quiz_id -or $quiz.questions.Count -ne 1) { throw 'The offline quiz did not return one question.' }
@@ -83,10 +116,13 @@ try {
         idempotency_key = $runId
         language = 'hi-IN'
     } | ConvertTo-Json -Depth 4
+    Assert-CheckServerListener
     $score = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/api/quiz/score' `
         -Method Post -ContentType 'application/json' -Body $scoreBody -WebSession $session -TimeoutSec 10
+    Assert-CheckServerListener
     $retry = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/api/quiz/score' `
         -Method Post -ContentType 'application/json' -Body $scoreBody -WebSession $session -TimeoutSec 10
+    Assert-CheckServerListener
     $progress = Invoke-RestMethod -Uri 'http://127.0.0.1:8000/api/progress' `
         -WebSession $session -TimeoutSec 5
     if (($score.question_id -ne $quiz.questions[0].id) -or
@@ -97,6 +133,7 @@ try {
     }
 
     $turnBody = @{ question = 'weak topics'; language = 'hi-IN'; history = @() } | ConvertTo-Json -Depth 4
+    Assert-CheckServerListener
     $turnResponse = Invoke-WebRequest -Uri 'http://127.0.0.1:8000/api/agent/turn' `
         -Method Post -ContentType 'application/json' -Body $turnBody -WebSession $session -UseBasicParsing -TimeoutSec 10
     $turnText = if ($turnResponse.Content -is [byte[]]) {
