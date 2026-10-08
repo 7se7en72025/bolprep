@@ -144,7 +144,7 @@ Browser checks save conversations and quiz scores to the supplied server's datab
 
 ## Automatic checks
 
-[GitHub Actions](.github/workflows/verify.yml) runs the provider-free Python, voice-state, retrieval, and headless browser checks on pushes and pull requests. It uses Windows, locked dependencies, pinned action revisions, a disposable offline database, and no provider secrets. The retrieval report is retained as a workflow artifact. This workflow is configured and locally exercised; a passing cloud run must be observed separately. It has no scheduled trigger and does not run autonomous code edits or real microphone/provider benchmarks.
+[GitHub Actions](.github/workflows/verify.yml) runs the provider-free Python, voice-state, retrieval, and headless browser checks on pushes and pull requests. It uses Windows, locked dependencies, pinned action revisions, a disposable offline database, and no provider secrets. The retrieval report is retained as a workflow artifact. The [first cloud run](https://github.com/7se7en72025/bolprep/actions/runs/37810436397) passed for commit a7f2898, including dependency setup, Python/voice tests, retrieval comparison, browser checks, and artifact upload. Subsequent changes require their own verification. It has no scheduled trigger and does not run autonomous code edits or real microphone/provider benchmarks.
 
 ## Repository map
 

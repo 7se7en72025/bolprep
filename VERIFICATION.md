@@ -42,3 +42,8 @@ The passing checks above cannot be used to mark those gates complete or claim pr
 A follow-up verification passed 44 Python tests (three additional actual HTTP saved-data checks), all four headless Chrome tests, and all four mocked live-STT tests. Storage checks cover cookie ownership, idempotent retries/conflicts, HTTP-server restart persistence, separate conversation/progress deletion, and malformed input without writes or response leaks. The added Chrome recording test uses fake permission/capture/upload responses to check draft preservation and track cleanup; it does not collect real microphone audio.
 
 The new tools/check-browser.ps1 runner passed locally on a free port with an isolated database and restored its environment/removed its owned process and temporary run files. The GitHub push/PR workflow repeats provider-free checks and retains retrieval output. Action revisions were checked against their upstream v7 tags and pinned to those commit hashes. Cloud execution is not established by these local results; no recurring schedule was created.
+
+
+## Observed cloud verification
+
+GitHub Actions [run 37810436397](https://github.com/7se7en72025/bolprep/actions/runs/37810436397), for commit a7f28982267d65f5ba45c48c3b5ede4e00cdaaf9, completed successfully. The GitHub run/jobs API reported success for all dependency, Python test, voice-state, retrieval, browser, and artifact-upload steps. This is independent runner execution of the offline checks; it does not establish real microphone/provider or human-review gates.
