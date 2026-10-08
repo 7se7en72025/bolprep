@@ -164,3 +164,15 @@ For each attempt, add one row below before summarizing the totals above. Keep th
 When submitting a typed quiz answer during prompt or feedback playback, check whether the old audio stops as scoring begins and stays stopped while the score is pending.
 
 This is a manual interaction check, not provider cancellation proof. The local client can abort its request and ignore stale client events, but the model provider may continue generating after the browser stops waiting.
+
+## Experimental live microphone checks
+
+With a configured key and a WebRTC-capable browser, try a short Hindi, English, and Hinglish question with **Live mic**. Observe partial text, tap **Done**, review the final transcript, and send it. Repeat with a spoken quiz answer. Record failures and actual transcripts in your ignored local evaluation input; live STT is not included in the diagnostics export yet.
+
+- Try submitting while listening or finalizing: submission should wait for a final transcript.
+- Cancel with Escape, Stop, Cancel, a language change, or New session: the microphone indicator should turn off and late events must not replace the restored draft.
+- Edit a partial transcript: capture should stop and the edit should remain.
+- Cancel while the permission prompt is open, then grant permission: capture must not resume.
+- Leave a capture running: it should finish at 20 seconds. Block the connection or final event: the connection/finalization deadline should restore the controls.
+- Start live input during tutor playback: old audio should stop. This requires clicking Live mic; automatic speech interruption is pending.
+- Verify the last words survive Done across network conditions; the media drain delay needs real-device validation.

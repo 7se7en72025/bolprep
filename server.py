@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import time
 import uuid
@@ -49,6 +50,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                     "study_notes": len(load_corpus()),
                     "streaming_tts": model_configured,
                     "server_transcription": model_configured,
+                    "live_transcription": model_configured,
                 },
                 include_session_cookie=False,
             )
@@ -61,6 +63,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         routes = {
             "/": (WEB_ROOT / "index.html", "text/html; charset=utf-8"),
             "/app.js": (WEB_ROOT / "app.js", "text/javascript; charset=utf-8"),
+            "/live-stt.js": (WEB_ROOT / "live-stt.js", "text/javascript; charset=utf-8"),
             "/styles.css": (WEB_ROOT / "styles.css", "text/css; charset=utf-8"),
         }
         route = routes.get(self.path)
@@ -94,7 +97,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         self._ensure_browser_session()
-        if self.path not in {"/api/answer", "/api/agent/turn", "/api/quiz/start", "/api/quiz/score", "/api/speech", "/api/transcribe"}:
+        if self.path not in {"/api/answer", "/api/agent/turn", "/api/quiz/start", "/api/quiz/score", "/api/speech", "/api/transcribe", "/api/transcription/session"}:
             self.send_error(404, "Not found")
             return
         if self.path == "/api/transcribe":
@@ -102,6 +105,9 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             return
         body = self._read_json_body()
         if body is None:
+            return
+        if self.path == "/api/transcription/session":
+            self._handle_transcription_session(body)
             return
         if self.path == "/api/speech":
             self._handle_speech(body)
@@ -313,6 +319,46 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 self.close_connection = True
             else:
                 self._send_json(502, {"error": "The speech provider could not return audio. Check the server terminal and try again."})
+
+    def _handle_transcription_session(self, body: dict[str, Any]) -> None:
+        # Browser-only, local endpoint: never expose the project API key.
+        if self.headers.get("Origin") not in {"http://127.0.0.1:8000", "http://localhost:8000"}:
+            self._send_json(403, {"error": "Start live transcription from the local tutor page."})
+            return
+        language = body.get("language")
+        if not isinstance(language, str) or language not in {"hi-IN", "en-IN"}:
+            self._send_json(400, {"error": "Choose Hindi/Hinglish or English."})
+            return
+        if not api_is_configured():
+            self._send_json(503, {"error": "Live transcription needs an API key. You can type or use browser speech."})
+            return
+        try:
+            from openai import OpenAI
+
+            with OpenAI(timeout=30.0, max_retries=0) as client:
+                secret = client.realtime.client_secrets.create(
+                    expires_after={"anchor": "created_at", "seconds": 60},
+                    session={
+                        "type": "transcription",
+                        "audio": {"input": {
+                            "transcription": {
+                                "model": "gpt-live-transcribe",
+                                "languages": ["hi", "en"] if language == "hi-IN" else ["en"],
+                                "delay": "low",
+                            },
+                            "turn_detection": None,
+                        }},
+                    },
+                    extra_headers={"OpenAI-Safety-Identifier": hashlib.sha256(self.session_id.encode()).hexdigest()},
+                )
+            if not isinstance(secret.value, str) or not secret.value or not isinstance(secret.expires_at, int):
+                raise ValueError("Invalid client secret response")
+            self._send_json(200, {"client_secret": secret.value, "expires_at": secret.expires_at,
+                                  "model": "gpt-live-transcribe"})
+        except Exception as exc:
+            # Exception text can contain provider response data; do not log tokens.
+            print(f"Live transcription session failed: {type(exc).__name__}")
+            self._send_json(502, {"error": "Live transcription could not connect. Try Record or type your question."})
 
     def _handle_transcription(self) -> None:
         try:

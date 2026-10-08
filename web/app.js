@@ -6,6 +6,8 @@ const sendButton = document.querySelector("#send-button");
 const micButton = document.querySelector("#mic-button");
 const serverTranscribeButton = document.querySelector("#server-transcribe-button");
 const serverSttNote = document.querySelector("#server-stt-note");
+const liveSttButton = document.querySelector("#live-stt-button");
+const liveSttNote = document.querySelector("#live-stt-note");
 const stopButton = document.querySelector("#stop-button");
 const modeLabel = document.querySelector("#mode-label");
 const speechLanguage = document.querySelector("#speech-language");
@@ -56,6 +58,10 @@ let recognitionAvailable = false;
 let recognitionListening = false;
 let recognitionRun = 0;
 let serverTranscriptionAvailable = false;
+let liveTranscriptionAvailable = false;
+let activeLiveTranscription = null;
+let liveSttRun = 0;
+let liveSttOriginalInput = "";
 let activeTranscriptionController = null;
 let activeMediaRecorder = null;
 let activeMediaStream = null;
@@ -186,7 +192,29 @@ function rememberTurn(userMessage, assistantMessage) {
   history.splice(0, Math.max(0, history.length - 20));
 }
 
+function updateLiveSttButton(state = "idle") {
+  liveSttButton.hidden = !liveTranscriptionAvailable;
+  liveSttButton.disabled = !liveTranscriptionAvailable;
+  const listening = state === "listening";
+  const label = listening ? "Done" : state === "idle" ? "Live mic" : "Cancel";
+  liveSttButton.querySelector(".button-label").textContent = label;
+  liveSttButton.setAttribute("aria-label", listening ? "Finish live transcription" : label);
+  liveSttButton.setAttribute("aria-pressed", String(listening));
+  liveSttButton.classList.toggle("is-listening", listening);
+}
+
+function stopLiveTranscription(restoreUnconfirmed = true) {
+  if (!activeLiveTranscription) return;
+  if (restoreUnconfirmed) input.value = liveSttOriginalInput;
+  liveSttRun += 1;
+  const capture = activeLiveTranscription;
+  activeLiveTranscription = null;
+  capture.cancel();
+  updateLiveSttButton();
+}
+
 function stopRecognition(restoreUnconfirmed = false) {
+  stopLiveTranscription(restoreUnconfirmed);
   if (restoreUnconfirmed && recognitionListening && !recognitionHadFinalResult) {
     input.value = recognitionOriginalInput;
   }
@@ -1127,6 +1155,7 @@ function createProgressiveBrowserSpeech(completionText = "Answer ready.") {
 }
 
 previewVoiceButton.addEventListener("click", () => {
+  stopLiveTranscription();
   const preview = speechLanguage.value === "en-IN"
     ? "Hello, let's study fundamental rights together."
     : "Namaste, aaj hum maulik adhikar seekhenge.";
@@ -1134,6 +1163,7 @@ previewVoiceButton.addEventListener("click", () => {
 });
 
 async function sendQuestion(question) {
+  stopLiveTranscription(false);
   prepareStreamingAudio();
   serverRecordingStartCancelled = true;
   serverRecordingRun += 1;
@@ -1339,6 +1369,7 @@ function showQuizQuestion(speakPrompt = true) {
 }
 
 async function submitQuizAnswer(answer) {
+  stopLiveTranscription(false);
   prepareStreamingAudio();
   if (!quizSession || !quizSession.awaitingAnswer) return;
   stopSpeechOutput();
@@ -1410,6 +1441,10 @@ async function submitQuizAnswer(answer) {
 
 form.addEventListener("submit", (event) => {
   event.preventDefault();
+  if (activeLiveTranscription) {
+    statusLine.textContent = "Tap Done and wait for the final live transcript before sending, or cancel and type.";
+    return;
+  }
   const automaticVoiceInput = pendingAutomaticVoiceInput;
   pendingAutomaticVoiceInput = null;
   if (recognitionListening && !recognitionHadFinalResult) {
@@ -1458,7 +1493,7 @@ document.addEventListener("keydown", (event) => {
   const speechSynthesis = window.speechSynthesis;
   if (!activeRequest && !activeSpeechController && !activeProgressiveSpeech && !scheduledSpeechSources.size
     && !recognitionListening && !activeMediaRecorder && !serverRecordingStarting
-    && !activeTranscriptionController && !speechSynthesis?.speaking && !speechSynthesis?.pending) return;
+    && !activeTranscriptionController && !activeLiveTranscription && !speechSynthesis?.speaking && !speechSynthesis?.pending) return;
   event.preventDefault();
   const stoppingQuizScore = Boolean(quizSession && !quizSession.awaitingAnswer);
   stopTutor();
@@ -1592,6 +1627,10 @@ if (SpeechRecognition) {
 
 updateMicrophoneButton(false);
 input.addEventListener("input", () => {
+  if (activeLiveTranscription) {
+    stopLiveTranscription(false);
+    statusLine.textContent = "Live transcription stopped so your edit stays in the question box.";
+  }
   if (recognitionListening) {
     stopRecognition();
     statusLine.textContent = "Voice input stopped so your edit stays in the question box. Review it, then ask.";
@@ -1710,6 +1749,58 @@ micButton.addEventListener("click", () => {
   }
 });
 
+liveSttButton.addEventListener("click", () => {
+  if (!liveTranscriptionAvailable) return;
+  if (activeLiveTranscription) {
+    if (activeLiveTranscription.state === "listening") activeLiveTranscription.finish();
+    else {
+      stopLiveTranscription();
+      statusLine.textContent = "Live transcription canceled. Your previous text is restored.";
+    }
+    return;
+  }
+  stopTutor();
+  const run = ++liveSttRun;
+  liveSttOriginalInput = input.value;
+  const capture = new window.BolPrepLiveTranscription({
+    partial: (text) => {
+      if (run === liveSttRun) input.value = text;
+    },
+    final: (text) => {
+      if (run !== liveSttRun) return;
+      input.value = text;
+      statusLine.textContent = text.length > input.maxLength
+        ? `Final transcript received. Shorten it to ${input.maxLength} characters before sending.`
+        : "Final live transcript received. Review it, then send.";
+    },
+    status: (text, state) => {
+      if (run !== liveSttRun) return;
+      statusLine.textContent = text;
+      updateLiveSttButton(state);
+    },
+    error: (message) => {
+      if (run !== liveSttRun) return;
+      input.value = liveSttOriginalInput;
+      statusLine.textContent = message;
+    },
+    closed: () => {
+      if (activeLiveTranscription !== capture) return;
+      activeLiveTranscription = null;
+      updateLiveSttButton();
+    },
+  });
+  activeLiveTranscription = capture;
+  updateLiveSttButton("connecting");
+  statusLine.textContent = "Connecting live microphone…";
+  void capture.start(speechLanguage.value);
+});
+speechLanguage.addEventListener("change", () => {
+  if (!activeLiveTranscription) return;
+  stopLiveTranscription();
+  statusLine.textContent = "Language changed. Start a new live transcript; partial words were discarded.";
+});
+window.addEventListener("pagehide", () => stopLiveTranscription(false));
+
 serverTranscribeButton.addEventListener("click", () => {
   if (serverRecordingStarting || activeTranscriptionController) {
     stopTutor();
@@ -1731,6 +1822,10 @@ fetch("/health").then((response) => response.json()).then((health) => {
   streamedTtsOption.disabled = !streamingTtsAvailable;
   streamedTtsVoice.disabled = !streamingTtsAvailable || !streamedTtsOption.checked;
   serverTranscriptionAvailable = Boolean(health.server_transcription);
+  liveTranscriptionAvailable = Boolean(health.live_transcription)
+    && Boolean(window.BolPrepLiveTranscription && window.RTCPeerConnection && navigator.mediaDevices?.getUserMedia);
+  liveSttNote.hidden = !liveTranscriptionAvailable;
+  updateLiveSttButton();
   serverSttNote.hidden = !serverTranscriptionAvailable;
   updateServerTranscribeButton();
   streamedTtsOption.title = streamingTtsAvailable
