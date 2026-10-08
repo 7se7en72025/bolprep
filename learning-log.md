@@ -1202,3 +1202,9 @@
 - Added a 90-second client deadline for recorded-file upload and transcription. A timeout aborts the local request, restores the Record control, preserves composer text, and records a distinct `transcription-timeout` failure. Deliberate cancellation remains excluded from failures; the deadline timer is cleared when the request settles.
 - Browser timers may be delayed in suspended tabs. The manual run sheet now includes stalled-request recovery; provider cancellation and real device behavior remain unverified.
 - Verification: JavaScript syntax and diff checks passed. A temporary actual-source simulation confirmed one timeout failure, unchanged draft, released controller, no failure for deliberate cancellation, and timer cleanup on successful completion. No microphone or provider was used.
+
+## Validate streamed speech before PCM playback - 2026-10-08
+
+- The client now requires `audio/pcm` and a 24 kHz sample-rate header before decoding streamed speech. Unexpected response formats fall back to the browser voice before scheduling audio. Decoder and playback errors also abort the local stream, so a failed consumer does not keep an unread response open.
+- Audible playback and provider cancellation still need device/provider verification.
+- Verification: JavaScript syntax and diff checks passed. A temporary simulation executed the actual streamed-speech function with wrong content type, wrong/missing sample rate, valid PCM, and a decoder error; rejection before decoding, fallback, successful completion, and stream cleanup passed. No real audio or provider request was used.

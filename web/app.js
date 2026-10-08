@@ -841,6 +841,11 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
       const payload = await response.json().catch(() => ({}));
       throw new Error(payload.error || "Streamed speech is unavailable.");
     }
+    const contentType = (response.headers.get("Content-Type") || "").split(";", 1)[0].trim().toLowerCase();
+    const sampleRate = Number(response.headers.get("X-Audio-Sample-Rate"));
+    if (contentType !== "audio/pcm" || sampleRate !== 24000) {
+      throw new Error("The speech server returned an unsupported audio format.");
+    }
     if (!response.body) throw new Error("This browser cannot receive streamed audio.");
     await context.resume();
     const reader = response.body.getReader();
@@ -855,7 +860,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
       for (let index = 0; index < sampleCount; index += 1) {
         samples[index] = view.getInt16(index * 2, true) / 32768;
       }
-      const buffer = context.createBuffer(1, sampleCount, 24000);
+      const buffer = context.createBuffer(1, sampleCount, sampleRate);
       buffer.copyToChannel(samples, 0);
       const source = context.createBufferSource();
       source.buffer = buffer;
@@ -902,6 +907,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
       + speechTimingSummary(sample);
   } catch (error) {
     if (error.name === "AbortError" || requestSpeechTurn !== speechTurn) return;
+    controller.abort();
     requestSources.forEach((source) => {
       try { source.stop(); } catch { /* The source may already have ended. */ }
       scheduledSpeechSources.delete(source);
