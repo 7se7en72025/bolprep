@@ -7,12 +7,19 @@ import argparse
 import hashlib
 import sys
 from collections import defaultdict
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO_ROOT))
+
+SOURCE_PATHS = {
+    "retrieval.py": REPO_ROOT / "retrieval.py",
+    "evals/run_retrieval_eval.py": Path(__file__).resolve(),
+}
+SOURCE_BYTES = {name: path.read_bytes() for name, path in SOURCE_PATHS.items()}
 
 from retrieval import CORPUS_PATH, load_corpus, retrieval_query, retrieve  # noqa: E402
 
@@ -21,7 +28,13 @@ DATASET_PATH = Path(__file__).with_name("retrieval_examples.json")
 SUPPORTED_LANGUAGES = {"English", "Hindi", "Hinglish"}
 
 
+def _require_stable_sources() -> None:
+    if any(path.read_bytes() != SOURCE_BYTES[name] for name, path in SOURCE_PATHS.items()):
+        raise ValueError("Retrieval or evaluator source changed; restart against stable code.")
+
+
 def evaluate(dataset_path: Path = DATASET_PATH, *, scoring: str = "overlap") -> dict[str, Any]:
+    _require_stable_sources()
     if scoring not in {"overlap", "rarity"}:
         raise ValueError("Retrieval scoring must be overlap or rarity.")
     dataset_bytes = dataset_path.read_bytes()
@@ -130,7 +143,15 @@ def evaluate(dataset_path: Path = DATASET_PATH, *, scoring: str = "overlap") -> 
 
     if dataset_path.read_bytes() != dataset_bytes or CORPUS_PATH.read_bytes() != corpus_bytes:
         raise ValueError("Dataset or corpus changed during evaluation; rerun against stable inputs.")
+    _require_stable_sources()
     return {
+        "evaluation_schema_version": 2,
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+        "implementation": {
+            "source_sha256": {name: hashlib.sha256(raw).hexdigest() for name, raw in SOURCE_BYTES.items()},
+            "python_version": sys.version.split()[0],
+            "python_implementation": sys.implementation.name,
+        },
         "scoring": scoring,
         "dataset_sha256": hashlib.sha256(dataset_bytes).hexdigest(),
         "corpus_sha256": hashlib.sha256(corpus_bytes).hexdigest(),
@@ -166,7 +187,7 @@ def main() -> int:
     if args.compare:
         baseline = evaluate(scoring="overlap")
         candidate = evaluate(scoring="rarity")
-        if any(baseline[key] != candidate[key] for key in ("dataset_sha256", "corpus_sha256")):
+        if any(baseline[key] != candidate[key] for key in ("dataset_sha256", "corpus_sha256", "implementation")):
             raise ValueError("Comparison inputs changed between configurations; rerun against stable inputs.")
         changed = []
         for before, after in zip(baseline["results"], candidate["results"]):

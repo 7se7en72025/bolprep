@@ -104,7 +104,7 @@ Retrieval evaluation commands:
 .\.venv\Scripts\python.exe evals/run_retrieval_eval.py --compare
 ```
 
-These are instructions, not evidence of a fresh run. Older constructed-set results in the archive predate retrieval changes and do not establish learner or voice quality. Current local test and evaluation execution remains pending explicit verification authorization.
+Reports include dataset/corpus hashes, retrieval/evaluator source hashes, Python version, scorer, and UTC generation time. Code or input changes invalidate a comparison; archive the actual JSON and repository commit when running an authorized evaluation. These are instructions, not evidence of a fresh run. Older constructed-set results in the archive predate retrieval changes and do not establish learner or voice quality. Current local test and evaluation execution remains pending explicit verification authorization.
 
 ## Repository map
 

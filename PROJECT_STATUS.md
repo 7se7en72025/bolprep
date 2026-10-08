@@ -22,7 +22,7 @@ Audit date: 2026-10-08. This is an implementation/evidence inventory, not a rele
 | Retrieval, answer support, tool behavior have labeled checks | Constructed retrieval labels and existing mocked tool tests | Fresh retrieval comparison, generated-answer support labels, current tool coverage. |
 | Human speech/quiz reviews documented | Versioned TTS/quiz review procedures | Actual independent reviews, disagreements, coverage, and measured reports. |
 | Accessible working demo and setup | Local startup scripts, README, `.env.example` | Fresh local/browser run; any hosted demo needs a separate concrete deployment decision. |
-| README architecture, limits, actual benchmarks, reproduction | Architecture/setup/limits and historical constructed retrieval figures | Archive and identify current benchmark configurations/hashes; real voice results missing. |
+| README architecture, limits, actual benchmarks, reproduction | Architecture/setup/limits and historical constructed retrieval figures | Retrieval runner now emits input/code hashes, interpreter/scorer, and UTC time; actual current reports, reproducibility proof, and real voice results remain missing. |
 | Short recorded demo demonstrates full flow | `DEMO_SCRIPT.md` outline | Actual video showing observed Hinglish speech, interruption, sources, tools, diagnostics. |
 | Technical walkthrough explains tradeoffs and a failure-led improvement | ARCHITECTURE.md maps current paths/tradeoffs and the reviewed Article 14 alias defect | Written implementation artifact exists; the defect is static reasoning, and current runtime/video evidence is still missing. |
 

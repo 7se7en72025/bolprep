@@ -1725,3 +1725,10 @@
 - Replaced unbounded response.json() on recorded transcription with a 128 KiB byte-counted reader and strict streaming UTF-8 decoder. This bounds response allocation before the existing transcript validation, including when Content-Length is absent. Invalid bodies use existing generic invalid-transcript recovery.
 - Preserved AbortError semantics and the 90-second request deadline; canceled readers release their lock without awaiting an unresponsive cancellation promise. Added manual response-boundary/cancellation scenarios, with no claimed runtime pass.
 - Verification: JavaScript syntax and git diff whitespace checks only. No tests, browser/device checks, recordings, server requests, or provider calls were performed.
+
+
+## Identify retrieval reports by implementation - 2026-10-08
+
+- Added evaluation schema 2 with UTC generation time, exact raw retrieval/evaluator source hashes, Python version and implementation, alongside existing dataset/corpus hashes and scorer. Captured code bytes before retrieval import and reject persistent changes before/after evaluation. Comparisons now require the same implementation metadata as well as input hashes.
+- Updated reproduction guidance to archive actual JSON, commit, and exact files/environment; hashes include line endings and are not authenticated execution evidence or protection against changes restored between checks. Corrected stale README references and an edition separator in the dataset guide.
+- Verification: Python compilation, CLI --help, and git diff whitespace checks only. No evaluation, tests, source mutation exercises, provider calls, or measured reports were run/generated. Current benchmark evidence remains pending.
