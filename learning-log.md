@@ -1690,3 +1690,10 @@
 - Added ARCHITECTURE.md with a learner-turn diagram, code responsibility map, speech-path tradeoffs, turn/data boundaries, and measurement semantics. It explains local cookie/demo controls, ephemeral live credentials, fixed scoring, consolidated score persistence, and explicit conversation snapshots without claiming hosted accounts or measured speech quality.
 - Documented the reviewed Article 14 alias collision and bf7763e correction as static code/data reasoning, with remaining negation/meaning and runtime verification limits. Linked the walkthrough from README/demo outline and updated the acceptance audit to distinguish the written artifact from missing video/observed-device evidence.
 - Verification: inspected the referenced current code/data paths and ran git diff whitespace checks. No tests, browser/device interactions, database writes, scoring/retrieval evaluation, recordings, human collection, or provider calls were performed. The existing local-verification request remains pending.
+
+
+## Make repository onboarding readable - 2026-10-08
+
+- Replaced the long README with a project guide covering setup, configuration, study workflow, voice paths, storage, evidence limits, and bounded repository work. Preserved the detailed original in IMPLEMENTATION_NOTES.md with an explicit historical-results caveat.
+- Restored a corrupted Hindi rubric example in the manual voice run sheet and an edition separator in the archived notes.
+- Verification: reviewed documentation links and current helper commands and ran git diff whitespace checks. No tests, evaluations, browser/device sessions, recordings, or provider calls were performed. Local verification authorization remains pending.
