@@ -1175,3 +1175,8 @@
 - The optional `failure_reason` field now groups failed or empty transcript attempts under fixed cause codes. Missing reasons appear as `unclassified`; successful transcripts cannot carry a failure reason. The run sheet and README explain the new output.
 - `node --check evals/score_stt.js`, `git diff --check`, and a synthetic three-attempt CLI run passed; the run reported one `no-speech` and one `unclassified` failure. No real speech was evaluated, and these counts depend on accurate manual labeling.
 - The repository-local Python environment could not start in this task environment, so no Python retrieval change or evaluation was attempted.
+
+## Add a repeatable offline startup check - 2026-10-08
+
+- Added `tools/check-local.ps1` to start a temporary local server in forced offline mode, verify health and the tutor page, and confirm a Hinglish Article 14 answer includes a source. The script stops the server and restores the caller's API-key environment variable afterward; temporary logs are ignored and removed.
+- This gives Windows users a quick end-to-end setup check without a provider key, browser microphone, or external API call. Requires the prepared `.venv` and free port 8000.

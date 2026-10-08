@@ -23,6 +23,14 @@ On Windows, start the complete local setup with one command from the project fol
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\run-local.ps1
 ```
 
+After setup, check the offline app end to end with:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\check-local.ps1
+```
+
+The smoke check starts a temporary local server, forces offline mode without sending requests to a model provider, checks the health endpoint and tutor page, and asks a Hinglish Article 14 question to confirm a source comes back. It stops the temporary server when done. Port 8000 must be available.
+
 The launcher reuses `.venv` when its Python interpreter runs and is version 3.11 or later. If `.venv` is missing, broken, or too old, it creates a fresh environment using the selected system Python; rebuilding clears only the project `.venv` directory. A linked `.venv` is left for manual repair rather than cleared. It installs `requirements.txt`, copies `.env.example` to `.env` only when `.env` does not already exist, and starts the server. Open <http://127.0.0.1:8000>; press Ctrl+C in PowerShell to stop. Add an API key to `.env` before starting if you want model answers. Offline mode works without a key.
 
 For manual setup, create and activate the environment, then install dependencies:

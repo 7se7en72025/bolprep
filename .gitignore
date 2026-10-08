@@ -11,5 +11,6 @@ evals/local-stt-*.json
 *.m4a
 *.webm
 .codex/overnight/
+.codex/local-check/
 .codex/*.sqlite3
 .codex/*.sqlite3-*
