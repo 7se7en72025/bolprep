@@ -169,17 +169,21 @@ class BolPrepLiveTranscription {
     if (this.committedItemId && this.committedItemId !== event.item_id) return;
     this.itemId = event.item_id;
     if (event.type === "conversation.item.input_audio_transcription.delta" && typeof event.delta === "string") {
-      if (event.delta.length && this.firstPartialAt === undefined) this.firstPartialAt = performance.now();
-      this.partial += event.delta;
-      if (this.partial.length > 6000) {
+      if (this.partial.length + event.delta.length > 6000) {
         this.fail("Live transcript is too long. Please use a shorter question.", "transcript-too-long");
         return;
       }
+      if (event.delta.length && this.firstPartialAt === undefined) this.firstPartialAt = performance.now();
+      this.partial += event.delta;
       this.callbacks.partial(this.partial);
     } else if (event.type === "conversation.item.input_audio_transcription.completed" && this.state === "finalizing") {
       const text = typeof event.transcript === "string" ? event.transcript.trim() : "";
       if (!text) {
         this.fail("No speech was transcribed. Try again or type your question.", "empty-transcript");
+        return;
+      }
+      if (text.length > 6000) {
+        this.fail("Live transcript is too long. Please use a shorter question.", "transcript-too-long");
         return;
       }
       clearTimeout(this.finalTimer);

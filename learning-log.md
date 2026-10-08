@@ -1452,3 +1452,9 @@
 - Added a 6,000-UTF-16-unit joined result cap before accepting browser recognition text or new final timing samples. Overflow aborts capture, records transcript-too-long once, and preserves the earlier confirmed draft or restores the original text. Application text bounds do not cover browser recognizer buffers.
 - Bounded final text exceeding the active question/quiz limit receives an edit warning and bypasses automatic submission at natural end. Existing manual submission limits remain. Added README/manual multi-segment, Unicode, timing, draft, and late-event cases.
 - Verification: JavaScript syntax and git diff whitespace checks passed. No tests, controlled recognition runs, browser interactions, recordings, or provider calls were performed; boundaries, timing counts, draft retention, auto-submit suppression, and recovery remain unverified at runtime.
+
+## Apply the live transcript limit before final acceptance - 2026-10-08
+
+- Inspection found live final transcripts could bypass the existing partial-text cap. Added a 6,000-UTF-16-unit trimmed final limit before completion reporting/callbacks. Oversized finals use transcript-too-long failure cleanup and cannot reach continuous auto-submit.
+- Partial deltas now check combined length before concatenation or first-partial timing, avoiding retention/counting of rejected text. Limits cover application text rather than incoming transport/JSON buffers. Added README/manual final-only, boundary, delta, cleanup, and restart cases.
+- Verification: live/app JavaScript syntax, live diagnostics CLI help, and git diff whitespace checks passed. No tests, controlled events, browser interactions, recordings, or provider calls were performed; final boundaries, timing counts, draft restoration, and continuous cleanup remain unverified at runtime.
