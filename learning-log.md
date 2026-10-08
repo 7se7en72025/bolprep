@@ -1,8 +1,13 @@
 # Learning log
 
+## Keep explanation questions out of the revision tool path - 2026-10-08
+
+- The earlier revision detector treated any standalone `weak` or `kamzor` as a request to read saved progress, so questions about a weak point in a constitutional article could unexpectedly enter revision mode. English and Roman Hinglish now require a revision command phrase such as `weak topics`, `kamzor topics batao`, or `dohrao fundamental rights`; ordinary explanatory questions stay on the answer path. Existing Devanagari cues remain supported.
+- A focused local intent check confirmed the revision phrases still activate and weak-point questions about Article 14 no longer do. No API call, browser microphone, or learner audio was used.
+
 ## Recognize Roman Hinglish revision requests - 2026-10-08
 
-- The tutor now recognizes `kamzor`, `kamzori`, `dohra`, `dohrao`, and `dohraana` as revision intent in both offline command handling and the model tool gate. Previously, `kamzor topics batao` and `dohrao fundamental rights` were not recognized.
+- The tutor now recognizes Roman Hinglish revision requests such as `kamzor topics batao`, `kamzori dikhao`, `dohrao`, and `dohraana` in both offline command handling and the model tool gate. Previously, `kamzor topics batao` and `dohrao fundamental rights` were not recognized.
 - A focused local intent check now recognizes those revision phrases while keeping ordinary questions out of the tool path. No API call, browser microphone, or learner audio was used.
 
 ## Show prompt-level STT errors - 2026-10-07

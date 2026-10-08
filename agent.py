@@ -72,7 +72,10 @@ TOOLS: list[dict[str, Any]] = [
 
 QUIZ_INTENT = re.compile(r"\b(quiz|test|viva)\b|\u0915\u094d\u0935\u093f\u091c")
 REVISION_INTENT = re.compile(
-    r"\b(revis(e|ion)|weak|kamzor(?:i)?|dohra(?:o|na|ana)?|practice more|what should i study)\b|\u0915\u092e\u091c\u094b\u0930|\u0926\u094b\u0939\u0930\u093e"
+    r"\b(?:revis(?:e|ion)|practice more|what should i study|"
+    r"weak\s+(?:topics?|areas?)|where am i weak(?:\s+at)?|my weak points|"
+    r"kamzor\s+(?:topics?|areas?)|kamzori\s+(?:batao|dikhao)|"
+    r"dohra(?:o|na|ana))\b|\u0915\u092e\u091c\u094b\u0930|\u0926\u094b\u0939\u0930\u093e"
 )
 
 
