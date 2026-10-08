@@ -119,6 +119,16 @@ Use headphones first: speaker echo or background noise can trigger a false inter
 
 Quiz scores are stored in a local SQLite database at `.codex/bolprep.sqlite3`, scoped to a random, HttpOnly browser cookie. Set `BOLPREP_DATABASE_PATH` in the server environment to use a different database file; the local smoke check uses this option for an isolated temporary database. Progress survives a server restart in the same browser. The app saves scores and rubric feedback, not the learner's raw answer text. A per-answer idempotency key makes network retries safe without retaining the answer or its hash. The **Saved progress** panel shows recent weak question areas; **Clear saved progress** deletes records for that browser cookie. This is a local prototype bound to `127.0.0.1`, not a multi-user hosted service with account authentication. Keep the cookie private on shared computers; deleting site cookies creates a new, separate progress history.
 
+## Optional local demo sign-in
+
+Set `BOLPREP_ACCESS_PASSWORD` in your ignored `.env` file to a private, separate passphrase of 16-256 characters, then restart the server. Leave it empty for the existing open localhost setup. Do not use a model API key as the demo password. With the gate enabled, visiting the tutor opens a sign-in page; protected tutor, speech, transcription, quiz, and progress APIs require the access cookie. `/health`, scripts, styles, and the sign-in page are public.
+
+Passwords are checked against an in-memory salted PBKDF2 digest using a constant-time comparison. Successful login issues a random cookie with an eight-hour lifetime; the server retains token hashes in a bounded store of 128 sessions. Relogin rotates the current token, and capacity pressure expires the oldest session. **Sign out** revokes that session and stops local voice/response activity. An expired/revoked API session also stops local activity and redirects to sign-in. Restarting the server invalidates all access sessions. Login/logout and protected writes require the local browser Origin.
+
+The access cookie uses [HttpOnly and SameSite=Strict](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie). Cookies use localhost HTTP here; hosted HTTPS and Secure-cookie configuration have not been implemented. This is a shared demo password gate, not individual learner accounts or account-bound progress. Progress still belongs to the existing browser progress cookie; signing out does not delete it. The application does not save the password/token in browser storage or export them in diagnostics. Session tokens follow Python's [secrets API](https://docs.python.org/3/library/secrets.html).
+
+The default offline smoke check explicitly disables the gate in its temporary process and restores the previous environment afterward. Browser sign-in, expiry, logout, and rejection behavior remain unverified; complete those checks before relying on the gate for shared access. No hosted deployment or security audit is claimed.
+
 ## Local request limits
 
 The server applies rolling 60-second quotas shared by all local browsers. Admitted attempts count even when validation/provider work fails or an idempotent write is retried. A throttled request returns [HTTP 429](https://www.rfc-editor.org/rfc/rfc6585.html#section-4), a `Retry-After` header, and `retry_after_seconds` in JSON. Wait for that interval and retry manually; the browser does not automatically repeat paid requests.
@@ -132,6 +142,8 @@ The server applies rolling 60-second quotas shared by all local browsers. Admitt
 | `/api/quiz/start`, `/api/quiz/score` | 60 combined |
 | `GET /api/progress` | 60 |
 | `DELETE /api/progress` | 6 |
+| `/api/login` | 6 |
+| `/api/logout` | 30 |
 
 The limiter is thread-safe, uses monotonic time, and retains only bounded timestamp queues in server memory. Throttled attempts do not extend the retry interval, create a browser session, read an upload, or call a provider. The server closes their HTTP connection because the request body remains unread. Restarting the server resets quotas; changing cookies does not. Static files and `/health` remain available.
 

@@ -30,3 +30,7 @@ Only include this segment when a server-side API key is configured and usage is 
 - Run the relevant interruption, quiz, and speech cases in the [voice run sheet](evals/voice-run-sheet.md); mark unavailable cases honestly.
 - Record measured values only from the visible diagnostics or a timed run-sheet attempt. Keep acoustic first-audible timing separate from browser synthesis `onstart` timing.
 - Capture a short technical explanation of the browser STT/TTS path, optional provider paths, source-grounded offline mode, and one observed failure that led to a fix.
+
+## Optional demo access checks
+
+Before recording a password-gated demo, configure a separate private BOLPREP_ACCESS_PASSWORD in the ignored .env and restart. Do not show the file or password in the recording. In a fresh browser session, confirm the tutor redirects to sign-in and unauthenticated API requests cannot access tutor, speech, quiz, or progress data. Check a wrong password, a successful login, six-attempt login throttling, Sign out, expired/revoked access, and server restart. Confirm the browser stops mic/output before redirect and that signing out preserves browser-scoped progress without sharing it between browser progress cookies. These behaviors remain unverified; the default offline smoke check runs with login disabled. This gate is for localhost and has not been deployed or audited for hosted access.

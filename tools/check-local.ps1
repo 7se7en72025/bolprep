@@ -16,11 +16,14 @@ $progressDatabasePath = Join-Path $stateDirectory "$runId.sqlite3"
 $process = $null
 $hadOpenAiKey = Test-Path Env:OPENAI_API_KEY
 $previousOpenAiKey = $env:OPENAI_API_KEY
+$hadAccessPassword = Test-Path Env:BOLPREP_ACCESS_PASSWORD
+$previousAccessPassword = $env:BOLPREP_ACCESS_PASSWORD
 $hadProgressDatabasePath = Test-Path Env:BOLPREP_DATABASE_PATH
 $previousProgressDatabasePath = $env:BOLPREP_DATABASE_PATH
 
 try {
     $env:OPENAI_API_KEY = ''
+    $env:BOLPREP_ACCESS_PASSWORD = ''
     $env:BOLPREP_DATABASE_PATH = $progressDatabasePath
     $process = Start-Process -FilePath $pythonPath -ArgumentList (Join-Path $repoRoot 'server.py') `
         -WorkingDirectory $repoRoot -WindowStyle Hidden -PassThru `
@@ -123,6 +126,12 @@ finally {
     }
     else {
         Remove-Item Env:\OPENAI_API_KEY -ErrorAction SilentlyContinue
+    }
+    if ($hadAccessPassword) {
+        $env:BOLPREP_ACCESS_PASSWORD = $previousAccessPassword
+    }
+    else {
+        Remove-Item Env:\BOLPREP_ACCESS_PASSWORD -ErrorAction SilentlyContinue
     }
     if ($hadProgressDatabasePath) {
         $env:BOLPREP_DATABASE_PATH = $previousProgressDatabasePath

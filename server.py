@@ -20,6 +20,7 @@ from progress import ProgressConflict, clear_progress, create_quiz_run, ensure_s
 from quiz import score_answer, start_quiz
 from retrieval import load_corpus, retrieval_query, retrieve
 from request_limits import RequestLimiter
+from access import ACCESS_COOKIE, ACCESS_LIFETIME_SECONDS, AccessGate
 
 
 ROOT = Path(__file__).resolve().parent
@@ -29,6 +30,8 @@ PORT = 8000
 MAX_BODY_BYTES = 256 * 1024
 MAX_AUDIO_BYTES = 5 * 1024 * 1024
 POST_QUOTAS = {
+    "/api/login": "login",
+    "/api/logout": "logout",
     "/api/answer": "tutor",
     "/api/agent/turn": "tutor",
     "/api/speech": "speech",
@@ -41,7 +44,9 @@ POST_QUOTAS = {
 REQUEST_LIMITER = RequestLimiter({
     "tutor": 30, "speech": 60, "recorded-stt": 10, "live-session": 6,
     "quiz-write": 60, "progress-read": 60, "progress-delete": 6,
+    "login": 6, "logout": 30,
 })
+ACCESS_GATE = AccessGate(os.getenv("BOLPREP_ACCESS_PASSWORD", ""))
 MAX_ACTIVE_TUTOR_OR_SPEECH_REQUESTS = 4
 ACTIVE_TUTOR_OR_SPEECH_SLOTS = BoundedSemaphore(MAX_ACTIVE_TUTOR_OR_SPEECH_REQUESTS)
 LONG_REQUEST_QUOTAS = {"tutor", "speech", "recorded-stt", "live-session"}
@@ -75,22 +80,34 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                     "streaming_tts": model_configured,
                     "server_transcription": model_configured,
                     "live_transcription": model_configured,
+                    "access_protected": ACCESS_GATE.enabled,
                 },
                 include_session_cookie=False,
             )
             return
 
         if self.path == "/api/progress":
+            if not self._require_access():
+                return
             if not self._permit_api_request("progress-read"):
                 return
             self._ensure_browser_session()
             self._send_json(200, get_progress(self.session_id))
+            return
+        if self.path == "/" and not ACCESS_GATE.allowed(self._access_token()):
+            self._redirect("/login")
+            return
+        if self.path == "/login" and ACCESS_GATE.allowed(self._access_token()):
+            self._redirect("/")
             return
         routes = {
             "/": (WEB_ROOT / "index.html", "text/html; charset=utf-8"),
             "/app.js": (WEB_ROOT / "app.js", "text/javascript; charset=utf-8"),
             "/live-stt.js": (WEB_ROOT / "live-stt.js", "text/javascript; charset=utf-8"),
             "/styles.css": (WEB_ROOT / "styles.css", "text/css; charset=utf-8"),
+            "/login": (WEB_ROOT / "login.html", "text/html; charset=utf-8"),
+            "/login.js": (WEB_ROOT / "login.js", "text/javascript; charset=utf-8"),
+            "/access.js": (WEB_ROOT / "access.js", "text/javascript; charset=utf-8"),
         }
         route = routes.get(self.path)
         if route is None:
@@ -108,6 +125,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(payload)))
         self.send_header("X-Content-Type-Options", "nosniff")
+        self.send_header("Cache-Control", "no-store")
         if self.path == "/":
             self._send_session_cookie_if_needed()
         self._finish_response(payload)
@@ -115,6 +133,8 @@ class BolPrepHandler(BaseHTTPRequestHandler):
     def do_DELETE(self) -> None:
         if self.path != "/api/progress":
             self.send_error(404, "Not found")
+            return
+        if not self._require_access():
             return
         if not self._permit_api_request("progress-delete"):
             return
@@ -127,6 +147,8 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         quota = POST_QUOTAS.get(self.path)
         if quota is None:
             self.send_error(404, "Not found")
+            return
+        if self.path != "/api/login" and not self._require_access():
             return
         if not self._permit_api_request(quota):
             return
@@ -141,6 +163,12 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 ACTIVE_TUTOR_OR_SPEECH_SLOTS.release()
 
     def _dispatch_post(self) -> None:
+        if self.path in {"/api/login", "/api/logout"}:
+            body = self._read_json_body()
+            if body is None:
+                return
+            self._handle_access(body)
+            return
         self._ensure_browser_session()
         if self.path == "/api/transcribe":
             self._handle_transcription()
@@ -529,6 +557,60 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             return
         self._send_json(200, result)
 
+    def _access_token(self) -> str | None:
+        cookie = SimpleCookie()
+        try:
+            cookie.load(self.headers.get("Cookie", ""))
+        except Exception:
+            return None
+        morsel = cookie.get(ACCESS_COOKIE)
+        return morsel.value if morsel else None
+
+    def _require_access(self) -> bool:
+        if ACCESS_GATE.allowed(self._access_token()):
+            if ACCESS_GATE.enabled and self.command in {"POST", "DELETE"} and self.headers.get("Origin") not in {
+                "http://127.0.0.1:8000", "http://localhost:8000"
+            }:
+                self.close_connection = True
+                self._send_json(403, {"error": "Use the local tutor page.", "code": "unexpected-origin"},
+                                include_session_cookie=False)
+                return False
+            return True
+        self.close_connection = True
+        self._send_json(401, {"error": "Sign in to continue.", "code": "login-required"}, include_session_cookie=False)
+        return False
+
+    def _redirect(self, location: str) -> None:
+        self.send_response(302)
+        self.send_header("Location", location)
+        self.send_header("Content-Length", "0")
+        self.send_header("Cache-Control", "no-store")
+        self._finish_response(b"")
+
+    def _handle_access(self, body: dict[str, Any]) -> None:
+        if self.headers.get("Origin") not in {"http://127.0.0.1:8000", "http://localhost:8000"}:
+            self._send_json(403, {"error": "Use the local sign-in page."}, include_session_cookie=False)
+            return
+        token = self._access_token()
+        if self.path == "/api/logout":
+            ACCESS_GATE.logout(token)
+            self._send_json(200, {"ok": True}, include_session_cookie=False,
+                            access_cookie=f"{ACCESS_COOKIE}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0")
+            return
+        password = body.get("password")
+        if not isinstance(password, str) or not 1 <= len(password) <= 256:
+            self._send_json(400, {"error": "Enter your demo password."}, include_session_cookie=False)
+            return
+        if not ACCESS_GATE.enabled:
+            self._send_json(200, {"ok": True}, include_session_cookie=False)
+            return
+        new_token = ACCESS_GATE.login(password, token)
+        if new_token is None:
+            self._send_json(401, {"error": "That password was not accepted."}, include_session_cookie=False)
+            return
+        self._send_json(200, {"ok": True}, include_session_cookie=False,
+                        access_cookie=f"{ACCESS_COOKIE}={new_token}; HttpOnly; SameSite=Strict; Path=/; Max-Age={ACCESS_LIFETIME_SECONDS}")
+
     def _ensure_browser_session(self) -> None:
         cookie = SimpleCookie()
         try:
@@ -577,6 +659,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
     def _send_json(
         self, status: int, payload: dict[str, Any], include_session_cookie: bool = True,
         retry_after_seconds: int | None = None,
+        access_cookie: str | None = None,
     ) -> None:
         encoded = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
@@ -586,7 +669,10 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         self.send_header("X-Content-Type-Options", "nosniff")
         if retry_after_seconds is not None:
             self.send_header("Retry-After", str(retry_after_seconds))
+        if self.close_connection:
             self.send_header("Connection", "close")
+        if access_cookie is not None:
+            self.send_header("Set-Cookie", access_cookie)
         if include_session_cookie:
             self._send_session_cookie_if_needed()
         self._finish_response(encoded)

@@ -1,4 +1,6 @@
 const form = document.querySelector("#question-form");
+const apiFetch = window.BolPrepFetch;
+const logoutButton = document.querySelector("#logout-button");
 const input = document.querySelector("#question-input");
 const conversation = document.querySelector("#conversation");
 const statusLine = document.querySelector("#status");
@@ -372,7 +374,7 @@ async function transcribeRecordedAudio(audio, language) {
     controller.abort();
   }, 90_000);
   try {
-    const response = await fetch("/api/transcribe", {
+    const response = await apiFetch("/api/transcribe", {
       method: "POST",
       headers: {
         "Content-Type": audio.type.split(";", 1)[0] || "audio/webm",
@@ -940,7 +942,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn) {
   };
   resetIdleDeadline();
   try {
-    const response = await fetch("/api/speech", {
+    const response = await apiFetch("/api/speech", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, language: speechLanguage.value, voice }),
@@ -1280,7 +1282,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
   addMessage("user", question);
 
   try {
-    const response = await fetch("/api/agent/turn", {
+    const response = await apiFetch("/api/agent/turn", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question, history: history.slice(-20), language: requestLanguage }),
@@ -1390,7 +1392,7 @@ async function startQuiz() {
   nextQuestionButton.hidden = true;
   statusLine.textContent = "Preparing a three-question Fundamental Rights quiz…";
   try {
-    const response = await fetch("/api/quiz/start", {
+    const response = await apiFetch("/api/quiz/start", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ topic: "fundamental rights", question_count: 3, language: speechLanguage.value }),
@@ -1463,7 +1465,7 @@ async function submitQuizAnswer(answer, { preserveLive = false } = {}) {
   statusLine.textContent = "Checking your answer against the rubric…";
   addMessage("user", answer);
   try {
-    const response = await fetch("/api/quiz/score", {
+    const response = await apiFetch("/api/quiz/score", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ quiz_id: quizSession.quizId, question_id: current.id, idempotency_key: current.idempotencyKey, answer, language: speechLanguage.value }),
@@ -1604,7 +1606,7 @@ async function loadProgress() {
   weakTopics.replaceChildren();
   progressSummary.textContent = "Loading saved results…";
   try {
-    const response = await fetch("/api/progress");
+    const response = await apiFetch("/api/progress");
     if (requestId !== progressRequestId) return;
     const progress = await response.json();
     if (requestId !== progressRequestId) return;
@@ -1640,7 +1642,7 @@ clearProgressButton.addEventListener("click", async () => {
   progressRefreshButton.disabled = true;
   clearProgressButton.disabled = true;
   try {
-    const response = await fetch("/api/progress", { method: "DELETE" });
+    const response = await apiFetch("/api/progress", { method: "DELETE" });
     if (!response.ok) throw new Error("Could not clear saved results.");
     await loadProgress();
     statusLine.textContent = "Saved quiz progress cleared.";
@@ -1935,7 +1937,8 @@ serverTranscribeButton.addEventListener("click", () => {
   void startServerRecording();
 });
 
-fetch("/health").then((response) => response.json()).then((health) => {
+apiFetch("/health").then((response) => response.json()).then((health) => {
+  logoutButton.hidden = !health.access_protected;
   const mode = health.mode === "model" ? "Model answers enabled" : "Offline practice mode";
   modelModeAvailable = health.mode === "model";
   modelName = typeof health.model_name === "string" && health.model_name ? health.model_name : "unknown";
@@ -1960,5 +1963,28 @@ fetch("/health").then((response) => response.json()).then((health) => {
   }
 }).catch(() => {
   modeLabel.textContent = "Start the local server to connect";
+});
+window.addEventListener("bolprep-access-expired", () => stopTutor());
+logoutButton.addEventListener("click", async () => {
+  stopTutor();
+  logoutButton.disabled = true;
+  const controller = new AbortController();
+  const deadline = setTimeout(() => controller.abort(), 15000);
+  try {
+    const response = await apiFetch("/api/logout", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: "{}",
+      signal: controller.signal,
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || "Could not sign out. Try again.");
+    window.location.replace("/login");
+  } catch (error) {
+    statusLine.textContent = error.name === "AbortError"
+      ? "Sign out timed out. Try again or reload."
+      : error.message || "Could not sign out. Try again.";
+  } finally {
+    clearTimeout(deadline);
+    logoutButton.disabled = false;
+  }
 });
 loadProgress();

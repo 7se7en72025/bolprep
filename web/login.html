@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BolPrep — Sign in</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell login-shell">
+      <header class="topbar"><a class="brand" href="/"><span class="brand-mark">ब</span> BolPrep</a></header>
+      <section class="intro" aria-labelledby="login-title">
+        <p class="eyebrow">YOUR STUDY SPACE</p>
+        <h1 id="login-title">Sign in to study.</h1>
+        <p class="lede">Enter the demo password provided by the person running this tutor.</p>
+      </section>
+      <section class="tutor-card" aria-label="Demo sign in">
+        <form id="login-form" class="composer">
+          <label for="login-password">Demo password</label>
+          <input id="login-password" class="login-password" type="password" minlength="16" maxlength="256" autocomplete="current-password" required autofocus>
+          <div class="composer-actions"><button id="login-button" class="send-button" type="submit">Sign in</button></div>
+        </form>
+        <p id="login-status" class="status" role="status">Your study progress stays in this browser.</p>
+      </section>
+    </main>
+    <script src="/login.js" defer></script>
+  </body>
+</html>

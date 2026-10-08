@@ -341,7 +341,7 @@ class BolPrepLiveTranscription {
         this.beginListening();
       });
       stage = "session";
-      const tokenResponse = await fetch("/api/transcription/session", {
+      const tokenResponse = await window.BolPrepFetch("/api/transcription/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ language }),
