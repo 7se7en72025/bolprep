@@ -2123,23 +2123,34 @@ micButton.addEventListener("click", () => {
     if (run !== recognitionRun || !recognitionListening) return;
     const transcriptParts = [];
     const finalParts = [];
+    let transcriptCharacters = 0;
     for (let i = 0; i < event.results.length; i += 1) {
       const part = event.results[i][0].transcript.trim();
+      transcriptCharacters += part.length + (part && transcriptParts.length ? 1 : 0);
+      if (transcriptCharacters > 6000) {
+        stopRecognition(true);
+        recognitionFailures.push({ language: capture.lang, reason: "transcript-too-long" });
+        if (recognitionFailures.length > 500) recognitionFailures.shift();
+        statusLine.textContent = "Voice input exceeded the 6,000-character review limit. Earlier confirmed words or your previous draft were kept. Record a shorter question or type instead.";
+        return;
+      }
       if (part) transcriptParts.push(part);
       if (event.results[i].isFinal && part) finalParts.push(part);
-      if (event.results[i].isFinal && event.results[i][0].transcript.trim()
-        && !recognitionHadFinalResult && recognitionStartedAt !== null) {
-        recognitionHadFinalResult = true;
-        const elapsedMs = performance.now() - recognitionStartedAt;
-        recognitionSamples.push({ language: capture.lang, firstFinalMs: elapsedMs });
-        if (recognitionSamples.length > 500) recognitionSamples.shift();
-        const elapsed = (elapsedMs / 1000).toFixed(2);
-        statusLine.textContent = `Final transcript received in ${elapsed}s. Review it, then ask. `
-          + recognitionTimingSummary(capture.lang);
-      }
+    }
+    if (finalParts.length && !recognitionHadFinalResult && recognitionStartedAt !== null) {
+      recognitionHadFinalResult = true;
+      const elapsedMs = performance.now() - recognitionStartedAt;
+      recognitionSamples.push({ language: capture.lang, firstFinalMs: elapsedMs });
+      if (recognitionSamples.length > 500) recognitionSamples.shift();
+      const elapsed = (elapsedMs / 1000).toFixed(2);
+      statusLine.textContent = `Final transcript received in ${elapsed}s. Review it, then ask. `
+        + recognitionTimingSummary(capture.lang);
     }
     if (finalParts.length) finalTranscript = finalParts.join(" ");
     input.value = finalTranscript || transcriptParts.join(" ");
+    if (finalTranscript.length > input.maxLength) {
+      statusLine.textContent = `Final transcript received. Shorten it to ${input.maxLength} characters before sending.`;
+    }
   };
   capture.onerror = (event) => {
     if (run !== recognitionRun || !recognitionListening) return;
@@ -2164,6 +2175,8 @@ micButton.addEventListener("click", () => {
       recognitionFailures.push({ language, reason: "no-final-transcript" });
       if (recognitionFailures.length > 500) recognitionFailures.shift();
       statusLine.textContent = `No final transcript was received; partial words were discarded. Try again or type. ${recognitionTimingSummary(language)}`;
+    } else if (wasListening && recognitionHadFinalResult && input.value.length > input.maxLength) {
+      statusLine.textContent = `Final transcript received. Shorten it to ${input.maxLength} characters before sending.`;
     } else if (wasListening && recognitionHadFinalResult && autoSubmitSpeech.checked && input.value.trim()) {
       statusLine.textContent = "Final transcript received. Sending it to the tutor.";
       const automaticVoiceInput = { language: capture.lang, recognitionEndedAt: performance.now() };

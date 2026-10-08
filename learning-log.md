@@ -1446,3 +1446,9 @@
 - Added a 45-second browser-recognition startup deadline and 60-second listening limit. Timeout uses existing abort/draft restoration, releases Speak, records one phase-specific failure, and blocks late completion auto-submit. Confirmed final words remain for review; interim-only words restore the previous draft.
 - Stop, errors, normal end, synchronous startup failure, edit/lifecycle cleanup, and new attempts clear the timer. Run guards prevent old timers from affecting a newer capture. Final-transcript timing samples and later session timeout failures remain distinct; timer suspension and upstream cancellation are limitations.
 - Updated README/manual deadline, draft, late-event, and restart cases. Verification: JavaScript syntax and git diff whitespace checks passed. No tests, controlled recognition runs, browser interactions, recordings, or provider calls were run; deadline timing, duplicate suppression, stale events, and restart behavior remain unverified at runtime.
+
+## Bound browser-recognition transcript review - 2026-10-08
+
+- Added a 6,000-UTF-16-unit joined result cap before accepting browser recognition text or new final timing samples. Overflow aborts capture, records transcript-too-long once, and preserves the earlier confirmed draft or restores the original text. Application text bounds do not cover browser recognizer buffers.
+- Bounded final text exceeding the active question/quiz limit receives an edit warning and bypasses automatic submission at natural end. Existing manual submission limits remain. Added README/manual multi-segment, Unicode, timing, draft, and late-event cases.
+- Verification: JavaScript syntax and git diff whitespace checks passed. No tests, controlled recognition runs, browser interactions, recordings, or provider calls were performed; boundaries, timing counts, draft retention, auto-submit suppression, and recovery remain unverified at runtime.
