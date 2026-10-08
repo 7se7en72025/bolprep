@@ -1392,3 +1392,9 @@
 - Common Hindi/English/Hinglish names, including Devanagari variants, and translation/bolo terms now count as generic clarification words. They no longer independently force an article support check or become a substantive prior topic. Substantive words in the same request still participate in evidence matching.
 - Documented the distinction between retrieval context, model answer language, and speech controls, plus manual language-switch and minority-language-topic cases. This remains a bounded lexical vocabulary; unlisted spellings and ambiguous requests may need clarification.
 - Verification: retrieval/agent/server Python compilation and git diff whitespace checks passed. No tests, evaluation dataset runs, or provider calls were performed. Real multilingual follow-ups, unrelated-question abstention, and model language behavior remain unverified.
+
+## Summarize saved speech-stop metadata locally - 2026-10-08
+
+- Added a schema 11/12 command-line report for existing speech_stops exports. It validates metadata, caps input size/count, deduplicates identical projected records, and groups by reason/pre-stop state for nearest-rank dispatch p50/p95 and separate source-stop exception counts. Raw records, paths, timestamps, and turn counters are omitted from output.
+- Documented event-ID absence, collisions/changed snapshots, retained-record bounds, self-reported inputs, and the distinction between local dispatch and audible interruption. Updated README and manual checks without adding acoustic claims.
+- Verification: JavaScript syntax, CLI help, and git diff whitespace checks passed. No tests, sample aggregation, browser exports, recordings, or provider calls were run; report aggregation/error behavior and real-device interruption remain unverified.

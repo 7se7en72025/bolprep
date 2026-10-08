@@ -242,6 +242,8 @@ Repeat with a long Unicode answer: history must stay within 3,000 code points pe
 
 ### Speech-stop diagnostics checks (not yet performed)
 
+Run `node evals/summarize_speech_stops.js evals/local-live-session.json` on your saved schema 11/12 export. Inspect separate reason/state groups, sample counts, command-dispatch percentiles, and exception totals. Repeated overlapping exports should remove identical selected metadata; document possible collisions because stops lack event IDs. Try empty stop arrays and malformed metadata separately. Keep acoustic observations and stale-playback outcomes in the run sheet, outside this command-dispatch report.
+
 During browser speech and streamed PCM playback, try Stop, Escape, a typed follow-up, and continuous-mic detected speech. Export schema 11 diagnostics and match each active/pending stop to its speech_stops reason and pre-stop state. Repeat while idle: no new stop sample should appear. Check queued segments and provider-request startup separately from playing audio. More than 500 samples should retain only the newest records.
 
 Observe whether sound actually stops and whether late playback resumes; record these outcomes separately. stop_dispatch_ms measures local command execution and excludes detection, audio hardware/buffering, and provider cleanup. source_stop_exceptions may include already-ended sources. Neither a small dispatch duration nor zero exceptions proves a successful acoustic interruption.
