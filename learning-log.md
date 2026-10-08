@@ -1221,3 +1221,9 @@
 - The browser's schema 6 export retains up to 500 completed, failed, or canceled turn traces with client duration. Usage is explicitly unavailable, and early disconnects can lack server metadata. Traces stay in page memory and exclude learner text, audio, and session cookies.
 - The offline smoke check now verifies that a revision turn's trace ID matches its response header and reports its executed `get_weak_topics` outcome. Browser interactions and live-model tracing remain unverified.
 - Verification: Python compilation, JavaScript syntax, diff checks, and the extended isolated offline smoke command passed. Temporary failure probes verified matching header/event/log request IDs, no question text in trace metadata, and propagation of error traces through the actual client parser. The smoke reader explicitly decodes byte-array NDJSON responses as UTF-8 for Windows PowerShell.
+
+## Report provider token usage for completed tutor turns - 2026-10-08
+
+- The model loop now collects provider-reported input, output, and total token counts from each completed response, including tool rounds. A turn reports aggregate usage only when every response has valid nonnegative integer counts; missing or invalid data remains null, with response counts showing coverage. Server traces and the browser export preserve these counts.
+- Counts follow the [official Responses API usage schema](https://developers.openai.com/api/reference/resources/responses/methods/retrieve). They exclude speech usage, failed requests, and unreported retries. Monetary cost and live-provider behavior remain unverified.
+- Verification: Python compilation, JavaScript syntax, diff checks, and the isolated offline smoke command passed. A temporary actual-loop probe with mocked responses confirmed tool-round aggregation, streamed completion usage, and unavailable totals for missing, negative, boolean, or string counts. No model API was called.

@@ -204,7 +204,9 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 "source_count": len(result.get("sources", [])),
                 "tool_outcomes": [{"name": event["name"], "ok": event.get("ok") is True}
                                   for event in result.get("tool_events", [])],
-                "usage": None,
+                "usage": result.get("usage"),
+                "model_response_count": result.get("model_response_count", 0 if mode == "offline" else None),
+                "usage_response_count": result.get("usage_response_count", 0 if mode == "offline" else None),
             }
 
         self.send_response(200)

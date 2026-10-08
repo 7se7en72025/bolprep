@@ -132,6 +132,7 @@ def run_agent_turn(
         *history,
         {"role": "user", "content": f"{question.strip()}\n\nChecked study notes:\n{evidence}"},
     ]
+    response_usages: list[dict[str, int] | None] = []
     def create_response() -> Any:
         request = {
             "model": os.getenv("OPENAI_MODEL", "gpt-6-astra"),
@@ -142,8 +143,11 @@ def run_agent_turn(
             request["tools"] = TOOLS
             request["parallel_tool_calls"] = False
         if on_text_delta is None:
-            return responses_client.create(**request)
-        return _stream_response(responses_client, request, on_text_delta)
+            response = responses_client.create(**request)
+        else:
+            response = _stream_response(responses_client, request, on_text_delta)
+        response_usages.append(_reported_token_usage(response))
+        return response
 
     response = create_response()
     tool_events: list[dict[str, Any]] = []
@@ -184,7 +188,27 @@ def run_agent_turn(
     if not answer:
         raise RuntimeError("The model returned an empty response. Please try again.")
     sources = [_source(document) for document in documents]
-    return {"answer": answer, "sources": sources, "tool_events": tool_events, "mode": "model"}
+    reported_usages = [item for item in response_usages if item is not None]
+    usage = None
+    if len(reported_usages) == len(response_usages):
+        usage = {key: sum(item[key] for item in reported_usages)
+                 for key in ("input_tokens", "output_tokens", "total_tokens")}
+        usage["response_count"] = len(response_usages)
+    return {
+        "answer": answer, "sources": sources, "tool_events": tool_events, "mode": "model",
+        "usage": usage, "model_response_count": len(response_usages),
+        "usage_response_count": len(reported_usages),
+    }
+
+
+def _reported_token_usage(response: Any) -> dict[str, int] | None:
+    """Keep provider-reported token counts only; missing or invalid counts stay unavailable."""
+    usage = _field(response, "usage")
+    values = {key: _field(usage, key) for key in ("input_tokens", "output_tokens", "total_tokens")}
+    if not all(isinstance(value, int) and not isinstance(value, bool) and value >= 0
+               for value in values.values()):
+        return None
+    return values
 
 
 def _stream_response(client: Any, request: dict[str, Any], on_text_delta: Callable[[str], None]) -> Any:

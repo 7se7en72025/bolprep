@@ -1167,7 +1167,14 @@ async function sendQuestion(question) {
       configured_model: trace?.configured_model ?? null,
       source_count: trace?.source_count ?? null,
       tool_outcomes: (trace?.tool_outcomes || []).map(({ name, ok }) => ({ name, ok: ok === true })),
-      usage: null,
+      usage: trace?.usage ? {
+        input_tokens: trace.usage.input_tokens,
+        output_tokens: trace.usage.output_tokens,
+        total_tokens: trace.usage.total_tokens,
+        response_count: trace.usage.response_count,
+      } : null,
+      model_response_count: trace?.model_response_count ?? null,
+      usage_response_count: trace?.usage_response_count ?? null,
     });
     if (tutorTurnTraces.length > 500) tutorTurnTraces.shift();
   };
