@@ -1991,3 +1991,9 @@
 - Added BOLPREP_OFFLINE=1 and shared --offline CLI handling for server/terminal, plus -Offline launcher forwarding. The process override disables configured provider capability/route checks, direct ask_model, and injected-client agent model execution without changing .env credentials or access-gate settings.
 - Updated startup feedback, setup instructions, and demo command. Dependency installation and browser speech network behavior are explicitly separate from provider-route disabling; prior sessions in other processes are not revoked.
 - Verification: Python compilation, both CLI help commands, PowerShell parser check, and git diff whitespace checks with static guard/call inspection. No tests, installations, server launches, model/tool/provider calls, browser/device checks, or demo recording.
+
+## Stop pending speech when playback settings change - 2026-10-08
+
+- Added a shared active-output predicate including the browser start/playback deadline. Installed voice changes now stop active/pending output before saving preferences; speech-backend changes also cancel ordinary browser playback rather than only progressive/provider output.
+- Language, provider-voice, and rate controls use the same predicate, retaining existing speech identities, queue/controller/deadline cleanup, and next-playback semantics. Static inspection confirmed progressive browser speech already captures its selected voice, language, and rate.
+- Verification: Node syntax check and git diff whitespace checks with static event/ownership inspection. No tests, audio, browser/race checks, provider calls, or measured acoustic/cancellation claims.

@@ -928,6 +928,11 @@ function markSpeechIncomplete(entry = activeSpeechHistoryEntry) {
   }
 }
 
+function hasActiveSpeechOutput() {
+  return Boolean(activeProgressiveSpeech || activeSpeechController || scheduledSpeechSources.size
+    || activeBrowserSpeechDeadline || window.speechSynthesis?.speaking || window.speechSynthesis?.pending);
+}
+
 function stopSpeechOutput(reason = "other-control") {
   const startedAt = performance.now();
   const snapshot = {
@@ -2643,8 +2648,7 @@ clearProgressButton.addEventListener("click", async () => {
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 speechLanguage.addEventListener("change", () => {
   refreshSpeechVoices();
-  const speechSynthesis = window.speechSynthesis;
-  if (activeProgressiveSpeech || activeSpeechController || scheduledSpeechSources.size || speechSynthesis?.speaking || speechSynthesis?.pending) {
+  if (hasActiveSpeechOutput()) {
     stopSpeechOutput();
     statusLine.textContent = "Speech language changed. Current playback stopped; the new language applies next time.";
   }
@@ -2653,7 +2657,10 @@ speechLanguage.addEventListener("change", () => {
   }
 });
 streamedTtsOption.addEventListener("change", () => {
-  if (activeProgressiveSpeech || activeSpeechController || scheduledSpeechSources.size) stopSpeechOutput();
+  if (hasActiveSpeechOutput()) {
+    stopSpeechOutput();
+    statusLine.textContent = "Speech playback mode changed. Current playback stopped; the new mode applies next time.";
+  }
   if (streamedTtsOption.checked && !prepareStreamingAudio()) {
     streamedTtsOption.checked = false;
     statusLine.textContent = "This browser cannot play streamed audio. Use the installed browser voice instead.";
@@ -2662,17 +2669,22 @@ streamedTtsOption.addEventListener("change", () => {
   streamedTtsVoice.disabled = !streamingTtsAvailable || !streamedTtsOption.checked;
 });
 streamedTtsVoice.addEventListener("change", () => {
-  if (activeProgressiveSpeech || activeSpeechController || scheduledSpeechSources.size) {
+  if (hasActiveSpeechOutput()) {
     stopSpeechOutput();
     statusLine.textContent = "Streamed voice changed. The new voice applies to the next playback.";
   }
   saveSpeechPreferences();
 });
 speechLanguage.addEventListener("change", saveSpeechPreferences);
-speechVoice.addEventListener("change", saveSpeechPreferences);
+speechVoice.addEventListener("change", () => {
+  if (hasActiveSpeechOutput()) {
+    stopSpeechOutput();
+    statusLine.textContent = "Browser voice changed. Current playback stopped; the new voice applies next time.";
+  }
+  saveSpeechPreferences();
+});
 speechRateControl.addEventListener("change", () => {
-  const speechSynthesis = window.speechSynthesis;
-  if (activeProgressiveSpeech || speechSynthesis?.speaking || speechSynthesis?.pending) {
+  if (hasActiveSpeechOutput()) {
     stopSpeechOutput();
     statusLine.textContent = "Browser speech rate changed. Current playback stopped; the new rate applies next time.";
   }
