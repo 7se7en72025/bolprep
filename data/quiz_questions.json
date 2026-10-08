@@ -15,8 +15,10 @@
           "samanata",
           "samanta",
           "barabari",
+          "barabari before law",
           "समानता",
-          "बराबरी"
+          "बराबरी",
+          "कानून के सामने बराबरी"
         ],
         "label_hinglish": "barabari kanoon ke saamne"
       },
@@ -26,9 +28,7 @@
         "aliases": [
           "equal protection",
           "equal protection of the laws",
-          "barabari before law",
-          "कानूनों का समान संरक्षण",
-          "कानून के सामने बराबरी"
+          "कानूनों का समान संरक्षण"
         ],
         "label_hinglish": "kanoon ka barabar sanrakshan"
       }

@@ -15,6 +15,26 @@ MAX_QUESTIONS = 3
 MAX_ANSWER_LENGTH = 1000
 
 
+def _concept_aliases(concept: dict[str, Any]) -> list[str]:
+    """Feedback labels should also be recognized when a learner uses that wording."""
+    return list(dict.fromkeys([
+        *concept["aliases"],
+        *(concept[key] for key in ("label", "label_hi", "label_hinglish") if key in concept),
+    ]))
+
+
+def _validate_concept_aliases(concepts: list[dict[str, Any]]) -> None:
+    previous: list[list[str]] = []
+    for concept in concepts:
+        current = [_answer_tokens(alias) for alias in _concept_aliases(concept)]
+        if any(not tokens for tokens in current):
+            raise ValueError("Quiz concept phrases must contain words.")
+        for tokens in current:
+            if any(_contains_tokens(tokens, other) or _contains_tokens(other, tokens) for other in previous):
+                raise ValueError("Quiz phrases overlap between distinct concepts; use separate concept wording.")
+        previous.extend(current)
+
+
 def _load_questions() -> list[dict[str, Any]]:
     questions = json.loads(QUESTION_BANK.read_text(encoding="utf-8"))
     if not isinstance(questions, list) or not questions:
@@ -57,6 +77,7 @@ def _load_questions() -> list[dict[str, Any]]:
         ):
             raise ValueError(f"Quiz question {question['id']} has an invalid rubric.")
         minimum = question["minimum_concepts"]
+        _validate_concept_aliases(concepts)
         if not isinstance(minimum, int) or isinstance(minimum, bool) or not 1 <= minimum <= len(concepts):
             raise ValueError(f"Quiz question {question['id']} has an invalid minimum score.")
         source = question["source"]
@@ -118,13 +139,16 @@ def _answer_tokens(answer: str) -> list[str]:
     return tokens
 
 
-def _contains_phrase(answer_tokens: list[str], phrase: str) -> bool:
-    phrase_tokens = _answer_tokens(phrase)
+def _contains_tokens(answer_tokens: list[str], phrase_tokens: list[str]) -> bool:
     width = len(phrase_tokens)
     return bool(width) and any(
         answer_tokens[index : index + width] == phrase_tokens
         for index in range(len(answer_tokens) - width + 1)
     )
+
+
+def _contains_phrase(answer_tokens: list[str], phrase: str) -> bool:
+    return _contains_tokens(answer_tokens, _answer_tokens(phrase))
 
 
 def score_answer(question_id: str, answer: str, language: str = "en-IN") -> dict[str, Any]:
@@ -151,7 +175,7 @@ def score_answer(question_id: str, answer: str, language: str = "en-IN") -> dict
             label = concept.get("label_hinglish", concept["label"])
         else:
             label = concept["label"]
-        if any(_contains_phrase(answer_tokens, alias) for alias in concept["aliases"]):
+        if any(_contains_phrase(answer_tokens, alias) for alias in _concept_aliases(concept)):
             matched.append(label)
         else:
             missing.append(label)

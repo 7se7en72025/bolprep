@@ -2,6 +2,10 @@
 
 Use this procedure to compare actual scoring results with independent human review of the same self-authored answers. The current quiz is a lexical matcher. Mentioning an alias can earn credit even in a negated, contradictory, quoted, or incomplete answer; equivalent paraphrases can lose credit. This review does not assume the matcher understands meaning.
 
+## Matcher phrase rules
+
+The scorer recognizes aliases plus the bank's existing English, Hindi, and Hinglish concept labels. After the scorer's NFC/case/punctuation token normalization, a phrase from one concept must not contain or be contained by a phrase from another concept in the same question. Bank loading rejects those collisions and wordless phrases. This is an authoring constraint: use separate phrases to identify each concept rather than a composite alias naming multiple concepts. A learner answer can still include both separate phrases. Article 14 equality-before-law aliases are now assigned only to that concept; equal-protection wording is separate. The change does not interpret negation, contradictions, quotation, or meaning. Previously stored scores remain unchanged. Keep historical reviews with their original bank hash and scorer checkout.
+
 ## Collect observations
 
 1. Freeze the question bank and scoring configuration. Record its raw-file SHA-256, commit, environment, and scorer settings in private collection notes. The report checks the current bank hash; line-ending changes also change it. Keep an archived matching checkout for older reviews.
