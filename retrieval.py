@@ -13,8 +13,13 @@ from typing import Any
 
 CORPUS_PATH = Path(__file__).resolve().parent / "data" / "fundamental_rights.json"
 ARTICLE_REFERENCE_PATTERN = re.compile(
-    r"(?:\b(?:article|art|anuchhed)\s*[-.]?\s*(?P<article_id>\d+[a-z]?)\b|"
+    r"(?:\b(?:articles?|arts?|anuchhed)\s*[-.]?\s*(?P<article_id>\d+[a-z]?)\b|"
     r"\u0905\u0928\u0941\u091a\u094d\u091b\u0947\u0926\s*[-.]?\s*(?P<hindi_id>\d+[a-z]?)\b)",
+    re.IGNORECASE,
+)
+ARTICLE_LIST_CONTINUATION_PATTERN = re.compile(
+    r"\s*(?:,\s*(?:(?:and|aur|\u0914\u0930)\s+)?|&\s*|"
+    r"(?:and|aur|\u0914\u0930|vs\.?|versus)\s+)(?P<article_id>\d+[a-z]?)\b",
     re.IGNORECASE,
 )
 HINDI_STOPWORDS = {
@@ -62,6 +67,21 @@ def _tokens(text: str) -> set[str]:
     return {token for token in tokens if token not in STOPWORDS and len(token) > 1}
 
 
+def _article_references(question: str) -> list[tuple[str, list[str]]]:
+    """Keep an explicit prefix and any immediately connected numeric list."""
+    references: list[tuple[str, list[str]]] = []
+    for reference in ARTICLE_REFERENCE_PATTERN.finditer(question):
+        article_ids = [reference.group("article_id") or reference.group("hindi_id")]
+        end = reference.end()
+        continuation = ARTICLE_LIST_CONTINUATION_PATTERN.match(question, end)
+        while continuation:
+            article_ids.append(continuation.group("article_id"))
+            end = continuation.end()
+            continuation = ARTICLE_LIST_CONTINUATION_PATTERN.match(question, end)
+        references.append((question[reference.start():end], article_ids))
+    return references
+
+
 def retrieval_query(question: str, prior_questions: list[str]) -> str:
     """Prefer current evidence, then the most recent substantive user topic."""
     current_question = question.strip()
@@ -72,9 +92,9 @@ def retrieval_query(question: str, prior_questions: list[str]) -> str:
     if _tokens(current_question) - GENERIC_ARTICLE_QUERY_TOKENS and retrieve(current_question):
         return current_question
     for previous in reversed(prior_questions[-4:]):
-        references = list(ARTICLE_REFERENCE_PATTERN.finditer(previous))
+        references = _article_references(previous)
         if references:
-            return " ".join([*(reference.group(0) for reference in references), current_question])
+            return " ".join([*(text for text, _ in references), current_question])
         if _tokens(previous) - GENERIC_ARTICLE_QUERY_TOKENS:
             return f"{previous} {current_question}"
     return current_question
@@ -161,16 +181,16 @@ def retrieve(question: str, limit: int | None = None, *, scoring: str = "overlap
         and not token.isdigit()
     }
     normalized_question = question.casefold()
-    article_references = list(ARTICLE_REFERENCE_PATTERN.finditer(question))
+    article_references = _article_references(question)
     documents = load_corpus()
     if article_references:
         # References identify notes; their number/suffix tokens are not topic evidence.
-        for reference in article_references:
-            informative_tokens -= _tokens(reference.group(0))
+        for reference_text, _ in article_references:
+            informative_tokens -= _tokens(reference_text)
         by_id = {document["id"]: document for document in documents}
         selected: dict[str, dict[str, Any]] = {}
-        for reference in article_references:
-            raw_id = (reference.group("article_id") or reference.group("hindi_id")).casefold()
+        for raw_id in (article_id for _, article_ids in article_references for article_id in article_ids):
+            raw_id = raw_id.casefold()
             article_id = "".join(
                 str(unicodedata.decimal(character)) if character.isdecimal() else character
                 for character in raw_id
