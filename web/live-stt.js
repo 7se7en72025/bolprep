@@ -8,6 +8,7 @@ class BolPrepLiveTranscription {
     this.quietPauseMs = [3000, 5000, 8000].includes(quietPauseMs) ? quietPauseMs : 3000;
     this.completedItems = new Set();
     this.turnNumber = 1;
+    this.attemptId = window.crypto?.randomUUID?.() ?? null;
     this.controller = new AbortController();
     this.timers = new Set();
     this.closed = false;
@@ -53,6 +54,7 @@ class BolPrepLiveTranscription {
     const duration = (start, end) => Number.isFinite(start) && Number.isFinite(end)
       ? Number(Math.max(0, end - start).toFixed(2)) : null;
     this.callbacks.metrics?.({
+      attempt_id: this.attemptId,
       started_at_utc: this.startedAtUtc ?? null,
       language: this.language ?? null,
       model: "gpt-live-transcribe",
@@ -77,6 +79,7 @@ class BolPrepLiveTranscription {
   resetTurn(reused = false) {
     if (reused) {
       this.turnNumber += 1;
+      this.attemptId = window.crypto?.randomUUID?.() ?? null;
       this.startedAt = performance.now();
       this.startedAtUtc = new Date().toISOString();
     }

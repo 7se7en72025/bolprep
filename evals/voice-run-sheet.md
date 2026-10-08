@@ -167,7 +167,7 @@ This is a manual interaction check, not provider cancellation proof. The local c
 
 ## Experimental live microphone checks
 
-With a configured key and a WebRTC-capable browser, try a short Hindi, English, and Hinglish question with **Live mic**. Observe partial text, tap **Done**, review the final transcript, and send it. Repeat with a spoken quiz answer. Record failures and actual transcripts in your ignored local evaluation input; download schema 8 diagnostics to keep live STT timings and outcomes alongside your private transcript labels.
+With a configured key and a WebRTC-capable browser, try a short Hindi, English, and Hinglish question with **Live mic**. Observe partial text, tap **Done**, review the final transcript, and send it. Repeat with a spoken quiz answer. Record failures and actual transcripts in your ignored local evaluation input; download current diagnostics to keep live STT timings and outcomes alongside your private transcript labels.
 
 - Try submitting while listening or finalizing: submission should wait for a final transcript.
 - Cancel with Escape, Stop, Cancel, a language change, or New session: the microphone indicator should turn off and late events must not replace the restored draft.
@@ -215,8 +215,14 @@ Repeat the same self-authored utterance with 3-, 5-, and 8-second settings, firs
 
 - The pause selector should be unavailable during connecting/listening/finalizing/clearing, then re-enable at session end. Reused conversation turns should retain the connection?s selected duration.
 - Manual Done and Stop should work at each setting. Standard mode should retain the final transcript for review; Conversation mode should auto-submit once.
-- Export schema 9 diagnostics: each attempt should carry quiet_pause_ms, and summaries should separate settings with the correct configuration.quiet_pause_s. Do not combine their timing distributions or claim a setting is better without comparable measured samples.
+- Export schema 10 diagnostics: each attempt should carry quiet_pause_ms, and summaries should separate settings with the correct configuration.quiet_pause_s. Do not combine their timing distributions or claim a setting is better without comparable measured samples.
 
 ### Save and combine live diagnostics
 
-Save each page export as an ignored local-live JSON file and note its corresponding device, browser, prompts, voice and microphone environment in this run sheet. Keep overlapping exports identifiable. Run `node evals/summarize_live_stt.js` with the export paths to recompute completed-attempt distributions, configuration groups, and separate failure/cancellation counts. Check input/unique/deduplicated counts against your session records before using a report. Schema 8 quiet-pause settings remain unknown. Identical metadata deduplication cannot establish globally unique attempts, and exports retain at most 500 attempts per page. Imported session/report behavior is not yet verified; do not treat this command as evidence of accuracy or an acoustic latency benchmark.
+Save each page export as an ignored local-live JSON file and note its corresponding device, browser, prompts, voice and microphone environment in this run sheet. Keep overlapping exports identifiable. Run `node evals/summarize_live_stt.js` with the export paths to recompute completed-attempt distributions, configuration groups, and separate failure/cancellation counts. Check input/unique/deduplicated counts against your session records before using a report. Schema 8 quiet-pause settings remain unknown. Schema 10 IDs enable deduplication; legacy/null-ID metadata deduplication cannot establish globally unique attempts, and exports retain at most 500 attempts per page. Imported session/report behavior is not yet verified; do not treat this command as evidence of accuracy or an acoustic latency benchmark.
+
+### Attempt-ID checks (not yet performed)
+
+Export the same completed live attempt twice: its attempt_id should stay the same, and the report should count one unique attempt with one duplicate by ID. Complete another conversation turn on the reused connection: it should get a different ID. Repeat with an early connection failure and deliberate cancellation; each terminal attempt should retain its allocated ID. With UUID generation unavailable, the exported ID should be null and the report should state its metadata fallback counts.
+
+For report review, check that conflicting selected metadata under one ID is rejected with an input/attempt index, while separate IDs with otherwise matching metadata stay separate. Avoid mixing legacy and current snapshots of the same session. These checks remain manual and unverified.
