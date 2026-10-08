@@ -1746,3 +1746,10 @@
 - Generalized the recorded-transcription reader into a shared bounded JSON helper. Quiz start, scoring, and progress loading now use a 1 MiB byte limit, strict UTF-8, reader cleanup, and generic parse errors that do not expose response fragments. Recorded transcription retains its 128 KiB limit and existing error category.
 - Preserved cancellation/deadline handling, quiz score retry identities, result validators, and control recovery. Added manual boundary/privacy/timeout/retry scenarios without claiming a runtime result.
 - Verification: JavaScript syntax and git diff whitespace checks only. No tests, browser interactions, response injection, storage writes, evaluations, or provider calls were performed.
+
+
+## Validate quiz score rubric consistency - 2026-10-08
+
+- Added minimum/total concept counts to newly computed scores. The browser now validates bounded disjoint matched/missing labels and, when counts are present, verifies total coverage, percentage with Python half-even rounding, and completion against the matched count. Direct scores and model score tool events share this validator.
+- Older retained score records remain accepted without the optional counts and are not rewritten; arithmetic validation for those records remains unavailable. Documented malformed metadata, boundaries, rounding, and retry scenarios without claiming semantic correctness.
+- Verification: Python compilation, JavaScript syntax, and git diff whitespace checks only. No tests, scoring runs, storage writes, browser checks, or provider calls were performed.

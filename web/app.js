@@ -273,6 +273,28 @@ function validTutorToolEvents(events) {
       return new Set(result.questions.map((question) => question.id)).size === result.questions.length;
     }
     if (event.name === "score_answer") {
+      const matched = result.matched_concepts;
+      const missing = result.missing_concepts;
+      if (![matched, missing].every((items) => Array.isArray(items) && items.length <= 100
+        && items.every((item) => text(item, 512)))) return false;
+      const labels = [...matched, ...missing];
+      if (!labels.length || labels.length > 100 || new Set(labels).size !== labels.length) return false;
+      const minimum = result.minimum_concepts;
+      const total = result.total_concepts;
+      // Older persisted results predate rubric counts. Check arithmetic only
+      // when metadata is supplied, and reject partially supplied metadata.
+      if (minimum !== undefined || total !== undefined) {
+        if (!Number.isSafeInteger(minimum) || !Number.isSafeInteger(total)
+          || minimum < 1 || minimum > total || total !== labels.length) return false;
+        const numerator = 100 * matched.length;
+        const whole = Math.floor(numerator / minimum);
+        const doubledRemainder = 2 * (numerator % minimum);
+        // Match Python's round-to-even at exact half points.
+        const rounded = whole + (doubledRemainder > minimum
+          || (doubledRemainder === minimum && whole % 2 === 1) ? 1 : 0);
+        if (result.score !== Math.min(100, rounded)
+          || result.complete !== (matched.length >= minimum)) return false;
+      }
       return text(result.question_id, 128) && typeof result.complete === "boolean"
         && text(result.feedback, 4096) && typeof result.score === "number"
         && Number.isFinite(result.score) && result.score >= 0 && result.score <= 100

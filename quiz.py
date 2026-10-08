@@ -209,6 +209,8 @@ def score_answer(question_id: str, answer: str, language: str = "en-IN") -> dict
         "score": score,
         "matched_concepts": matched,
         "missing_concepts": missing,
+        "minimum_concepts": minimum,
+        "total_concepts": len(question["concepts"]),
         "complete": complete,
         "feedback": feedback,
         "source": question["source"],

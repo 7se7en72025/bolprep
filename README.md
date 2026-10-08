@@ -76,7 +76,7 @@ The starter corpus contains **48 checked notes** spanning selected Articles 12-5
 - [Source review](data/SOURCE_REVIEW.md): linked PDF edition and unresolved reuse-policy questions. Repository Hindi/Hinglish summaries are not official translations.
 - [Dataset inventory](evals/DATASETS.md): constructed evaluation cases and evidence boundaries.
 
-Quiz questions currently cover Articles 14, 19, 21, and 22. Basic selects 14/21, Challenge selects 19/22, and Standard uses the mixed pool, with up to three questions per quiz. Scores use authored phrase rubrics, which can misread negation and meaning. Human agreement has not been established.
+Quiz questions currently cover Articles 14, 19, 21, and 22. Basic selects 14/21, Challenge selects 19/22, and Standard uses the mixed pool, with up to three questions per quiz. Scores use authored phrase rubrics, which can misread negation and meaning. New score responses expose minimum/total rubric counts so the browser can reject inconsistent concept lists, percentages, and completion flags. Older stored results lack these counts and receive structural checks only. Human agreement has not been established.
 
 ## Saved data and local limits
 
