@@ -1548,3 +1548,9 @@
 - Trace recording previously called map on unchecked tool_outcomes and marked the trace recorded before that could throw. Added server trace validation for containers, bounded metadata, timestamps, durations, safe counts, tool outcomes, and reported usage coverage. Invalid trace metadata is omitted before projection, preserving client outcome/timing and existing answer/error handling.
 - Exported turns distinguish valid/invalid/unavailable server metadata, and the panel explains rejected diagnostics. Validation cannot authenticate a trace or establish quality/cost. Added README/manual malformed, missing, error-path, and compatible server cases.
 - Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, controlled streams, browser interactions, recordings, or provider calls were performed; metadata compatibility, rendering, and recovery remain unverified at runtime.
+
+## Recover from missing browser speech events - 2026-10-08
+
+- Browser speech had no recovery deadline for missing start/end events. Added a shared 30-second first/next-chunk start deadline and 120-second active-chunk deadline to completed/progressive playback. Timeout cancels speech, records a failure, and preserves incomplete-playback history; Stop/errors/completion clear timers.
+- Empty progressive queues do not time generation gaps. Duplicate chunk callbacks are ignored and synchronous speak failures recover through the same failure path. Slow voices/suspended timers may exceed these bounds, with no acoustic latency claim. Added README and manual missing-event, fallback, preview, cancellation, duplicate, and normal-playback cases.
+- Verification: app/live JavaScript syntax and git diff whitespace checks passed. No tests, controlled playback, browser interactions, recordings, or provider calls were performed; event ordering, voice compatibility, deadline recovery, and audible stopping remain unverified at runtime.

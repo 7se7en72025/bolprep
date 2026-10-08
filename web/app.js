@@ -107,6 +107,7 @@ let activeAutomaticVoiceTurn = null;
 let speechTurn = 0;
 let activeProgressiveSpeech = null;
 let activeSpeechHistoryEntry = null;
+let activeBrowserSpeechDeadline = null;
 const speechStopSamples = [];
 let progressRequestId = 0;
 let quizSession = null;
@@ -708,10 +709,12 @@ function stopSpeechOutput(reason = "other-control") {
     progressive_session_active: Boolean(activeProgressiveSpeech),
   };
   const speechPending = activeSpeechController || scheduledSpeechSources.size
-    || activeProgressiveSpeech?.isSpeaking() || window.speechSynthesis?.speaking || window.speechSynthesis?.pending;
+    || activeBrowserSpeechDeadline || activeProgressiveSpeech?.isSpeaking()
+    || window.speechSynthesis?.speaking || window.speechSynthesis?.pending;
   if (speechPending) markSpeechIncomplete();
   activeSpeechHistoryEntry = null;
   speechTurn += 1;
+  activeBrowserSpeechDeadline?.clear();
   activeProgressiveSpeech?.cancel();
   activeProgressiveSpeech = null;
   window.speechSynthesis?.cancel();
@@ -885,6 +888,8 @@ function recordedTranscriptionTimingSummary(language) {
 function speechErrorMessage(error) {
   const messages = {
     "audio-busy": "Audio output is busy. Close another app using audio, then try again.",
+    "browser-start-timeout": "Browser speech did not start within 30 seconds. Try the voice preview or read the answer above.",
+    "browser-playback-timeout": "A browser speech chunk did not finish within 120 seconds. Playback stopped; read the answer above or try another voice.",
     "language-unavailable": "No speech voice is available for this language. Choose another installed voice or read the answer above.",
     "not-allowed": "The browser blocked speech playback. Try the voice preview or read the answer above.",
     "synthesis-failed": "The browser could not synthesize this answer. Read it above or try another voice.",
@@ -1499,6 +1504,26 @@ function createProgressiveStreamedSpeech(completionText = "Answer ready.") {
   return session;
 }
 
+function createBrowserSpeechDeadline(isCurrent, onTimeout) {
+  let timer = null;
+  const deadline = {
+    clear: () => {
+      if (timer !== null) window.clearTimeout(timer);
+      timer = null;
+      if (activeBrowserSpeechDeadline === deadline) activeBrowserSpeechDeadline = null;
+    },
+    arm: (playing = false) => {
+      deadline.clear();
+      activeBrowserSpeechDeadline = deadline;
+      timer = window.setTimeout(() => {
+        deadline.clear();
+        if (isCurrent()) onTimeout(playing ? "browser-playback-timeout" : "browser-start-timeout");
+      }, playing ? 120_000 : 30_000);
+    },
+  };
+  return deadline;
+}
+
 function speakWithBrowser(text, completionText = "Ready when you are.", kind = "tutor") {
   if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
     markSpeechIncomplete();
@@ -1526,20 +1551,44 @@ function speakWithBrowser(text, completionText = "Ready when you are.", kind = "
     kind,
     startEvent: "speech_synthesis_onstart",
   };
+  const fail = (reason) => {
+    if (requestSpeechTurn !== speechTurn || failed) return;
+    failed = true;
+    deadline.clear();
+    markSpeechIncomplete();
+    speechFailures.push({ ...sample, reason });
+    if (speechFailures.length > 500) speechFailures.shift();
+    statusLine.textContent = `${speechErrorMessage(reason)} ${speechTimingSummary(sample)}`;
+    window.speechSynthesis.cancel();
+  };
+  const deadline = createBrowserSpeechDeadline(() => requestSpeechTurn === speechTurn && !failed, fail);
+  deadline.arm();
   chunks.forEach((chunk, index) => {
+    if (failed) return;
     const utterance = new SpeechSynthesisUtterance(chunk);
+    let chunkStarted = false;
+    let chunkEnded = false;
     utterance.lang = speechLanguage.value;
     utterance.rate = speechRate;
     if (selectedVoice) utterance.voice = selectedVoice;
     utterance.onstart = () => {
-      if (requestSpeechTurn !== speechTurn || failed || startedAt !== null) return;
+      if (requestSpeechTurn !== speechTurn || failed || chunkStarted || chunkEnded) return;
+      chunkStarted = true;
+      deadline.arm(true);
+      if (startedAt !== null) return;
       startedAt = performance.now();
       recordAutomaticVoiceTurnStart(sample, startedAt);
       const startDelay = ((startedAt - queuedAt) / 1000).toFixed(2);
       statusLine.textContent = `Tutor is speaking (started in ${startDelay}s). Tap Stop audio or Speak to interrupt.`;
     };
     utterance.onend = () => {
-      if (requestSpeechTurn !== speechTurn || failed || index !== chunks.length - 1) return;
+      if (requestSpeechTurn !== speechTurn || failed || chunkEnded) return;
+      chunkEnded = true;
+      if (index !== chunks.length - 1) {
+        deadline.arm();
+        return;
+      }
+      deadline.clear();
       if (startedAt === null) {
         statusLine.textContent = completionText;
         return;
@@ -1557,15 +1606,10 @@ function speakWithBrowser(text, completionText = "Ready when you are.", kind = "
         + speechTimingSummary(sample);
     };
     utterance.onerror = (event) => {
-      if (requestSpeechTurn !== speechTurn || failed) return;
-      failed = true;
-      markSpeechIncomplete();
-      speechFailures.push({ ...sample, reason: event.error || "unknown" });
-      if (speechFailures.length > 500) speechFailures.shift();
-      statusLine.textContent = `${speechErrorMessage(event.error)} ${speechTimingSummary(sample)}`;
-      window.speechSynthesis.cancel();
+      if (chunkEnded) return;
+      fail(event.error || "unknown");
     };
-    window.speechSynthesis.speak(utterance);
+    try { window.speechSynthesis.speak(utterance); } catch { fail("synthesis-failed"); }
   });
 }
 
@@ -1593,6 +1637,22 @@ function createProgressiveBrowserSpeech(completionText = "Answer ready.") {
   let cancelled = false;
   let hadQueuedSpeech = false;
 
+  const fail = (reason) => {
+    if (requestSpeechTurn !== speechTurn || failed || cancelled) return;
+    failed = true;
+    deadline.clear();
+    buffer = "";
+    queuedCount = 0;
+    markSpeechIncomplete();
+    speechFailures.push({ ...sample, reason });
+    if (speechFailures.length > 500) speechFailures.shift();
+    statusLine.textContent = `${speechErrorMessage(reason)} ${speechTimingSummary(sample)}`;
+    window.speechSynthesis.cancel();
+  };
+  const deadline = createBrowserSpeechDeadline(
+    () => requestSpeechTurn === speechTurn && !failed && !cancelled, fail,
+  );
+
   const complete = () => {
     if (!finished || queuedCount || requestSpeechTurn !== speechTurn || failed || cancelled) return;
     if (startedAt === null) {
@@ -1612,33 +1672,37 @@ function createProgressiveBrowserSpeech(completionText = "Answer ready.") {
     for (const chunk of splitSpeechText(text)) {
       if (requestSpeechTurn !== speechTurn || failed || cancelled) return;
       const utterance = new SpeechSynthesisUtterance(chunk);
+      let chunkStarted = false;
+      let chunkEnded = false;
       utterance.lang = language;
       utterance.rate = speechRate;
       if (selectedVoice) utterance.voice = selectedVoice;
+      if (queuedCount === 0) deadline.arm();
       queuedCount += 1;
       hadQueuedSpeech = true;
       utterance.onstart = () => {
-        if (requestSpeechTurn !== speechTurn || failed || startedAt !== null) return;
+        if (requestSpeechTurn !== speechTurn || failed || cancelled || chunkStarted || chunkEnded) return;
+        chunkStarted = true;
+        deadline.arm(true);
+        if (startedAt !== null) return;
         startedAt = performance.now();
         recordAutomaticVoiceTurnStart(sample, startedAt);
         const startDelay = ((startedAt - queuedAt) / 1000).toFixed(2);
         statusLine.textContent = `Tutor is speaking as the answer arrives (started in ${startDelay}s). Tap Stop audio or Speak to interrupt.`;
       };
       utterance.onend = () => {
-        if (requestSpeechTurn !== speechTurn || failed) return;
+        if (requestSpeechTurn !== speechTurn || failed || cancelled || chunkEnded) return;
+        chunkEnded = true;
         queuedCount = Math.max(0, queuedCount - 1);
+        if (queuedCount) deadline.arm();
+        else deadline.clear();
         complete();
       };
       utterance.onerror = (event) => {
-        if (requestSpeechTurn !== speechTurn || failed) return;
-        failed = true;
-        markSpeechIncomplete();
-        speechFailures.push({ ...sample, reason: event.error || "unknown" });
-        if (speechFailures.length > 500) speechFailures.shift();
-        statusLine.textContent = `${speechErrorMessage(event.error)} ${speechTimingSummary(sample)}`;
-        window.speechSynthesis.cancel();
+        if (chunkEnded) return;
+        fail(event.error || "unknown");
       };
-      window.speechSynthesis.speak(utterance);
+      try { window.speechSynthesis.speak(utterance); } catch { fail("synthesis-failed"); }
     }
   };
 
@@ -1669,7 +1733,7 @@ function createProgressiveBrowserSpeech(completionText = "Answer ready.") {
   return {
     consume,
     finish,
-    cancel: () => { cancelled = true; buffer = ""; },
+    cancel: () => { cancelled = true; buffer = ""; deadline.clear(); },
     isSpeaking: () => startedAt !== null && queuedCount > 0,
     hasFailed: () => failed,
   };
