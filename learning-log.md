@@ -1,5 +1,11 @@
 # Learning log
 
+## Update the Article 19 source summary and coverage - 2026-10-08
+
+- Checked the current official Constitution text for Article 19. The English, Hindi, and Hinglish notes now name associations, unions, and co-operative societies; identify sub-clause (f) as omitted; and distinguish restrictions in clauses (2)-(6). Added one retrieval example per language for co-operative-society questions.
+- The constructed retrieval evaluation was rerun after the corpus and example updates. It does not measure speech recognition, learner questions, or legal interpretation.
+
+
 ## Require a quiz request before starting quiz tools - 2026-10-08
 
 - The old quiz detector treated any mention of `test` or `viva` as a quiz request, so a question about the Article 14 legal test could start a quiz. English and Roman Hinglish now need request wording such as `test me`, `start a quiz`, `quiz karwao`, or `mera viva lo`; the Devanagari quiz cue also needs an action such as `lo` or `karao`.

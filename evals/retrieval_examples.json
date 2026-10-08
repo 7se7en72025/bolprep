@@ -176,5 +176,8 @@
   {"id": "context-en-follow-up-keeps-article-history", "language": "Hinglish", "question": "What about personal liberty?", "history_questions": ["Article 21 protects life and personal liberty."], "expected_doc_ids": ["article-21"]},
   {"id": "en-art51a-fundamental-duties", "language": "English", "question": "What fundamental duties does Article 51A list for citizens?", "expected_doc_ids": ["article-51a"]},
   {"id": "hi-art51a-nagrik-kartavya", "language": "Hindi", "question": "अनुच्छेद 51A नागरिकों के कौन से मौलिक कर्तव्य बताता है?", "expected_doc_ids": ["article-51a"]},
-  {"id": "hinglish-art51a-environment", "language": "Hinglish", "question": "Article 51A environment aur public property ke baare mein citizens ki kya duties batata hai?", "expected_doc_ids": ["article-51a"]}
+  {"id": "hinglish-art51a-environment", "language": "Hinglish", "question": "Article 51A environment aur public property ke baare mein citizens ki kya duties batata hai?", "expected_doc_ids": ["article-51a"]},
+  {"id": "en-art19-cooperative-societies", "language": "English", "question": "Can citizens form co-operative societies under Article 19(1)(c)?", "expected_doc_ids": ["article-19"]},
+  {"id": "hi-art19-cooperative-societies", "language": "Hindi", "question": "\u0915\u094d\u092f\u093e \u0905\u0928\u0941\u091a\u094d\u091b\u0947\u0926 19(1)(c) \u0928\u093e\u0917\u0930\u093f\u0915\u094b\u0902 \u0915\u094b \u0938\u0939\u0915\u093e\u0930\u0940 \u0938\u092e\u093f\u0924\u093f\u092f\u093e\u0901 \u092c\u0928\u093e\u0928\u0947 \u0915\u093e \u0905\u0927\u093f\u0915\u093e\u0930 \u0926\u0947\u0924\u093e \u0939\u0948?", "expected_doc_ids": ["article-19"]},
+  {"id": "hinglish-art19-cooperative-societies", "language": "Hinglish", "question": "Article 19(1)(c) mein citizens ko co-operative societies banane ka right hai kya?", "expected_doc_ids": ["article-19"]}
 ]
