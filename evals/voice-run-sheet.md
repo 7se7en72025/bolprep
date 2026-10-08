@@ -412,3 +412,8 @@ Cancel a recording through Stop, another study control, and page navigation whil
 ### Bounded recorded-transcription response (not yet verified)
 
 With authorized local browser checks, inspect responses split across UTF-8 character boundaries, invalid/truncated UTF-8, malformed JSON, missing bodies, and bodies just below/above 128 KiB. The client must count received bytes even without a Content-Length header, stop reading oversized data, release its reader, and show generic invalid-response recovery without echoing response text. Repeat with canceled/timed-out fetches, a late response after another turn, and a cancellation promise that does not resolve: recovery must not wait on that promise or replace the newer draft. Valid transcripts still use the existing 6,000-code-point review limit and remain drafts until explicit submission. No browser or response-stream checks have been performed.
+
+
+### Invalid live event recovery (not yet verified)
+
+During connecting/listening/finalizing/clearing, deliver malformed JSON, null, arrays, scalar values, non-text data, missing/non-string/empty/overlong type fields, and serialized messages above 65,536 UTF-16 units. Each should fail through provider-failed cleanup rather than throw out of the event callback or retain capture: inspect tracks, peer/channel, timers, draft restoration, and one failure sample. Late events should be ignored after closure. Valid object events with unknown types should remain ignored for provider housekeeping compatibility; valid transcript events retain existing review limits. Explicit restart should create fresh state and not automatically reconnect. These are proposed manual scenarios; no event, browser, or provider checks have been performed.

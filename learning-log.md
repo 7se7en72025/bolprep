@@ -1732,3 +1732,10 @@
 - Added evaluation schema 2 with UTC generation time, exact raw retrieval/evaluator source hashes, Python version and implementation, alongside existing dataset/corpus hashes and scorer. Captured code bytes before retrieval import and reject persistent changes before/after evaluation. Comparisons now require the same implementation metadata as well as input hashes.
 - Updated reproduction guidance to archive actual JSON, commit, and exact files/environment; hashes include line endings and are not authenticated execution evidence or protection against changes restored between checks. Corrected stale README references and an edition separator in the dataset guide.
 - Verification: Python compilation, CLI --help, and git diff whitespace checks only. No evaluation, tests, source mutation exercises, provider calls, or measured reports were run/generated. Current benchmark evidence remains pending.
+
+
+## Fail safely on malformed live transcription events - 2026-10-08
+
+- Static event review found parsed null could throw before normal capture recovery, and serialized messages had no pre-parse bound. Added a 65,536 UTF-16-unit text-message cap and require a JSON object with a bounded nonempty string type before field access. Malformed messages now use existing provider-failed cleanup; unknown well-formed event types remain ignored.
+- Documented malformed/oversized data, late events, single failure recording, cleanup, and explicit restart scenarios. Existing transcript limits and failure-report categories are unchanged.
+- Verification: JavaScript syntax and git diff whitespace checks only. No tests, event injection, browser/device checks, recordings, or provider requests were performed.

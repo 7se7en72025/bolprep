@@ -63,7 +63,7 @@ Model language following, microphone behavior, and spoken playback require obser
 | --- | --- | --- |
 | Browser recognition | Browser-managed transcription for a text turn | Availability and accuracy depend on the browser/service. |
 | Recorded clip | Capture a clip, then send it for provider transcription | Maximum 20 seconds and 5 MiB; transcription begins after recording. Discarding requests immediate microphone-track release; transcription response bodies are capped at 128 KiB before parsing. |
-| Live microphone | WebRTC partial/final transcription, manual or quiet-pause submission | Experimental; explicit activation, bounded sessions, no automatic reconnect. |
+| Live microphone | WebRTC partial/final transcription, manual or quiet-pause submission | Experimental; explicit activation, bounded sessions/messages, no automatic reconnect. Malformed events close capture for explicit recovery. |
 | Spoken answer | Browser synthesis or progressive provider speech | Replay and cancellation controls exist; acoustic latency and stop behavior remain unmeasured. |
 
 Live mode offers optional continuous conversation and 3/5/8-second quiet-pause choices. Segments are bounded to 20 or 60 seconds, sessions to five minutes, and idle time to 60 seconds. Muting during turn finalization/clearing may lose words. Local cancellation does not prove provider processing or billing stopped. Navigating away cancels microphone input, active tutor work, and speech queues; returning to a cached page requires a new explicit turn. Merely hiding the page stops microphone input without canceling answer playback.

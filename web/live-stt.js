@@ -144,8 +144,23 @@ class BolPrepLiveTranscription {
 
   event(data) {
     if (this.closed) return;
+    const invalid = () => this.fail(
+      "The live transcription provider returned an invalid event. Start Live mic again, use Record, or type.",
+      "provider-failed",
+    );
+    // Bound the serialized message before parsing; valid transcripts have a
+    // separate, smaller review limit. Data-channel messages must be text JSON.
+    if (typeof data !== "string" || data.length > 64 * 1024) {
+      invalid();
+      return;
+    }
     let event;
-    try { event = JSON.parse(data); } catch { return; }
+    try { event = JSON.parse(data); } catch { invalid(); return; }
+    if (!event || typeof event !== "object" || Array.isArray(event)
+      || typeof event.type !== "string" || !event.type || event.type.length > 128) {
+      invalid();
+      return;
+    }
     if (!event || typeof event !== "object" || typeof event.type !== "string") return;
     if (event.type === "error") {
       this.fail("The live transcription provider could not finish. Try Record or type your question.");
