@@ -99,6 +99,8 @@ let speechAudioContext = null;
 const scheduledSpeechSources = new Set();
 const speechSamples = [];
 const speechFailures = [];
+const speechCancellations = [];
+let activeSpeechAttempt = null;
 const automaticVoiceTurnSamples = [];
 const modelStreamSamples = [];
 const modelStreamFailures = [];
@@ -929,8 +931,18 @@ function markSpeechIncomplete(entry = activeSpeechHistoryEntry) {
 }
 
 function hasActiveSpeechOutput() {
-  return Boolean(activeProgressiveSpeech || activeSpeechController || scheduledSpeechSources.size
+  return Boolean(activeSpeechAttempt || activeProgressiveSpeech || activeSpeechController || scheduledSpeechSources.size
     || activeBrowserSpeechDeadline || window.speechSynthesis?.speaking || window.speechSynthesis?.pending);
+}
+
+function beginSpeechAttempt(sample) {
+  const attempt = { sample };
+  activeSpeechAttempt = attempt;
+  return attempt;
+}
+
+function finishSpeechAttempt(attempt) {
+  if (activeSpeechAttempt === attempt) activeSpeechAttempt = null;
 }
 
 function stopSpeechOutput(reason = "other-control") {
@@ -945,9 +957,14 @@ function stopSpeechOutput(reason = "other-control") {
     scheduled_pcm_sources: scheduledSpeechSources.size,
     progressive_session_active: Boolean(activeProgressiveSpeech),
   };
-  const speechPending = activeSpeechController || scheduledSpeechSources.size
+  const speechPending = activeSpeechAttempt || activeSpeechController || scheduledSpeechSources.size
     || activeBrowserSpeechDeadline || activeProgressiveSpeech?.isSpeaking()
     || window.speechSynthesis?.speaking || window.speechSynthesis?.pending;
+  if (activeSpeechAttempt) {
+    speechCancellations.push({ ...activeSpeechAttempt.sample, reason });
+    if (speechCancellations.length > 500) speechCancellations.shift();
+    activeSpeechAttempt = null;
+  }
   if (speechPending) markSpeechIncomplete();
   activeSpeechHistoryEntry = null;
   speechTurn += 1;
@@ -1151,6 +1168,8 @@ function buildSpeechDiagnostics() {
         completed: [],
         failures: 0,
         failure_reasons: {},
+        cancellations: 0,
+        cancellation_reasons: {},
       });
     }
     return ttsGroups.get(key);
@@ -1160,6 +1179,12 @@ function buildSpeechDiagnostics() {
     const group = getTtsGroup(sample);
     group.failures += 1;
     group.failure_reasons[sample.reason] = (group.failure_reasons[sample.reason] || 0) + 1;
+  });
+
+  speechCancellations.forEach((sample) => {
+    const group = getTtsGroup(sample);
+    group.cancellations += 1;
+    group.cancellation_reasons[sample.reason] = (group.cancellation_reasons[sample.reason] || 0) + 1;
   });
 
   const sttGroups = new Map();
@@ -1192,6 +1217,8 @@ function buildSpeechDiagnostics() {
       completed_count: group.completed.length,
       failure_count: group.failures,
       failure_reasons: group.failure_reasons,
+      cancellation_count: group.cancellations,
+      cancellation_reasons: group.cancellation_reasons,
       start_delay: percentiles(group.completed.map((sample) => sample.startMs)),
       playback_duration: percentiles(group.completed.map((sample) => sample.playbackMs)),
     }));
@@ -1346,6 +1373,7 @@ function buildSpeechDiagnostics() {
     scope: "Current page only",
     privacy: "Diagnostics metadata only; no learner text, audio, cookies, or credentials.",
     tts,
+    tts_cancellation_scope: "Local stop of an active browser playback or provider segment, including pending start; excludes queued future provider segments, upstream confirmation, and audible stop latency.",
     stt,
     recorded_stt: recordedStt,
     live_stt: liveStt,
@@ -1380,10 +1408,14 @@ function renderSpeechDashboard() {
   };
   snapshot.tts.forEach((group) => {
     const config = `TTS | ${group.language} | ${group.sample_type} | ${group.voice} | rate ${group.browser_rate ?? "provider"} | ${group.start_event}`;
+    const reasons = { ...group.failure_reasons };
+    Object.entries(group.cancellation_reasons).forEach(([reason, count]) => {
+      reasons[`cancelled/${reason}`] = count;
+    });
     append(config, "Speech queue to start event", group.start_delay, group.completed_count,
-      group.completed_count, group.failure_count, "unavailable", group.failure_reasons);
+      group.completed_count, group.failure_count, group.cancellation_count, reasons);
     append(config, "Playback duration", group.playback_duration, group.completed_count,
-      group.completed_count, group.failure_count, "unavailable", group.failure_reasons);
+      group.completed_count, group.failure_count, group.cancellation_count, reasons);
   });
   snapshot.stt.forEach((group) => append(`Browser STT | ${group.language}`, "Listening to first final",
     group.time_to_first_final, group.final_transcript_count, group.final_transcript_count,
@@ -1543,6 +1575,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
     kind,
     startEvent: "first_pcm_buffer_scheduled",
   };
+  const attempt = beginSpeechAttempt(sample);
   const queuedAt = performance.now();
   let firstAudioAt = null;
   let nextStartAt = 0;
@@ -1703,6 +1736,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
     const startDelay = ((firstAudioAt - queuedAt) / 1000).toFixed(2);
     const playbackDuration = ((endedAt - firstAudioAt) / 1000).toFixed(2);
     speechSamples.push({ ...sample, startMs: firstAudioAt - queuedAt, playbackMs: endedAt - firstAudioAt });
+    finishSpeechAttempt(attempt);
     if (speechSamples.length > 500) speechSamples.shift();
     statusLine.textContent = `${completionText} Stream start ${startDelay}s, playback ${playbackDuration}s. `
       + speechTimingSummary(sample);
@@ -1716,6 +1750,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
     });
     requestSources.clear();
     speechFailures.push({ ...sample, reason: overallTimedOut ? "overall-timeout" : audioLimitExceeded ? "audio-limit" : playbackTimedOut ? "playback-timeout" : timedOut ? "stream-timeout" : "stream-failed" });
+    finishSpeechAttempt(attempt);
     if (speechFailures.length > 500) speechFailures.shift();
     const message = overallTimedOut ? "Streamed speech exceeded its seven-minute request deadline."
       : playbackTimedOut ? "Audio playback stalled. Try again or reload the page."
@@ -1729,6 +1764,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
     }
     return false;
   } finally {
+    finishSpeechAttempt(attempt);
     window.clearTimeout(overallTimer);
     window.clearTimeout(idleTimer);
     window.clearTimeout(playbackTimer);
@@ -1876,9 +1912,11 @@ function speakWithBrowser(text, completionText = "Ready when you are.", kind = "
     kind,
     startEvent: "speech_synthesis_onstart",
   };
+  const attempt = beginSpeechAttempt(sample);
   const fail = (reason) => {
     if (requestSpeechTurn !== speechTurn || failed) return;
     failed = true;
+    finishSpeechAttempt(attempt);
     deadline.clear();
     markSpeechIncomplete();
     speechFailures.push({ ...sample, reason });
@@ -1914,6 +1952,7 @@ function speakWithBrowser(text, completionText = "Ready when you are.", kind = "
         return;
       }
       deadline.clear();
+      finishSpeechAttempt(attempt);
       if (startedAt === null) {
         statusLine.textContent = completionText;
         return;
@@ -1961,10 +2000,12 @@ function createProgressiveBrowserSpeech(completionText = "Answer ready.") {
   let failed = false;
   let cancelled = false;
   let hadQueuedSpeech = false;
+  let attempt = null;
 
   const fail = (reason) => {
     if (requestSpeechTurn !== speechTurn || failed || cancelled) return;
     failed = true;
+    finishSpeechAttempt(attempt);
     deadline.clear();
     buffer = "";
     queuedCount = 0;
@@ -1980,6 +2021,7 @@ function createProgressiveBrowserSpeech(completionText = "Answer ready.") {
 
   const complete = () => {
     if (!finished || queuedCount || requestSpeechTurn !== speechTurn || failed || cancelled) return;
+    finishSpeechAttempt(attempt);
     if (startedAt === null) {
       statusLine.textContent = completionText;
       return;
@@ -2004,6 +2046,7 @@ function createProgressiveBrowserSpeech(completionText = "Answer ready.") {
       if (selectedVoice) utterance.voice = selectedVoice;
       if (queuedCount === 0) deadline.arm();
       queuedCount += 1;
+      if (!hadQueuedSpeech) attempt = beginSpeechAttempt(sample);
       hadQueuedSpeech = true;
       utterance.onstart = () => {
         if (requestSpeechTurn !== speechTurn || failed || cancelled || chunkStarted || chunkEnded) return;

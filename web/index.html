@@ -122,12 +122,12 @@
               <button class="text-button" id="download-speech-diagnostics" type="button">Download JSON</button>
             </div>
           </div>
-          <p>Current page only; reload clears samples. Completed samples determine p50/p95 (seconds). These are software events, not audible latency or accuracy scores. Each collection retains its latest 500 records.</p>
+          <p>Current page only; reload clears samples. Completed samples determine p50/p95 (seconds). These are software events, not audible latency or accuracy scores. Each collection retains its latest 500 records. TTS cancellations count local stops of active/pending browser playback or a provider segment; future provider segments are excluded. They do not confirm provider cancellation or audible stop.</p>
           <p id="speech-dashboard-status" role="status">Open to view collected timings.</p>
           <div class="diagnostics-table-scroll" tabindex="0" role="region" aria-label="Speech timing table">
             <table class="diagnostics-table">
               <caption>Observed speech and model timings by configuration</caption>
-              <thead><tr><th scope="col">Path / configuration</th><th scope="col">Metric</th><th scope="col">Timing samples</th><th scope="col">p50 / p95 (s)</th><th scope="col">Completed / failed / cancelled</th><th scope="col">Failure reasons</th></tr></thead>
+              <thead><tr><th scope="col">Path / configuration</th><th scope="col">Metric</th><th scope="col">Timing samples</th><th scope="col">p50 / p95 (s)</th><th scope="col">Completed / failed / cancelled</th><th scope="col">Failure / cancellation reasons</th></tr></thead>
               <tbody id="speech-dashboard-rows"></tbody>
             </table>
           </div>
