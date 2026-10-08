@@ -233,3 +233,9 @@ For report review, check that conflicting selected metadata under one ID is reje
 - Keep response chunks arriving less than 90 seconds apart but hold the turn open for five minutes: verify the total deadline ends it. Completed tool effects may remain; inspect actual progress before retrying.
 - Stop/Escape or start a follow-up before expiry: the old turn should count as canceled and old timers must not affect the new request. Complete a normal answer then leave playback running: tutor timers should not stop it.
 - Export diagnostics: timeouts should increase failure counts, not cancellation or success counts. Record browser timer delays and missing trace metadata separately. Provider generation cancellation remains unverified.
+
+### Follow-up context after stopping completed speech (not yet performed)
+
+Let a tutor finish generating text while its browser/provider voice continues. Stop or interrupt the playback, then ask for an example or explanation of the last topic: the next history payload should keep that answer with one playback-stopped note and the original user question. Repeat before first audio with queued speech, after natural completion, and with a voice preview; only stopped pending tutor speech should annotate its associated answer. A pending model answer still uses its separate interruption note.
+
+Repeat with a long Unicode answer: history must stay within 3,000 code points per assistant message while the displayed answer remains complete. Start New session and confirm earlier annotations do not enter new follow-ups. Do not infer exact heard words or provider cancellation from the note.

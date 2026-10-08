@@ -103,6 +103,7 @@ let pendingAutomaticVoiceInput = null;
 let activeAutomaticVoiceTurn = null;
 let speechTurn = 0;
 let activeProgressiveSpeech = null;
+let activeSpeechHistoryEntry = null;
 let progressRequestId = 0;
 let quizSession = null;
 
@@ -220,11 +221,13 @@ async function readAgentStream(response, onTextDelta, onSpeechMode, onActivity) 
 }
 
 function rememberTurn(userMessage, assistantMessage) {
+  const assistantEntry = { role: "assistant", content: [...assistantMessage].slice(0, 3000).join("") };
   history.push(
     { role: "user", content: userMessage },
-    { role: "assistant", content: assistantMessage },
+    assistantEntry,
   );
   history.splice(0, Math.max(0, history.length - 20));
+  return assistantEntry;
 }
 
 function updateLiveSttButton(state = "idle") {
@@ -465,6 +468,16 @@ function preserveInterruptedTurn() {
 }
 
 function stopSpeechOutput() {
+  const speechPending = activeSpeechController || scheduledSpeechSources.size
+    || activeProgressiveSpeech?.isSpeaking() || window.speechSynthesis?.speaking || window.speechSynthesis?.pending;
+  if (activeSpeechHistoryEntry && history.includes(activeSpeechHistoryEntry) && speechPending) {
+    const note = "\n[Speech playback stopped before completion; the learner may not have heard the full answer.]";
+    if (!activeSpeechHistoryEntry.content.endsWith(note)) {
+      activeSpeechHistoryEntry.content = [...activeSpeechHistoryEntry.content]
+        .slice(0, 3000 - [...note].length).join("") + note;
+    }
+  }
+  activeSpeechHistoryEntry = null;
   speechTurn += 1;
   activeProgressiveSpeech?.cancel();
   activeProgressiveSpeech = null;
@@ -924,8 +937,9 @@ function splitSpeechText(text, maxCodePoints = 500) {
   return chunks;
 }
 
-function speak(text, completionText = "Ready when you are.", kind = "tutor") {
+function speak(text, completionText = "Ready when you are.", kind = "tutor", historyEntry = null) {
   stopSpeechOutput();
+  activeSpeechHistoryEntry = historyEntry;
   if (streamedTtsOption.checked && streamingTtsAvailable) {
     if (text.length > 4096) {
       statusLine.textContent = "This answer is too long for streamed speech; using the browser voice.";
@@ -1490,7 +1504,8 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
     activePartialMessage?.remove();
     activePartialMessage = null;
     addMessage("assistant", payload.answer, payload.sources || []);
-    rememberTurn(question, payload.answer);
+    const answerHistoryEntry = rememberTurn(question, payload.answer);
+    if (usedProgressiveSpeech && !progressiveSpeech?.hasFailed()) activeSpeechHistoryEntry = answerHistoryEntry;
     pendingQuestion = null;
     if (!progressiveSpeech?.hasFailed()) {
       statusLine.textContent = usedProgressiveSpeech && progressiveSpeech?.isSpeaking()
@@ -1508,14 +1523,14 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
         awaitingAnswer: false,
       };
       showQuizQuestion(false);
-      speak(`${payload.answer} ${quizSession.questions[0].prompt}`, "Your answer is ready when you are.");
+      speak(`${payload.answer} ${quizSession.questions[0].prompt}`, "Your answer is ready when you are.", "tutor", answerHistoryEntry);
     } else if (scoredAnswer) {
       const score = scoredAnswer.result;
       addMessage("assistant", `${score.feedback} Score: ${score.score}%.`, [score.source]);
-      speak(`${payload.answer} ${score.feedback}`, "Answer ready.");
+      speak(`${payload.answer} ${score.feedback}`, "Answer ready.", "tutor", answerHistoryEntry);
       loadProgress();
     } else if (!usedProgressiveSpeech) {
-      speak(payload.answer);
+      speak(payload.answer, "Ready when you are.", "tutor", answerHistoryEntry);
     }
   } catch (error) {
     const cancelled = requestTurn !== turn || (error.name === "AbortError" && !timeoutReason);
