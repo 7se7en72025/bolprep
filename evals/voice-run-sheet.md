@@ -202,3 +202,9 @@ With an approved model/provider session and streamed speech selected, ask for a 
 - Stall or fail a segment, including quota rejection: queued speech should clear, the error should stay visible while the model text finishes, and the text should remain readable without an automatic whole-answer replay.
 - Check offline answers, previews, quiz and revision tool turns still use the complete-answer speech path.
 - Export diagnostics: progressive requests should appear as tutor-segment, separate from whole-answer tutor timings. Segment start timings exclude model generation and queue wait. Automatic browser-voice turn timing should still use the first segment start event, once per turn. Record audible latency separately.
+
+### Streamed playback recovery checks (not yet performed)
+
+- Block audio-context startup, then use Stop/Escape or let the 90-second data-idle deadline expire: the local speech request should release, with intentional cancellation excluded from failure counts. Resume the context later; canceled speech must not restart.
+- Suspend the audio context after download completes, or prevent the final playback-ended event. Wait the remaining scheduled duration plus ten seconds: playback should stop with playback-timeout in diagnostics, and a progressive sentence queue should clear without replay. Browser timer delays must be recorded separately.
+- Play a long, normally functioning buffer: it should get its full scheduled duration plus the ten-second margin. Complete playback and start another turn; the old watchdog must not abort the new turn. These are manual cases, not verified results.

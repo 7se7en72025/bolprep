@@ -933,7 +933,9 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
   const onAbort = () => resolvePlayback();
   controller.signal.addEventListener("abort", onAbort, { once: true });
   let timedOut = false;
+  let playbackTimedOut = false;
   let idleTimer = null;
+  let playbackTimer = null;
   const resetIdleDeadline = () => {
     window.clearTimeout(idleTimer);
     idleTimer = window.setTimeout(() => {
@@ -959,7 +961,17 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
       throw new Error("The speech server returned an unsupported audio format.");
     }
     if (!response.body) throw new Error("This browser cannot receive streamed audio.");
-    await context.resume();
+    // A suspended audio context can leave resume pending even after fetch aborts.
+    let rejectResume;
+    const resumeAborted = new Promise((resolve, reject) => { rejectResume = reject; });
+    const onResumeAbort = () => rejectResume(new DOMException("Speech stopped.", "AbortError"));
+    controller.signal.addEventListener("abort", onResumeAbort, { once: true });
+    try {
+      if (controller.signal.aborted) onResumeAbort();
+      await Promise.race([Promise.resolve().then(() => context.resume()), resumeAborted]);
+    } finally {
+      controller.signal.removeEventListener("abort", onResumeAbort);
+    }
     if (controller.signal.aborted) {
       if (timedOut) throw new Error("Streamed speech timed out.");
       return;
@@ -1016,7 +1028,14 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
     window.clearTimeout(idleTimer);
     streamFinished = true;
     if (requestSources.size === 0) resolvePlayback();
+    const remainingPlaybackMs = Math.max(0, nextStartAt - context.currentTime) * 1000;
+    playbackTimer = window.setTimeout(() => {
+      playbackTimedOut = true;
+      controller.abort();
+    }, remainingPlaybackMs + 10_000);
     await playbackDone;
+    if (playbackTimedOut) throw new Error("Streamed audio did not finish playing.");
+    if (timedOut) throw new Error("Streamed speech timed out.");
     if (requestSpeechTurn !== speechTurn || controller.signal.aborted) return;
     const endedAt = performance.now();
     const startDelay = ((firstAudioAt - queuedAt) / 1000).toFixed(2);
@@ -1027,16 +1046,17 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
       + speechTimingSummary(sample);
     return true;
   } catch (error) {
-    if ((error.name === "AbortError" && !timedOut) || requestSpeechTurn !== speechTurn) return;
+    if ((error.name === "AbortError" && !timedOut && !playbackTimedOut) || requestSpeechTurn !== speechTurn) return;
     controller.abort();
     requestSources.forEach((source) => {
       try { source.stop(); } catch { /* The source may already have ended. */ }
       scheduledSpeechSources.delete(source);
     });
     requestSources.clear();
-    speechFailures.push({ ...sample, reason: timedOut ? "stream-timeout" : "stream-failed" });
+    speechFailures.push({ ...sample, reason: playbackTimedOut ? "playback-timeout" : timedOut ? "stream-timeout" : "stream-failed" });
     if (speechFailures.length > 500) speechFailures.shift();
-    const message = timedOut ? "No streamed speech data arrived for 90 seconds." : error.message;
+    const message = playbackTimedOut ? "Audio playback stalled. Try again or reload the page."
+      : timedOut ? "No streamed speech data arrived for 90 seconds." : error.message;
     if (firstAudioAt === null && allowFallback) {
       statusLine.textContent = `${message} Falling back to the browser voice.`;
       speakWithBrowser(text, completionText, kind);
@@ -1046,6 +1066,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
     return false;
   } finally {
     window.clearTimeout(idleTimer);
+    window.clearTimeout(playbackTimer);
     controller.signal.removeEventListener("abort", onAbort);
     if (activeSpeechController === controller) activeSpeechController = null;
   }

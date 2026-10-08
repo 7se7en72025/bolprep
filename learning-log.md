@@ -1290,3 +1290,9 @@
 - Stop and interruption clear pending text and cancel active local speech, including after model text completion. A segment failure leaves the answer readable and clears speech without automatic replay. Existing standalone speech retains early browser fallback. Provider-side cancellation remains unverified.
 - Diagnostics distinguish tutor-segment from whole-answer tutor samples; segment timing excludes model generation and queue wait. Automatic browser voice timing recognizes the first progressive segment.
 - Verification: node syntax and git diff whitespace checks passed. No tests or provider requests were run; browser playback, segment order/gaps, failure handling, interruption, and timing benefits remain unverified. Added manual run-sheet checks.
+
+## Bound stalled streamed-audio playback - 2026-10-08
+
+- Inspection found that the download idle deadline ended before waiting for Web Audio playback; a suspended context or missing final ended event could hold the progressive queue indefinitely. Added a playback watchdog based on remaining scheduled audio plus ten seconds, with playback-timeout failure metadata and queued-source cleanup through the existing error path. Normal playback receives its scheduled duration.
+- Audio-context resume now races the local abort signal, so Stop and the existing 90-second idle deadline can release a pending startup. Timers and the temporary abort listener are removed on completion/cancellation; timeout paths cannot be recorded as successful playback.
+- Updated README and manual recovery checks. Verification: JavaScript syntax and git diff whitespace checks passed. No tests or provider requests were run; suspended-context recovery, delayed/missing ended events, long-buffer playback, and new-turn isolation remain unverified in a real browser.
