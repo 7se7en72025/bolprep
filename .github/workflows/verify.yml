@@ -46,13 +46,18 @@ jobs:
         shell: pwsh
         run: |
           $browserLog = @()
-          try {
-            .\tools\check-browser.ps1 2>&1 | Tee-Object -Variable browserLog
-          } catch {
-            $details = (($browserLog | Select-Object -Last 100 | ForEach-Object { "$_" }) -join "`n")
-            $details = $details.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
-            Write-Output "::error title=Offline browser failure::$details"
-            throw
+          $ErrorActionPreference = 'Continue'
+          & powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\check-browser.ps1 2>&1 |
+            Tee-Object -Variable browserLog
+          $browserExit = $LASTEXITCODE
+          $ErrorActionPreference = 'Stop'
+          if ($browserExit -ne 0) {
+            foreach ($line in ($browserLog | Select-Object -Last 100)) {
+              $detail = ("$line" -replace '\x1b\[[0-9;]*m', '')
+              $detail = $detail.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+              Write-Host "::error title=Offline browser failure::$detail"
+            }
+            exit $browserExit
           }
       - name: Save retrieval report
         if: always()
