@@ -2121,3 +2121,13 @@
 - Protected-access commit 5f56d30 passed GitHub Actions run 38002523983. Actual microphone/provider sessions, paired comparisons, human reviews, source permission, and the demo video remain pending.
 
 - Final root verification passed 94 Python tests, nine ordinary browser checks plus one protected check in separate invocations, ten mocked live-STT checks, and eight synthetic evaluation/reader checks. Source syntax and whitespace checks passed. The first Python run exposed a speech-test assertion race: receiving the terminal HTTP chunk can precede provider context cleanup. The fake provider now signals cleanup completion, and the HTTP helper waits at most three seconds before assertions; the subsequent full suite passed. Production speech behavior was not changed by that test repair.
+
+
+## Retrieve the publisher reuse policy - 2026-10-10
+
+- Rechecked the remaining roadmap gates against tracked artifacts and private input presence without printing credentials. No configured OpenAI key or private speech-evaluation directory was present; tracked evaluation results remain constructed retrieval reports, with no real voice benchmark or demo recording found. User microphone/provider observations and independent human reviews remain necessary.
+- Retrieved the Legislative Department copyright policy from its public CMS route discovered in the website frontend. The previously unreadable policy is now recorded with its page ID, modified timestamp, text-field hash, and a source link. It describes permission, attribution, accurate presentation, and third-party restrictions; it is not permission already granted to this corpus or its adaptations. No publisher message was sent and no license/clearance was assigned.
+- Updated source-review documentation and the reproducible corpus manifest exporter while preserving corpus contents, original edition-review date, note check dates, and unresolved reuse status. Export/check evidence is recorded below.
+- Live metadata commit 0618e3d passed GitHub Actions run 38002914451. Real voice, independent reviews, applicable reuse clearance, and the actual demonstration remain open.
+
+- Verification: exporter JSON matches the tracked manifest exactly; all 48 document records and the corpus SHA-256 match the preceding commit. Edition-review and per-note check dates remain unchanged, policy-review date is separate, and reuse_status remains unresolved. Python syntax and git diff --check passed. No benchmark, provider, microphone, or learner-data run was performed for this documentation task.

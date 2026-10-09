@@ -28,9 +28,10 @@ def main() -> None:
             "record": "data/SOURCE_REVIEW.md", "reviewed_on": "2026-10-08",
             "edition": "Second English-Malayalam diglot edition, 2024",
             "reuse_status": "unresolved",
+            "policy_reviewed_on": "2026-10-10",
             "repository_translations": "Hindi/Hinglish summaries are repository study material, not official translations from this edition.",
         },
-        "reuse_permission_review": "See data/SOURCE_REVIEW.md for edition evidence and the unresolved policy review. Applicable reuse permission has not been established.",
+        "reuse_permission_review": "See data/SOURCE_REVIEW.md for edition evidence and the retrieved publisher policy. Applicable document/adaptation permission has not been established.",
         "limitations": [
             "Source check dates are repository records, not a fresh source verification performed by this exporter.",
             "Inventory validation does not prove factual accuracy, translation fidelity, citation support, or retrieval quality.",
