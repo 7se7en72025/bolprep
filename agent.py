@@ -46,16 +46,15 @@ TOOLS: list[dict[str, Any]] = [
     {
         "type": "function",
         "name": "score_answer",
-        "description": "Score a learner's answer with the checked deterministic rubric. Use only a question and quiz ID returned by start_quiz. Never invent or change the learner's answer.",
+        "description": "Score the learner's entire current submitted message with the checked deterministic rubric. The server supplies the answer; do not extract, rewrite, or supply it. Use only a question and quiz ID returned by start_quiz.",
         "parameters": {
             "type": "object",
             "properties": {
                 "quiz_id": {"type": "string"},
                 "question_id": {"type": "string"},
-                "answer": {"type": "string"},
                 "language": {"type": "string", "enum": ["hi-IN", "en-IN"]},
             },
-            "required": ["quiz_id", "question_id", "answer", "language"],
+            "required": ["quiz_id", "question_id", "language"],
             "additionalProperties": False,
         },
         "strict": True,
@@ -218,6 +217,7 @@ def _model_turn(
                     _field(call, "arguments", ""),
                     call_id,
                     session_id,
+                    learner_answer=question.strip(),
                 )
             input_items.append(
                 {"type": "function_call_output", "call_id": call_id, "output": json.dumps(output, ensure_ascii=False)}
@@ -305,7 +305,9 @@ def _unique_tool_fields(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
     return values
 
 
-def _execute_tool(name: str, arguments: str, call_id: str, session_id: str) -> tuple[dict[str, Any], dict[str, Any]]:
+def _execute_tool(
+    name: str, arguments: str, call_id: str, session_id: str, *, learner_answer: str | None = None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
     try:
         if not isinstance(arguments, str) or len(arguments) > MAX_TOOL_ARGUMENT_CHARS:
             raise ValueError("Tool arguments must be text of at most 16,000 characters.")
@@ -330,12 +332,14 @@ def _execute_tool(name: str, arguments: str, call_id: str, session_id: str) -> t
             create_quiz_run(session_id, quiz_id, quiz["topic"], [item["id"] for item in quiz["questions"]])
             result = {**quiz, "quiz_id": quiz_id}
         elif name == "score_answer":
-            _check_fields(values, {"quiz_id", "question_id", "answer", "language"})
+            _check_fields(values, {"quiz_id", "question_id", "language"})
             if not all(isinstance(values[key], str) for key in values):
                 raise ValueError("Quiz scoring arguments must be text.")
-            if len(values["answer"]) > 1000:
+            if not isinstance(learner_answer, str) or not learner_answer.strip():
+                raise ValueError("Quiz scoring requires the current learner submission.")
+            if len(learner_answer) > 1000:
                 raise ValueError("Answer must contain at most 1,000 characters.")
-            result = score_answer(values["question_id"], values["answer"], values["language"])
+            result = score_answer(values["question_id"], learner_answer, values["language"])
             result = save_answer(
                 session_id,
                 values["quiz_id"],

@@ -45,6 +45,72 @@ class QuizToolTests(unittest.TestCase):
         self.assertEqual(result["score"], 50)
         self.assertIn("व्यक्तिगत स्वतंत्रता", result["feedback"])
 
+    def test_clear_english_denial_does_not_earn_full_credit(self):
+        result = score_answer(
+            "art14_equality",
+            "There is no equality before the law and no equal protection of the laws.",
+        )
+        self.assertEqual(result["score"], 0)
+        self.assertFalse(result["complete"])
+        self.assertEqual(result["matched_concepts"], [])
+        self.assertIn("may deny or contradict", result["feedback"])
+
+    def test_negation_of_one_concept_withholds_automatic_credit(self):
+        result = score_answer(
+            "art14_equality", "Equality before the law, but no equal protection of the laws."
+        )
+        self.assertEqual(result["score"], 0)
+        self.assertFalse(result["complete"])
+        self.assertEqual(result["matched_concepts"], [])
+        self.assertIn("Automatic credit was withheld", result["feedback"])
+
+    def test_extra_negated_article_19_concept_cannot_still_complete_quiz(self):
+        result = score_answer(
+            "art19_freedoms", "Speech and expression, movement, but no peaceful assembly."
+        )
+        self.assertEqual(result["score"], 0)
+        self.assertFalse(result["complete"])
+        self.assertEqual(result["total_concepts"], 6)
+        self.assertEqual(len(result["missing_concepts"]), 6)
+
+    def test_hindi_negated_protection_does_not_score_article_21(self):
+        result = score_answer(
+            "art21_protection", "अनुच्छेद 21 जीवन और व्यक्तिगत स्वतंत्रता की रक्षा नहीं करता।", "hi-IN"
+        )
+        self.assertEqual(result["score"], 0)
+        self.assertFalse(result["complete"])
+        self.assertIn("denial/contradiction", result["feedback"])
+
+    def test_hinglish_negated_protection_does_not_score_article_21(self):
+        result = score_answer(
+            "art21_protection", "Article 21 jeevan aur personal liberty ko protect nahi karta.", "hi-IN"
+        )
+        self.assertEqual(result["score"], 0)
+        self.assertFalse(result["complete"])
+
+    def test_additive_not_only_wording_still_earns_credit(self):
+        for answer, language in (
+            ("Not only equality before the law but also equal protection of the laws.", "en-IN"),
+            ("कानून के सामने समानता ही नहीं बल्कि कानूनों का समान संरक्षण भी है।", "hi-IN"),
+            ("Sirf barabari hi nahi balki kanoon ka barabar sanrakshan bhi hai.", "hi-IN"),
+        ):
+            with self.subTest(answer=answer):
+                result = score_answer("art14_equality", answer, language)
+                self.assertEqual(result["score"], 100)
+                self.assertTrue(result["complete"])
+
+    def test_negated_unrelated_phrase_or_denial_verb_still_earns_credit(self):
+        for answer in (
+            "Without discrimination equality before the law and equal protection of the laws apply.",
+            "No one can deny equality before the law or equal protection of the laws.",
+            "The State cannot deny equality before the law or equal protection of the laws.",
+            "Equality before the law is not denied, and equal protection of the laws is not denied.",
+        ):
+            with self.subTest(answer=answer):
+                result = score_answer("art14_equality", answer)
+                self.assertEqual(result["score"], 100)
+                self.assertTrue(result["complete"])
+
     def test_unknown_question_and_empty_answer_are_rejected(self):
         with self.assertRaises(ValueError):
             score_answer("not-a-question", "an answer")

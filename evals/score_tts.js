@@ -34,7 +34,7 @@ function score(document) {
     group.prompts.add(prompt);
     group.listeners.add(listener);
   });
-  const sameSets = (sets) => sets.length >= 2 && sets.every((set) => set.size === sets[0].size
+  const sameSets = (sets) => sets.length < 2 ? null : sets.every((set) => set.size === sets[0].size
     && [...set].every((value) => sets[0].has(value)));
   const reports = [...groups.values()].sort((a, b) => `${a.language}|${a.config}`.localeCompare(`${b.language}|${b.config}`));
   return {
@@ -74,22 +74,26 @@ function score(document) {
   };
 }
 
-const args = process.argv.slice(2);
-if (args.length === 1 && args[0] === "--help") {
-  console.log("Usage: node evals/score_tts.js evals/local-tts-ratings.json\nSummarize rubric-version-1 human ratings and paired coverage locally.");
-} else if (args.length !== 1) {
-  console.error("Provide one ratings JSON file. Use --help for usage.");
-  process.exitCode = 1;
-} else {
-  try {
-    let document;
-    try {
-      if (fs.statSync(args[0]).size > 4 * 1024 * 1024) throw new Error("large");
-      document = JSON.parse(fs.readFileSync(args[0], "utf8").replace(/^\uFEFF/, ""));
-    } catch { throw new Error("Input must be readable UTF-8 JSON no larger than 4 MiB."); }
-    console.log(JSON.stringify(score(document), null, 2));
-  } catch (error) {
-    console.error(`Could not score TTS ratings: ${error.message}`);
+if (require.main === module) {
+  const args = process.argv.slice(2);
+  if (args.length === 1 && args[0] === "--help") {
+    console.log("Usage: node evals/score_tts.js evals/local-tts-ratings.json\nSummarize rubric-version-1 human ratings and paired coverage locally.");
+  } else if (args.length !== 1) {
+    console.error("Provide one ratings JSON file. Use --help for usage.");
     process.exitCode = 1;
+  } else {
+    try {
+      let document;
+      try {
+        if (fs.statSync(args[0]).size > 4 * 1024 * 1024) throw new Error("large");
+        document = JSON.parse(fs.readFileSync(args[0], "utf8").replace(/^\uFEFF/, ""));
+      } catch { throw new Error("Input must be readable UTF-8 JSON no larger than 4 MiB."); }
+      console.log(JSON.stringify(score(document), null, 2));
+    } catch (error) {
+      console.error(`Could not score TTS ratings: ${error.message}`);
+      process.exitCode = 1;
+    }
   }
 }
+
+module.exports = { score };

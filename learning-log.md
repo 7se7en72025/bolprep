@@ -2039,3 +2039,13 @@
 - Verification: 44 Python tests, four Chrome browser tests through the isolated runner, and four mocked live-STT tests pass; script parsing and whitespace checks pass. No key is configured, so no provider calls, real recordings, human reviews, acoustic benchmarks, or demo video were performed.
 
 - Post-push evidence: GitHub run 37810436397 for a7f2898 completed successfully, with all verification steps and artifact upload successful. README/status/verification record now link the observed run; real voice/provider gates remain open.
+
+
+## Repair remaining quiz and voice recovery defects - 2026-10-10
+
+- Re-audited the implementation with the three existing workers after the user requested full completion. Found actionable code defects independently of missing real speech inputs.
+- Quiz scoring now withholds automatic credit (zero/incomplete) for an answer containing a nearby explicit rubric-concept denial or contradiction, with English/Hindi/Hinglish cases plus positive not-only and cannot-deny wording. Withholding covers the whole answer, can undercredit partially correct answers, and follows normal persistence; a corrected scored answer needs a new quiz. This remains a lexical heuristic; semantic/human agreement is unmeasured.
+- Removed the model scoring tool answer argument. The server supplies the entire current learner message; model-supplied replacements, absent input, and over-limit submissions fail before scoring/persistence. Added a model-round regression against older history/evidence substitution.
+- Continuous live quiz interruption now keeps the pending answer as a retry draft on failed/canceled capture and a refused next-question command. Successful new speech replaces it. The headless regression failed before the application fix and passed afterward; real microphone/provider behavior remains unobserved.
+- Single-configuration TTS pairing flags now return null rather than false. Four synthetic coverage tests are included in npm test:eval and push/PR CI; no human ratings were invented.
+- Root verification: 53 Python tests, five headless Chrome flows, four mocked live-STT checks, four synthetic TTS report checks passed; whitespace checks passed. The browser runner cleaned its disposable database/server. Key absent, no recordings, no external model requests or real acoustic benchmarks.

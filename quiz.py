@@ -167,6 +167,92 @@ def _contains_phrase(answer_tokens: list[str], phrase: str) -> bool:
     return _contains_tokens(answer_tokens, _answer_tokens(phrase))
 
 
+NEGATORS = {
+    "no", "not", "never", "without", "neither", "nor", "cannot",
+    "doesn", "don", "isn", "aren", "won",  # Contractions split at the apostrophe.
+    "nahi", "nahin", "nhi", "bina", "नहीं", "नही", "बिना", "न",
+}
+CONTRAST_WORDS = {"but", "however", "balki", "lekin", "बल्कि", "लेकिन", "परंतु"}
+COPULA_WORDS = {"is", "are", "was", "were", "hai", "hain", "है", "हैं"}
+NEGATED_FOLLOWERS = {
+    "protected", "guaranteed", "allowed", "exists", "hai", "hain", "hota", "hoti",
+    "milta", "milti", "है", "हैं", "होता", "होती", "मिलता", "मिलती", "करता", "करती",
+}
+PROTECTION_WORDS = {"protect", "protects", "protected", "रक्षा", "सुरक्षा"}
+DENIAL_WORDS = {"deny", "denies", "denied", "denying"}
+NEGATION_FILLERS = {"a", "an", "any", "the", "right", "rights", "to", "of", "का", "की", "के", "अधिकार"}
+
+
+def _ignored_negator(tokens: list[str], index: int) -> bool:
+    """Keep common additive expressions such as 'not only ... but also' positive."""
+    next_word = tokens[index + 1] if index + 1 < len(tokens) else ""
+    if tokens[index] == "not" and next_word in {"only", "just", "merely"}:
+        return True
+    previous = tokens[index - 1] if index else ""
+    if tokens[index] in {"nahi", "nahin", "nhi", "नहीं", "नही"} and previous in {"hi", "ही"}:
+        return any(word in {"balki", "बल्कि"} for word in tokens[index + 1:index + 4])
+    return False
+
+
+def _negates_phrase(tokens: list[str], start: int, end: int) -> bool:
+    """Catch nearby explicit denial; this deliberately does not infer full meaning."""
+    for index in range(max(0, start - 3), start):
+        if tokens[index] in NEGATORS and not _ignored_negator(tokens, index):
+            between = tokens[index + 1:start]
+            if any(word in CONTRAST_WORDS for word in between):
+                continue
+            if tokens[index] in {"no", "without", "bina", "बिना"} and any(
+                word not in NEGATION_FILLERS for word in between
+            ):
+                continue
+            if any(word in DENIAL_WORDS for word in between):
+                continue
+            return True
+    if end < len(tokens):
+        next_word = tokens[end]
+        following = tokens[end + 1] if end + 1 < len(tokens) else ""
+        if next_word in COPULA_WORDS and following in NEGATORS:
+            later = tokens[end + 2] if end + 2 < len(tokens) else ""
+            return later not in DENIAL_WORDS
+        if next_word in NEGATORS and following in NEGATED_FOLLOWERS:
+            return True
+        if next_word in {"hi", "ही"} and following in NEGATORS:
+            return not _ignored_negator(tokens, end + 1)
+    return False
+
+
+def _denies_protection(tokens: list[str]) -> bool:
+    """A negated protection verb applies to the concepts named in its clause."""
+    for index, word in enumerate(tokens):
+        if word not in PROTECTION_WORDS:
+            continue
+        if index + 1 < len(tokens) and tokens[index + 1] in NEGATORS:
+            if not _ignored_negator(tokens, index + 1):
+                return True
+        for prior in range(max(0, index - 2), index):
+            if tokens[prior] in NEGATORS and not _ignored_negator(tokens, prior):
+                return True
+    return False
+
+
+def _concept_mentions(clauses: list[list[str]], aliases: list[str]) -> tuple[bool, bool]:
+    positive = False
+    negated = False
+    phrases = [_answer_tokens(alias) for alias in aliases]
+    for tokens in clauses:
+        denied_clause = _denies_protection(tokens)
+        for phrase in phrases:
+            width = len(phrase)
+            for start in range(len(tokens) - width + 1):
+                if tokens[start:start + width] != phrase:
+                    continue
+                if denied_clause or _negates_phrase(tokens, start, start + width):
+                    negated = True
+                else:
+                    positive = True
+    return positive, negated
+
+
 def score_answer(question_id: str, answer: str, language: str = "en-IN") -> dict[str, Any]:
     """Score listed concept groups only; this is lexical rubric matching, not semantic grading."""
     if not isinstance(question_id, str) or not isinstance(answer, str):
@@ -180,9 +266,11 @@ def score_answer(question_id: str, answer: str, language: str = "en-IN") -> dict
     if question is None:
         raise ValueError("Unknown question ID.")
 
-    answer_tokens = _answer_tokens(answer)
+    clauses = [_answer_tokens(part) for part in re.split(r"[.!?;।,\n]+", answer)]
     matched: list[str] = []
     missing: list[str] = []
+    all_labels: list[str] = []
+    negated_labels: list[str] = []
     hindi_script_answer = any("\u0900" <= character <= "\u097f" for character in answer)
     for concept in question["concepts"]:
         if language == "hi-IN" and hindi_script_answer:
@@ -191,15 +279,29 @@ def score_answer(question_id: str, answer: str, language: str = "en-IN") -> dict
             label = concept.get("label_hinglish", concept["label"])
         else:
             label = concept["label"]
-        if any(_contains_phrase(answer_tokens, alias) for alias in _concept_aliases(concept)):
+        all_labels.append(label)
+        positive, negated = _concept_mentions(clauses, _concept_aliases(concept))
+        if positive and not negated:
             matched.append(label)
         else:
             missing.append(label)
+            if negated:
+                negated_labels.append(label)
 
+    # A denied rubric idea makes an otherwise high lexical count misleading.
+    # Withhold automatic credit until the learner states a consistent answer.
+    if negated_labels:
+        matched = []
+        missing = all_labels
     minimum = question["minimum_concepts"]
     score = min(100, round(100 * len(matched) / minimum))
     complete = len(matched) >= minimum
-    if language == "hi-IN":
+    if negated_labels:
+        correction = ", ".join(negated_labels)
+        feedback = (f"In ideas par denial/contradiction lagti hai: {correction}. Automatic score roka gaya; jawab saaf karke dobara do."
+                    if language == "hi-IN" else
+                    f"Your wording may deny or contradict: {correction}. Automatic credit was withheld; clarify and try again.")
+    elif language == "hi-IN":
         feedback = "Sahi jawab!" if complete else f"{len(matched)}/{minimum} key ideas mile. Add: {', '.join(missing[:minimum - len(matched)])}."
     else:
         feedback = "Good answer!" if complete else f"You covered {len(matched)} of {minimum} key ideas. Add: {', '.join(missing[:minimum - len(matched)])}."

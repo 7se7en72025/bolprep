@@ -47,3 +47,10 @@ The new tools/check-browser.ps1 runner passed locally on a free port with an iso
 ## Observed cloud verification
 
 GitHub Actions [run 37810436397](https://github.com/7se7en72025/bolprep/actions/runs/37810436397), for commit a7f28982267d65f5ba45c48c3b5ede4e00cdaaf9, completed successfully. The GitHub run/jobs API reported success for all dependency, Python test, voice-state, retrieval, browser, and artifact-upload steps. This is independent runner execution of the offline checks; it does not establish real microphone/provider or human-review gates.
+
+
+## Quiz integrity and voice recovery checks - 2026-10-10
+
+The local suite now passes 53 Python tests, five headless Chrome flows, four mocked live-STT checks, and four synthetic TTS report checks. New checks cover server-bound learner text for model scoring, bounded explicit-denial handling with positive-wording counterexamples, and a continuous-voice interrupted quiz answer retained after failed/canceled transcription or a refused next-question command. A new spoken answer can replace the draft. The browser regression failed on the previous application code and passed after the fix.
+
+TTS report tests use fabricated metadata only to check null/true/false pairing semantics; they are not human speech observations. The CI workflow now runs npm run test:eval. This follow-up has local evidence; cloud execution for its new commit must be observed separately. Scoring remains lexical and can misread complex meaning. Provider/microphone sessions, human evaluations, source reuse approval, and the actual recorded voice demo remain open.

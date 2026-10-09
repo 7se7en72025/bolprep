@@ -11,12 +11,12 @@ Audit date: 2026-10-08. This is an implementation/evidence inventory, not a rele
 | Transcripts, failures, stage timings visible | Draft/partial controls and page diagnostics | Browser rendering and real failure/timing observations. |
 | Ordinary-pause end-of-turn handling | Energy-based activity/quiet-pause controls and capture limits | Natural-pause/noise/device observations; thresholds remain heuristic. |
 | Interruption stops playback and cancels old turn | Stop/Escape/controller cleanup and history notes | Audible stop and provider behavior; client abort does not prove upstream cancellation. |
-| Late results cannot restart interrupted output | Turn/capture identities and cleanup guards | Automated race coverage plus actual browser/device recovery checks. |
+| Late results cannot restart interrupted output | Turn/capture identities and cleanup guards | Automated delayed-turn, speech callback, recorded-input, and continuous-quiz recovery checks pass; actual browser/device acoustic recovery still needs observation. |
 | Multi-turn clarification retains context | Current-topic retrieval, bounded text history, quiz article hints | Language-switch/quiz/cancellation/reopened-session scenarios. |
 | Answers show supporting sources | Retrieval/source-link code and checked note metadata | Human citation-support review of actual generated answers; retrieval alone is not support. |
 | Unsupported questions clarify or abstain | Lexical eligibility and insufficient-evidence paths | Current labeled evaluation and actual model behavior on unsupported questions. |
 | Spoken quiz, rubric feedback, persistent progress work end to end | Quiz, SQLite progress/history, browser controls | Complete spoken quiz, restart persistence, ownership, deletion, and retry recovery. |
-| Tool validation/retry checks protect progress | Existing agent/progress unit-test sources and storage validation | Run authorized tests; extend coverage for newer features and concurrency. |
+| Tool validation/retry checks protect progress | Passing agent/progress/HTTP tests cover ownership, retries, model-completion guards, and server-bound learner scoring | Real provider tool-argument behavior and broader concurrency need observation. |
 | Versioned inputs/reproducible runners exist | Tracked retrieval set, speech/review procedures and local runners | Artifacts exist; current computations and reproducibility remain unverified. |
 | STT/TTS comparisons, latency distributions, failure examples reported | Collection/run-sheet/report tools | Actual paired observations and archived reports; no fabricated samples. |
 | Retrieval, answer support, tool behavior have labeled checks | Constructed retrieval labels, existing mocked tool tests, and ANSWER_SUPPORT_RUBRIC.md procedure with a local label summarizer | Fresh retrieval comparison, actual generated-answer/support labels and report computation, current tool coverage. |

@@ -292,3 +292,97 @@ test("mocked recorded input preserves drafts after permission and upload cancell
     await browser.close();
   }
 });
+
+test("continuous quiz voice keeps an interrupted answer until replacement or retry", { skip: !baseURL }, async () => {
+  const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
+  try {
+    for (const scenario of ["failed capture", "cancelled capture", "next question", "replacement answer"]) {
+      const page = await browser.newPage();
+      const pageErrors = [];
+      page.on("pageerror", (error) => pageErrors.push(error.message));
+      const scoreRoutes = [];
+      let firstScoreReady;
+      const firstScore = new Promise((resolve) => { firstScoreReady = resolve; });
+      let liveSetupRequests = 0;
+      try {
+        await openOfflinePage(page, {
+          displayedMode: "Model answers enabled",
+          configure: async (health) => {
+            await page.addInitScript(() => {
+              Object.defineProperty(navigator, "mediaDevices", {
+                configurable: true, value: { getUserMedia: () => { throw new Error("Real microphone access forbidden in this test."); } },
+              });
+              window.RTCPeerConnection = class {};
+              window.__liveCaptures = [];
+            });
+            await page.route("**/health", (route) => route.fulfill({ json: {
+              ...health, mode: "model", model_name: "mock-browser", live_transcription: true,
+            } }));
+            await page.route("**/live-stt.js", (route) => route.fulfill({
+              contentType: "application/javascript",
+              body: `window.BolPrepLiveTranscription = class {
+                constructor(callbacks, options) {
+                  this.callbacks = callbacks;
+                  this.continuous = options.continuous;
+                  this.state = "connecting";
+                  window.__liveCaptures.push(this);
+                }
+                async start() { this.state = "listening"; this.callbacks.status("Mock listening", "listening"); }
+                cancel() { this.state = "closed"; this.callbacks.closed(); }
+              };`,
+            }));
+            await page.route("**/api/transcription/session", (route) => {
+              liveSetupRequests += 1;
+              return route.abort();
+            });
+            await page.route("**/api/quiz/score", async (route) => {
+              await new Promise((release) => {
+                scoreRoutes.push({ release });
+                if (scoreRoutes.length === 1) firstScoreReady();
+              });
+              try { await route.abort(); } catch { /* The browser may have already canceled it. */ }
+            });
+          },
+        });
+        await page.locator("#quiz-difficulty").selectOption("basic");
+        await page.locator("#quiz-button").click();
+        await page.waitForFunction(() => !document.querySelector("#end-quiz").hidden);
+        await page.locator("#live-conversation").check();
+        await page.locator("#live-stt-button").click();
+        await page.waitForFunction(() => window.__liveCaptures[0]?.state === "listening");
+        const previousAnswer = "Equality before law and equal protection of the laws.";
+        await page.evaluate((answer) => window.__liveCaptures[0].callbacks.final(answer), previousAnswer);
+        await firstScore;
+        await page.evaluate(() => window.__liveCaptures[0].callbacks.speechStart());
+        assert.equal(await page.locator("#question-input").inputValue(), "");
+        if (scenario === "failed capture") {
+          await page.evaluate(() => {
+            const capture = window.__liveCaptures[0];
+            capture.callbacks.error("Mock transcription failed.");
+            capture.cancel();
+          });
+          assert.equal(await page.locator("#question-input").inputValue(), previousAnswer);
+        } else if (scenario === "cancelled capture") {
+          await page.locator("#stop-button").click();
+          assert.equal(await page.locator("#question-input").inputValue(), previousAnswer);
+        } else if (scenario === "next question") {
+          await page.evaluate(() => window.__liveCaptures[0].callbacks.final("next question"));
+          assert.match(await page.locator("#status").textContent(), /does not skip an unanswered question/);
+          assert.equal(await page.locator("#question-input").inputValue(), previousAnswer);
+        } else {
+          const replacement = "A revised spoken answer.";
+          await page.evaluate((answer) => window.__liveCaptures[0].callbacks.final(answer), replacement);
+          assert.equal(await page.evaluate(() => quizSession.pendingAnswer), replacement);
+          assert.equal(await page.locator("#question-input").inputValue(), "");
+        }
+        assert.equal(liveSetupRequests, 0);
+        assert.deepEqual(pageErrors, []);
+      } finally {
+        scoreRoutes.forEach(({ release }) => release());
+        await page.close();
+      }
+    }
+  } finally {
+    await browser.close();
+  }
+});

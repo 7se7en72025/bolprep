@@ -90,18 +90,52 @@ class AgentToolTests(unittest.TestCase):
         args = json.dumps({
             "quiz_id": "quiz-one",
             "question_id": "art14_equality",
-            "answer": "equality before the law",
             "language": "en-IN",
         })
         result = {"score": 50, "complete": False, "feedback": "Add another point."}
         with patch.object(agent, "score_answer", return_value=result) as scorer, patch.object(
             agent, "save_answer", return_value=result
         ) as save:
-            output, event = agent._execute_tool("score_answer", args, "call-3", "session-one")
+            output, event = agent._execute_tool(
+                "score_answer", args, "call-3", "session-one", learner_answer="equality before the law",
+            )
         self.assertTrue(output["ok"])
         self.assertEqual(event["result"], result)
         scorer.assert_called_once_with("art14_equality", "equality before the law", "en-IN")
         save.assert_called_once_with("session-one", "quiz-one", "art14_equality", "call-3", result)
+
+    def test_score_tool_rejects_model_answer_and_missing_submission(self):
+        fields = {"quiz_id": "quiz-one", "question_id": "art14_equality", "language": "en-IN"}
+        with patch.object(agent, "score_answer") as scorer, patch.object(agent, "save_answer") as save:
+            for arguments, submitted in (
+                ({**fields, "answer": "invented perfect answer"}, "actual learner answer"),
+                (fields, None), (fields, ""), (fields, "a" * 1001),
+            ):
+                with self.subTest(arguments=arguments, submitted=submitted):
+                    output, event = agent._execute_tool(
+                        "score_answer", json.dumps(arguments), "call-4", "session-one", learner_answer=submitted,
+                    )
+                    self.assertFalse(output["ok"])
+                    self.assertFalse(event["ok"])
+            scorer.assert_not_called()
+            save.assert_not_called()
+
+    def test_model_score_uses_current_message_not_history_or_evidence(self):
+        question = "Score my answer: equality before the law"
+        fake = FakeResponses([
+            SimpleNamespace(output=[function_call("score_answer", {
+                "quiz_id": "quiz-one", "question_id": "art14_equality", "language": "en-IN",
+            })], output_text="", status="completed"),
+            SimpleNamespace(output=[], output_text="Add equal protection.", status="completed"),
+        ])
+        with patch.object(agent, "_has_tool_intent", return_value=True), patch.object(
+            agent, "score_answer", return_value={"score": 50}
+        ) as scorer, patch.object(agent, "save_answer", return_value={"score": 50}):
+            result = agent.run_agent_turn(
+                question, [{"role": "user", "content": "older answer"}], "session-one", "en-IN", fake,
+            )
+        scorer.assert_called_once_with("art14_equality", question, "en-IN")
+        self.assertTrue(result["tool_events"][0]["ok"])
 
     def test_offline_quiz_request_still_starts_a_checked_quiz(self):
         quiz = {

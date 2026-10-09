@@ -2983,7 +2983,10 @@ liveSttButton.addEventListener("click", () => {
     },
     speechStart: () => {
       if (run !== liveSttRun || !continuous) return;
+      const interruptedAnswer = quizSession?.pendingAnswer && !quizSession.awaitingAnswer
+        ? quizSession.pendingAnswer : "";
       stopTutor({ preserveLive: true, speechStopReason: "detected-speech" });
+      if (interruptedAnswer) liveSttOriginalInput = interruptedAnswer;
       input.value = "";
       statusLine.textContent = "Listening to your new turn. Previous tutor output stopped.";
     },
@@ -2997,12 +3000,15 @@ liveSttButton.addEventListener("click", () => {
           return;
         }
         if (quizSession && isNextQuizCommand(text)) {
+          const retryDraft = quizSession.pendingAnswer || liveSttOriginalInput;
           stopTutor({ preserveLive: true });
-          input.value = "";
-          liveSttOriginalInput = "";
           if (quizSession.awaitingAnswer) {
+            input.value = retryDraft;
+            liveSttOriginalInput = retryDraft;
             statusLine.textContent = "Answer the current question before moving on. Next question does not skip an unanswered question.";
           } else {
+            input.value = "";
+            liveSttOriginalInput = "";
             showQuizQuestion();
           }
           return;
