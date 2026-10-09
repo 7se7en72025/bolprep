@@ -70,3 +70,12 @@ TTS report tests use fabricated metadata only to check null/true/false pairing s
 - Scored narration now uses deterministic rubric feedback and verified saved/unsaved status. A failed model response after a successful save retains observed tool outcomes and source counts in opted-in diagnostics, without storing learner text or inventing usage.
 - Root verification: 77 Python tests, eight isolated offline Chrome checks, four mocked live-STT checks, and four synthetic TTS report checks passed. Model rounds and speech state use fixtures; these are not actual provider calls or microphone observations.
 - Previous commit fe244da passed GitHub Actions run 37990783346. Cloud verification of this new change remains pending until push. Real provider/microphone runs, paired observations, human reviews, source reuse approval, and the voice demonstration remain open.
+
+
+## Protect progress under concurrent requests - 2026-10-10
+
+- Reproduced a legacy migration race by pausing the first initializer after creating its staging table: a second initializer could inspect the old schema and fail with a table-already-exists error. Schema creation and migration now use one BEGIN IMMEDIATE transaction instead of executescript, which previously committed early. The existing ten-second lock timeout remains; prolonged contention is not guaranteed to succeed.
+- Added controlled migration exclusion and injected-failure rollback/retry checks, plus eight concurrent initializers preserving the historical score. Added actual loopback HTTP checks with competing different answers: same-key retries retain one result, different keys select one winner and one conflict, and deletion before a paused save cannot recreate the deleted quiz/owner or remove another owner's progress. These cover bounded schedules, not every possible concurrent operation.
+- The preceding score/save integration and CI diagnostic commit passed GitHub Actions run 37992508289 at 862c837. Earlier run 37992063632 failed its browser step without accessible detail; the follow-up and local Chrome/Edge checks passed, so its cause is unresolved rather than a demonstrated application defect.
+
+- Root verification passed 83 Python tests, eight isolated offline Chrome checks, and the isolated offline smoke. Whitespace checks passed. No actual provider calls, microphone recordings, or human evaluations were performed; those acceptance gates remain open. Cloud execution of this new commit remains to be observed after push.

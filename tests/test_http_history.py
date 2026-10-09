@@ -3,9 +3,12 @@
 import http.client
 import json
 import os
+import sqlite3
 import threading
 import unittest
 import uuid
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import closing
 from copy import deepcopy
 from functools import partial
 from http.server import ThreadingHTTPServer
@@ -16,6 +19,7 @@ from unittest.mock import patch
 import progress
 import server
 import session_history
+import quiz
 from access import AccessGate
 from request_limits import RequestLimiter
 
@@ -30,6 +34,7 @@ class SavedDataHttpTests(unittest.TestCase):
         temporary = TemporaryDirectory()
         self.addCleanup(temporary.cleanup)
         database = Path(temporary.name) / "saved-data.sqlite3"
+        self.database = database
 
         offline = patch.dict(os.environ, {"BOLPREP_OFFLINE": "1"})
         offline.start()
@@ -211,6 +216,96 @@ class SavedDataHttpTests(unittest.TestCase):
         self.assertNotIn(private_text, json.dumps(error))
         self.assertEqual(len(self.request("GET", "/api/history", cookie=owner)[2]["conversations"]), 1)
         self.assertEqual(self.request("GET", "/api/history", cookie=other)[2]["conversations"], [])
+
+    def _quiz_answer(self, cookie):
+        status, _, quiz = self.request("POST", "/api/quiz/start", {
+            "topic": "fundamental rights", "question_count": 2,
+            "language": "en-IN", "difficulty": "basic",
+        }, cookie)
+        self.assertEqual(status, 200)
+        return {
+            "quiz_id": quiz["quiz_id"], "question_id": "art14_equality",
+            "answer": "Equality before the law and equal protection of the laws.",
+            "language": "en-IN", "idempotency_key": str(uuid.uuid4()),
+        }
+
+    def _parallel_scores(self, owner, answers):
+        barrier = threading.Barrier(3)
+
+        def score(answer):
+            barrier.wait(timeout=5)
+            return self.request("POST", "/api/quiz/score", answer, owner)
+
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            futures = [pool.submit(score, answer) for answer in answers]
+            barrier.wait(timeout=5)
+            return [future.result(timeout=10) for future in futures]
+
+    def test_parallel_same_retry_key_retains_one_result(self):
+        owner = self.browser_cookie()
+        answer = self._quiz_answer(owner)
+        changed_answer = {**answer, "answer": "Banana"}
+        responses = self._parallel_scores(owner, [answer, changed_answer])
+        self.assertEqual([response[0] for response in responses], [200, 200])
+        self.assertEqual(responses[0][2], responses[1][2])
+        expected_results = [quiz.score_answer(body["question_id"], body["answer"], body["language"])
+                            for body in (answer, changed_answer)]
+        self.assertIn(responses[0][2], expected_results)
+        progress_data = self.request("GET", "/api/progress", cookie=owner)[2]
+        self.assertEqual(progress_data["attempt_count"], 1)
+        self.assertEqual(progress_data["questions"][0]["latest_score"], responses[0][2]["score"])
+        self.assertEqual(self.request("POST", "/api/quiz/score", answer, owner)[2], responses[0][2])
+
+    def test_parallel_different_retry_keys_choose_one_winner(self):
+        owner = self.browser_cookie()
+        first = self._quiz_answer(owner)
+        second = {**first, "answer": "Banana", "idempotency_key": str(uuid.uuid4())}
+        responses = self._parallel_scores(owner, [first, second])
+        self.assertEqual(sorted(response[0] for response in responses), [200, 409])
+        winner_index = next(index for index, response in enumerate(responses) if response[0] == 200)
+        winner = (first, second)[winner_index]
+        loser = (first, second)[1 - winner_index]
+        self.assertEqual(responses[winner_index][2], quiz.score_answer(
+            winner["question_id"], winner["answer"], winner["language"]))
+        self.assertEqual(self.request("POST", "/api/quiz/score", winner, owner)[2],
+                         responses[winner_index][2])
+        self.assertEqual(self.request("POST", "/api/quiz/score", loser, owner)[0], 409)
+        progress_data = self.request("GET", "/api/progress", cookie=owner)[2]
+        self.assertEqual(progress_data["attempt_count"], 1)
+        self.assertEqual(progress_data["questions"][0]["latest_score"], responses[winner_index][2]["score"])
+
+    def test_delete_before_paused_save_does_not_recreate_owner_or_touch_other_owner(self):
+        owner, other = self.browser_cookie(), self.browser_cookie()
+        owner_answer = self._quiz_answer(owner)
+        other_answer = self._quiz_answer(other)
+        self.assertEqual(self.request("POST", "/api/quiz/score", other_answer, other)[0], 200)
+        entered = threading.Event()
+        resume = threading.Event()
+        real_save = server.save_answer
+
+        def paused_save(*args, **kwargs):
+            entered.set()
+            if not resume.wait(timeout=5):
+                raise TimeoutError("Test save was not released.")
+            return real_save(*args, **kwargs)
+
+        with patch.object(server, "save_answer", paused_save), ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(self.request, "POST", "/api/quiz/score", owner_answer, owner)
+            try:
+                self.assertTrue(entered.wait(timeout=5))
+                self.assertEqual(self.request("DELETE", "/api/progress", cookie=owner)[0], 200)
+            finally:
+                resume.set()
+            status, _, result = future.result(timeout=10)
+        self.assertEqual(status, 400)
+        self.assertNotIn(owner_answer["answer"], json.dumps(result))
+        self.assertEqual(self.request("GET", "/api/progress", cookie=owner)[2]["attempt_count"], 0)
+        self.assertEqual(self.request("GET", "/api/progress", cookie=other)[2]["attempt_count"], 1)
+        with closing(sqlite3.connect(self.database)) as connection:
+            owner_id = owner.split("=", 1)[1]
+            self.assertIsNone(connection.execute("SELECT 1 FROM sessions WHERE id = ?", (owner_id,)).fetchone())
+            self.assertIsNone(connection.execute("SELECT 1 FROM quiz_runs WHERE id = ?",
+                                                 (owner_answer["quiz_id"],)).fetchone())
 
 
 if __name__ == "__main__":

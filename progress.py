@@ -40,24 +40,26 @@ def _connection(path: Path = DATABASE_PATH) -> Iterator[sqlite3.Connection]:
 def initialize(path: Path = DATABASE_PATH) -> None:
     """Create the local progress tables when the app first needs them."""
     with _connection(path) as connection:
-        connection.executescript(
-            """
-            CREATE TABLE IF NOT EXISTS sessions (
+        # Serialize first-use schema setup and legacy migration. executescript()
+        # commits before running, so it cannot share this transaction.
+        connection.execute("BEGIN IMMEDIATE")
+        for statement in (
+            """CREATE TABLE IF NOT EXISTS sessions (
                 id TEXT PRIMARY KEY,
                 created_at TEXT NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS quiz_runs (
+            )""",
+            """CREATE TABLE IF NOT EXISTS quiz_runs (
                 id TEXT PRIMARY KEY,
                 session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
                 topic TEXT NOT NULL,
                 created_at TEXT NOT NULL
-            );
-            CREATE TABLE IF NOT EXISTS quiz_run_questions (
+            )""",
+            """CREATE TABLE IF NOT EXISTS quiz_run_questions (
                 quiz_id TEXT NOT NULL REFERENCES quiz_runs(id) ON DELETE CASCADE,
                 question_id TEXT NOT NULL,
                 PRIMARY KEY (quiz_id, question_id)
-            );
-            CREATE TABLE IF NOT EXISTS quiz_attempts (
+            )""",
+            """CREATE TABLE IF NOT EXISTS quiz_attempts (
                 quiz_id TEXT NOT NULL,
                 question_id TEXT NOT NULL,
                 idempotency_key TEXT NOT NULL,
@@ -68,11 +70,11 @@ def initialize(path: Path = DATABASE_PATH) -> None:
                 PRIMARY KEY (quiz_id, question_id),
                 FOREIGN KEY (quiz_id, question_id)
                     REFERENCES quiz_run_questions(quiz_id, question_id) ON DELETE CASCADE
-            );
-            CREATE INDEX IF NOT EXISTS idx_quiz_runs_session
-                ON quiz_runs(session_id, created_at);
-            """
-        )
+            )""",
+            """CREATE INDEX IF NOT EXISTS idx_quiz_runs_session
+                ON quiz_runs(session_id, created_at)""",
+        ):
+            connection.execute(statement)
         columns = {row["name"] for row in connection.execute("PRAGMA table_info(quiz_attempts)")}
         if "answer_hash" in columns and "idempotency_key" not in columns:
             connection.execute(
