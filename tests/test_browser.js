@@ -6,12 +6,15 @@ const test = require("node:test");
 const { chromium } = require("playwright-core");
 
 const baseURL = process.env.BOLPREP_TEST_BASE_URL;
+const testAccessPassword = process.env.BOLPREP_TEST_ACCESS_PASSWORD || "";
+const skipNormal = !baseURL || Boolean(testAccessPassword);
+const skipProtected = !baseURL || !testAccessPassword;
 const executablePath = process.env.BOLPREP_BROWSER_PATH || [
   "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
   "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
 ].find((candidate) => fs.existsSync(candidate));
 
-async function openOfflinePage(page, { configure = null, displayedMode = "Offline practice mode" } = {}) {
+async function checkedOfflineURL(page, accessProtected) {
   const url = new URL(baseURL);
   assert.equal(url.protocol, "http:");
   assert.ok(["127.0.0.1", "localhost", "[::1]"].includes(url.hostname));
@@ -24,13 +27,117 @@ async function openOfflinePage(page, { configure = null, displayedMode = "Offlin
   const health = await healthResponse.json();
   assert.equal(health.ok, true);
   assert.equal(health.mode, "offline");
-  assert.equal(health.access_protected, false);
+  assert.equal(health.access_protected, accessProtected);
+  return { url, health };
+}
+
+async function openOfflinePage(page, { configure = null, displayedMode = "Offline practice mode" } = {}) {
+  const { url, health } = await checkedOfflineURL(page, false);
   if (configure) await configure(health);
   await page.goto(url.href, { waitUntil: "domcontentloaded" });
   await page.waitForFunction((mode) => document.querySelector("#mode-label")?.textContent.includes(mode), displayedMode);
 }
 
-test("offline browser flow: tutor, saved conversation, quiz, and diagnostics", { skip: !baseURL }, async () => {
+test("protected offline browser login, logout, and cookie-scoped progress", { skip: skipProtected }, async () => {
+  const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
+  try {
+    assert.ok(testAccessPassword.length >= 16 && testAccessPassword.length <= 256);
+    const owner = await browser.newContext();
+    const page = await owner.newPage();
+    const pageErrors = [];
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+    await page.addInitScript(() => {
+      const synthesis = {
+        pending: false, speaking: false,
+        getVoices: () => [], addEventListener() {},
+        speak() { this.pending = true; },
+        cancel() {
+          this.pending = false;
+          this.speaking = false;
+          const key = "bolprep-test-speech-cancels";
+          sessionStorage.setItem(key, String(Number(sessionStorage.getItem(key) || 0) + 1));
+        },
+      };
+      Object.defineProperty(window, "speechSynthesis", { configurable: true, value: synthesis });
+      window.SpeechSynthesisUtterance = class { constructor(text) { this.text = text; } };
+    });
+    const { url } = await checkedOfflineURL(page, true);
+    const login = async () => {
+      await page.locator("#login-password").fill(testAccessPassword);
+      await page.locator("#login-button").click();
+      await page.waitForURL((target) => target.pathname === "/");
+      await page.waitForFunction(() => document.querySelector("#mode-label")?.textContent.includes("Offline practice mode"));
+      assert.equal(await page.locator("#conversation").innerText().then((text) => text.includes(testAccessPassword)), false);
+    };
+    const speechCancels = () => page.evaluate(() => Number(sessionStorage.getItem("bolprep-test-speech-cancels") || 0));
+    const sessionCookie = async () => (await owner.cookies(url.href)).find((cookie) => cookie.name === "bolprep_session")?.value;
+
+    await page.goto(url.href, { waitUntil: "domcontentloaded" });
+    await page.waitForURL((target) => target.pathname === "/login");
+    assert.equal(await page.locator("#conversation").count(), 0);
+    await page.locator("#login-password").fill("deliberately-wrong-password");
+    await page.locator("#login-button").click();
+    await page.waitForFunction(() => document.querySelector("#login-status")?.textContent.includes("not accepted"));
+    assert.equal(await page.locator("#login-password").inputValue(), "");
+    assert.equal(new URL(page.url()).pathname, "/login");
+    await login();
+    assert.equal(await page.locator("#logout-button").isVisible(), true);
+    const originalSession = await sessionCookie();
+    assert.equal(typeof originalSession, "string");
+
+    await page.locator("#quiz-difficulty").selectOption("basic");
+    await page.locator("#quiz-button").click();
+    await page.waitForFunction(() => !document.querySelector("#end-quiz").hidden);
+    await page.locator("#question-input").fill("Equality before law and equal protection of the laws.");
+    await page.locator("#send-button").click();
+    await page.waitForFunction(() => !document.querySelector("#next-question").hidden);
+    await page.locator("#refresh-progress").click();
+    await page.waitForFunction(() => document.querySelector("#progress-summary")?.textContent.includes("1 saved answer"));
+
+    await page.evaluate(() => speakWithBrowser("Mocked pending playback.", "Done."));
+    const beforeLogout = await speechCancels();
+    await page.locator("#logout-button").click();
+    await page.waitForURL((target) => target.pathname === "/login");
+    assert.equal(await speechCancels() > beforeLogout, true);
+    assert.equal(await page.locator("#conversation").count(), 0);
+    const revoked = await page.request.get(new URL("/api/progress", url).href);
+    assert.equal(revoked.status(), 401);
+
+    await login();
+    assert.equal((await sessionCookie()) === originalSession, true);
+    await page.locator("#refresh-progress").click();
+    await page.waitForFunction(() => document.querySelector("#progress-summary")?.textContent.includes("1 saved answer"));
+    assert.equal(await page.locator("#conversation").innerText().then((text) => text.includes(testAccessPassword)), false);
+
+    const separate = await browser.newContext();
+    const separatePage = await separate.newPage();
+    await checkedOfflineURL(separatePage, true);
+    await separatePage.goto(url.href, { waitUntil: "domcontentloaded" });
+    await separatePage.waitForURL((target) => target.pathname === "/login");
+    await separatePage.locator("#login-password").fill(testAccessPassword);
+    await separatePage.locator("#login-button").click();
+    await separatePage.waitForURL((target) => target.pathname === "/");
+    await separatePage.locator("#refresh-progress").click();
+    await separatePage.waitForFunction(() => document.querySelector("#progress-summary")?.textContent.includes("No saved quiz answers"));
+
+    const accessLogout = await page.request.post(new URL("/api/logout", url).href, {
+      data: {}, headers: { Origin: url.origin },
+    });
+    assert.equal(accessLogout.ok(), true);
+    await page.evaluate(() => speakWithBrowser("Mocked pending playback after expiry.", "Done."));
+    const beforeExpiry = await speechCancels();
+    await page.locator("#refresh-progress").click();
+    await page.waitForURL((target) => target.pathname === "/login");
+    assert.equal(await speechCancels() > beforeExpiry, true);
+    assert.deepEqual(pageErrors, []);
+    await separate.close();
+    await owner.close();
+  } finally {
+    await browser.close();
+  }
+});
+
+test("offline browser flow: tutor, saved conversation, quiz, and diagnostics", { skip: skipNormal }, async () => {
   const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
   try {
     const page = await browser.newPage();
@@ -75,7 +182,7 @@ test("offline browser flow: tutor, saved conversation, quiz, and diagnostics", {
   }
 });
 
-test("restored conversation keeps the latest article context through a language switch", { skip: !baseURL }, async () => {
+test("restored conversation keeps the latest article context through a language switch", { skip: skipNormal }, async () => {
   const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
   try {
     const page = await browser.newPage();
@@ -133,7 +240,7 @@ test("restored conversation keeps the latest article context through a language 
   }
 });
 
-test("saved tutor diagnostics require opt-in and stay with their browser cookie", { skip: !baseURL }, async () => {
+test("saved tutor diagnostics require opt-in and stay with their browser cookie", { skip: skipNormal }, async () => {
   const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
   try {
     const owner = await browser.newContext();
@@ -222,7 +329,7 @@ test("saved tutor diagnostics require opt-in and stay with their browser cookie"
   }
 });
 
-test("model quiz scoring distinguishes preview, saved, failed save, and malformed save", { skip: !baseURL }, async () => {
+test("model quiz scoring distinguishes preview, saved, failed save, and malformed save", { skip: skipNormal }, async () => {
   const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
   try {
     const scoreId = "693f4437-98b8-46bd-8b42-b920519c481d";
@@ -328,7 +435,7 @@ test("model quiz scoring distinguishes preview, saved, failed save, and malforme
   }
 });
 
-test("Stop keeps a delayed tutor answer from appearing", { skip: !baseURL }, async () => {
+test("Stop keeps a delayed tutor answer from appearing", { skip: skipNormal }, async () => {
   const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
   try {
     const page = await browser.newPage();
@@ -358,7 +465,7 @@ test("Stop keeps a delayed tutor answer from appearing", { skip: !baseURL }, asy
   }
 });
 
-test("mocked browser speech counts pending cancellation once and rejects stale callbacks", { skip: !baseURL }, async () => {
+test("mocked browser speech counts pending cancellation once and rejects stale callbacks", { skip: skipNormal }, async () => {
   const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
   try {
     const page = await browser.newPage();
@@ -440,7 +547,7 @@ test("mocked browser speech counts pending cancellation once and rejects stale c
   }
 });
 
-test("mocked streamed TTS groups requested models without adopting missing or invalid headers", { skip: !baseURL }, async () => {
+test("mocked streamed TTS groups requested models without adopting missing or invalid headers", { skip: skipNormal }, async () => {
   const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
   try {
     const page = await browser.newPage();
@@ -549,7 +656,7 @@ test("mocked streamed TTS groups requested models without adopting missing or in
   }
 });
 
-test("mocked recorded input preserves drafts after permission and upload cancellation", { skip: !baseURL }, async () => {
+test("mocked recorded input preserves drafts after permission and upload cancellation", { skip: skipNormal }, async () => {
   const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
   try {
     const page = await browser.newPage();
@@ -657,7 +764,7 @@ test("mocked recorded input preserves drafts after permission and upload cancell
   }
 });
 
-test("continuous quiz voice keeps an interrupted answer until replacement or retry", { skip: !baseURL }, async () => {
+test("continuous quiz voice keeps an interrupted answer until replacement or retry", { skip: skipNormal }, async () => {
   const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
   try {
     for (const scenario of ["failed capture", "cancelled capture", "next question", "replacement answer"]) {

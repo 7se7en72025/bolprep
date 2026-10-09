@@ -1,4 +1,7 @@
-param([ValidateRange(0, 65535)][int]$Port = 0)
+param(
+    [ValidateRange(0, 65535)][int]$Port = 0,
+    [switch]$AccessProtected
+)
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
@@ -46,7 +49,8 @@ $databasePath = Join-Path $stateDirectory "$runId.sqlite3"
 $serverProcess = $null
 $environmentNames = @(
     'OPENAI_API_KEY', 'BOLPREP_ACCESS_PASSWORD', 'BOLPREP_DATABASE_PATH',
-    'BOLPREP_TEST_BASE_URL', 'BOLPREP_BROWSER_PATH', 'BOLPREP_OFFLINE'
+    'BOLPREP_TEST_BASE_URL', 'BOLPREP_TEST_ACCESS_PASSWORD',
+    'BOLPREP_BROWSER_PATH', 'BOLPREP_OFFLINE'
 )
 $previousEnvironment = @{}
 foreach ($name in $environmentNames) {
@@ -72,7 +76,11 @@ function Test-OwnedListener {
 
 try {
     $env:OPENAI_API_KEY = ''
-    $env:BOLPREP_ACCESS_PASSWORD = ''
+    $testAccessPassword = if ($AccessProtected) {
+        [guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N')
+    } else { '' }
+    $env:BOLPREP_ACCESS_PASSWORD = $testAccessPassword
+    $env:BOLPREP_TEST_ACCESS_PASSWORD = $testAccessPassword
     $env:BOLPREP_OFFLINE = '1'
     $env:BOLPREP_DATABASE_PATH = $databasePath
     $env:BOLPREP_TEST_BASE_URL = $baseUrl
@@ -90,7 +98,7 @@ try {
             try {
                 $health = Invoke-RestMethod -Uri "${baseUrl}health" -TimeoutSec 2
                 if ($health.ok -and $health.mode -eq 'offline' -and
-                    $health.access_protected -eq $false -and $health.study_notes -gt 0) {
+                    $health.access_protected -eq [bool]$AccessProtected -and $health.study_notes -gt 0) {
                     $healthy = $true
                     break
                 }
@@ -114,7 +122,8 @@ try {
         Pop-Location
     }
     if (-not (Test-OwnedListener)) { throw 'The temporary server lost its listener during browser tests.' }
-    Write-Output "Headless offline browser checks passed at $baseUrl with a disposable database."
+    $mode = if ($AccessProtected) { 'protected' } else { 'unprotected' }
+    Write-Output "Headless $mode offline browser checks passed at $baseUrl with a disposable database."
 }
 finally {
     if ($serverProcess -and -not $serverProcess.HasExited) {

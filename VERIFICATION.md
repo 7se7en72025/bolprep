@@ -108,3 +108,11 @@ TTS report tests use fabricated metadata only to check null/true/false pairing s
 - Previous context commit 7abae57 passed GitHub Actions run 37994732048. Current root checks are recorded below after their runners finish; real voice sessions, human reviews, source permission, and recorded demo remain open.
 
 - Root verification passed 89 Python tests, nine isolated offline Chrome flows, eight mocked live-STT checks, and seven synthetic evaluation/reader checks. Syntax and whitespace checks passed. No actual provider/microphone or human-review observations were made; cloud execution of this commit remains pending until push.
+
+
+## Verify protected local access - 2026-10-10
+
+- Added five actual loopback HTTP checks using a temporary database and a controlled gate-only clock: unauthenticated requests cannot open storage, login throttling denies a seventh attempt, mutations require the bound local origin, rotated/logged-out/expired/restarted access tokens are rejected, and progress stays with its browser cookie across relogin. These are bounded local checks, not a hosted authentication audit.
+- The disposable browser runner now accepts -AccessProtected, generates a throwaway password, checks owned offline-server health, and restores environment/process/database state. The protected Chrome flow checks wrong/correct login, logout, API revocation, progress retention and isolation, plus mocked pending playback cancellation before redirect. CI runs ordinary and protected modes separately.
+- Root verification passed 94 Python tests, nine ordinary Chrome checks (one protected check skipped), one protected Chrome check (nine ordinary checks skipped), eight mocked live-STT checks, and seven synthetic evaluation/reader checks. No real microphone, provider calls, learner recordings, or human ratings were collected. Local login does not provide learner accounts, TLS, or hosted production readiness.
+- Previous CI diagnostic commit da0c008 passed GitHub Actions run 37995717519. This change's cloud execution remains pending until push. Real multilingual voice observations, paired speech metrics, independent reviews, source permission, and the demo video remain open.
