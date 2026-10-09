@@ -54,9 +54,9 @@ function summarize(paths) {
     } catch {
       throw new Error(`${label} must be readable JSON no larger than 4 MiB.`);
     }
-    if (!document || ![11, 12, 13, 14].includes(document.schema_version)
+    if (!document || ![11, 12, 13, 14, 15].includes(document.schema_version)
       || !Array.isArray(document.speech_stops) || document.speech_stops.length > 500) {
-      throw new Error(`${label} must be a schema 11-14 export with at most 500 speech stops.`);
+      throw new Error(`${label} must be a schema 11-15 export with at most 500 speech stops.`);
     }
     schemas.add(document.schema_version);
     document.speech_stops.forEach((raw, index) => {
@@ -102,7 +102,7 @@ function summarize(paths) {
 
 const paths = process.argv.slice(2);
 if (paths.length === 1 && paths[0] === "--help") {
-  console.log("Usage: node evals/summarize_speech_stops.js export1.json [export2.json ...]\nLocal schema 11-14 stop-command summary; JSON stdout, no acoustic latency claims or provider calls.");
+  console.log("Usage: node evals/summarize_speech_stops.js export1.json [export2.json ...]\nLocal schema 11-15 stop-command summary; JSON stdout, no acoustic latency claims or provider calls.");
 } else if (!paths.length || paths.length > 100) {
   console.error("Provide 1-100 diagnostics exports. Use --help for usage.");
   process.exitCode = 1;

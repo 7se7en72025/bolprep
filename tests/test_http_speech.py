@@ -42,6 +42,7 @@ class FakeProvider:
     def __init__(self, items):
         self.response = FakeSpeechResponse(items)
         self.client_closed = False
+        self.cleaned_up = threading.Event()
         self.request = None
 
     def create(self, **kwargs):
@@ -60,6 +61,7 @@ class FakeProvider:
 
             def __exit__(self, *args):
                 provider.client_closed = True
+                provider.cleaned_up.set()
 
         return Client()
 
@@ -106,6 +108,9 @@ class SpeechTransportHttpTests(unittest.TestCase):
             return status, headers, response.read()
         finally:
             connection.close()
+            # Receiving the terminal HTTP chunk can precede context cleanup
+            # on the server thread. Observe completion before asserting it.
+            self.assertTrue(provider.cleaned_up.wait(3), "Provider cleanup did not finish.")
 
     def test_empty_stream_returns_json_failure_before_audio_headers(self):
         provider = FakeProvider([b"", b""])

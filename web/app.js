@@ -1402,7 +1402,7 @@ function buildSpeechDiagnostics() {
       recognition_end_to_start: percentiles(group.samples),
     }));
   return {
-    schema_version: 14,
+    schema_version: 15,
     generated_at_utc: new Date().toISOString(),
     scope: "Current page only",
     privacy: "Diagnostics metadata only; no learner text, audio, cookies, or credentials.",

@@ -607,3 +607,8 @@ In authorized browser checks, stop pending browser onstart, ordinary playback, p
 ## Requested TTS model labels (schema 14)
 
 Inspect requested_model in TTS configuration groups and the dashboard. A valid successful PCM header supplies the requested model; missing/malformed metadata and pre-header failures/stops remain null. Already-received labels remain with later failures and cancellations. Browser speech has no provider model. Older exports lack this identity and cannot be retroactively assigned one. Live/tutor/stop report readers accept schema 14 while preserving their existing field validation. Use the same prompt/listener coverage and archive actual configuration/environment separately; model aliases and grouped software timings do not prove resolved versions, paired comparisons, acoustic latency, or speech quality. Local browser coverage uses fake PCM/audio scheduling; no actual provider calls or speech observations were collected.
+
+
+## Live STT model attribution (schema 15)
+
+A live attempt begins with an unknown model. Valid session metadata supplies the requested label; missing/malformed labels and pre-session microphone, cancellation, or setup failures remain null. A known label survives later connection failure or cancellation and stays with subsequent turns on the same connection. Unknown and known models form separate report/dashboard groups. Schema 8-14 exports used a hard-coded label, so they cannot prove successful session setup; do not relabel historical attempts as verified configuration. Schema 15 readers retain strict field validation and accept older versions. These labels are not resolved provider versions or measured speech quality. Local tests use mocked microphone/WebRTC/session responses.

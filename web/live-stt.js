@@ -18,6 +18,7 @@ class BolPrepLiveTranscription {
     this.itemId = null;
     this.committedItemId = null;
     this.trackEndListeners = [];
+    this.model = null;
   }
 
   async readHandshakeText(response, maxBytes) {
@@ -89,7 +90,7 @@ class BolPrepLiveTranscription {
       attempt_id: this.attemptId,
       started_at_utc: this.startedAtUtc ?? null,
       language: this.language ?? null,
-      model: "gpt-live-transcribe",
+      model: this.model,
       auto_finish_requested: this.autoFinish,
       quiet_pause_ms: this.quietPauseMs,
       capture_limit_ms: this.captureLimitMs,
@@ -484,6 +485,9 @@ class BolPrepLiveTranscription {
           || !Number.isSafeInteger(token.expires_at) || token.expires_at * 1000 <= Date.now()) {
         throw new Error("Live transcription could not obtain a session. Try Record or type.");
       }
+      // Only validated session metadata can name the requested model.
+      this.model = typeof token.model === "string"
+        && /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(token.model) ? token.model : null;
       stage = "connection";
       const offer = await peer.createOffer();
       if (this.closed) return;

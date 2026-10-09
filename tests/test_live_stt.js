@@ -54,7 +54,8 @@ function captureHarness(continuous = false) {
     sent, track, channel, channelListeners, event, flushDelay };
 }
 
-async function pendingResumeHarness() {
+async function pendingResumeHarness(model) {
+  const requestedModel = arguments.length ? model : "gpt-live-transcribe";
   const h = captureHarness(true);
   let resolveResume;
   let rejectResume;
@@ -76,7 +77,7 @@ async function pendingResumeHarness() {
   }
   h.window.AudioContext = FakeAudioContext;
   h.window.BolPrepFetch = async () => new Response(JSON.stringify({
-    client_secret: "mock-ephemeral-token", expires_at: Math.floor(Date.now() / 1000) + 60,
+    client_secret: "mock-ephemeral-token", expires_at: Math.floor(Date.now() / 1000) + 60, model: requestedModel,
   }));
   h.context.navigator = { mediaDevices: { getUserMedia: async () => ({
     getTracks: () => [h.track], getAudioTracks: () => [h.track],
@@ -223,4 +224,20 @@ test("cancel before commit prevents a late turn from being sent", () => {
   assert.deepEqual(h.finals, []);
   assert.equal(h.metrics.length, 1);
   assert.equal(h.metrics[0].outcome, "cancelled");
+});
+
+
+test("live diagnostics leave pre-session failures unknown", () => {
+  const h = captureHarness();
+  h.capture.fail("Mock microphone failure.", "capture-permission");
+  assert.equal(h.metrics[0].model, null);
+});
+
+test("live diagnostics retain validated session model and ignore missing or invalid labels", async () => {
+  for (const model of ["gpt-live-transcribe", "mock-model-v2", undefined, null, "", "bad model", "x".repeat(129)]) {
+    const { h } = await pendingResumeHarness(model);
+    h.capture.cancel();
+    const valid = typeof model === "string" && /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(model);
+    assert.equal(h.metrics[0].model, valid ? model : null);
+  }
 });

@@ -503,7 +503,7 @@ test("mocked browser speech counts pending cancellation once and rejects stale c
     await page.locator("#stop-button").click();
     await page.locator("#stop-button").click();
     let diagnostic = await page.evaluate(() => buildSpeechDiagnostics());
-    assert.equal(diagnostic.schema_version, 14);
+    assert.equal(diagnostic.schema_version, 15);
     assert.equal(diagnostic.tts[0].requested_model, null);
     assert.equal(diagnostic.tts[0].cancellation_count, 1);
     assert.equal(diagnostic.tts[0].completed_count, 0);
@@ -631,7 +631,7 @@ test("mocked streamed TTS groups requested models without adopting missing or in
 
     const diagnostic = await page.evaluate(() => buildSpeechDiagnostics());
     const groups = diagnostic.tts.filter((group) => group.voice === "OpenAI coral" && group.sample_type === "preview");
-    assert.equal(diagnostic.schema_version, 14);
+    assert.equal(diagnostic.schema_version, 15);
     assert.equal(groups.length, 3);
     assert.deepEqual(groups.map((group) => group.requested_model), ["mock-tts-a", "mock-tts-b", null]);
     const byModel = (model) => groups.find((group) => group.requested_model === model);
