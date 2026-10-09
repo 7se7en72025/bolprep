@@ -111,6 +111,22 @@ test("restored conversation keeps the latest article context through a language 
     assert.doesNotMatch(latestFollowUp, /Article 14/i);
     assert.equal(turns.at(-1).language, "en-IN");
     assert.ok(turns.at(-1).history.some((message) => message.role === "user" && message.content === "Explain Article 21"));
+    for (let followUp = 0; followUp < 5; followUp += 1) {
+      const reply = await ask("Give an example");
+      assert.match(reply, /Article 21/i, `follow-up ${followUp + 2}`);
+      assert.doesNotMatch(reply, /Article 14/i, `follow-up ${followUp + 2}`);
+    }
+    const recentHistory = turns.at(-1).history.slice(-8);
+    assert.ok(recentHistory.some((message) => message.role === "assistant" && message.article_context === "article-21"));
+    assert.ok(recentHistory.every((message) => message.article_context !== "article-14"));
+
+    await ask("Compare Article 14 and Article 21");
+    assert.ok(await page.locator("#conversation .tutor-message").last().locator(".sources a").count() > 1);
+    assert.equal(await page.evaluate(() => history.at(-1).article_context), undefined);
+    assert.match(await ask("Explain Article 19"), /Article 19/i);
+    assert.equal(turns.at(-1).history.at(-1).article_context, undefined);
+    assert.match(await ask("Give an example"), /Article 19/i);
+    assert.equal(turns.at(-1).history.at(-1).article_context, "article-19");
     assert.deepEqual(pageErrors, []);
   } finally {
     await browser.close();

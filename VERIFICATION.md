@@ -89,3 +89,12 @@ TTS report tests use fabricated metadata only to check null/true/false pairing s
 - The preceding migration commit a5eda3d passed GitHub Actions run 37993422312. Real microphone/provider sessions, human reviews, source permission, and recorded demo remain open.
 
 - Root disposable Chrome verification finished with all eight checks passing; four synthetic TTS report checks also passed. Cloud execution of this new commit remains pending until push.
+
+
+## Keep article context through repeated follow-ups - 2026-10-10
+
+- Reproduced ordinary tutoring losing its article on the fifth generic follow-up: source links were displayed but their topic hint was omitted from assistant history. The existing four-query retrieval window then contained only generic user questions. The browser now passes validated answer sources into its existing bounded history helper. Exactly one article source can supply a hint; multiple sources cannot select an arbitrary article. Hints remain topic metadata, not evidence of answer correctness.
+- Extended the actual offline Chrome context regression with six Article21 follow-ups after a restored Article14 session and language switch, recent hint inspection, a multi-source comparison, and explicit Article19 precedence. The repeated-follow-up case failed before the fix and passed afterward. No provider or microphone observations follow from these text checks.
+- Previous voice-startup commit 6268dc1 passed GitHub Actions run 37994263900. Current root verification is recorded below after the isolated checks finish. Real voice sessions, independent human reviews, source permission, and recorded demo remain open.
+
+- Root verification passed all 88 Python tests and eight isolated offline Chrome flows, including the extended repeated-follow-up scenario. Source syntax and whitespace checks passed. Cloud execution for this new commit remains pending until push.

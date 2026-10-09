@@ -507,9 +507,9 @@ function rememberMessage(role, content, sources = []) {
   return entry;
 }
 
-function rememberTurn(userMessage, assistantMessage) {
+function rememberTurn(userMessage, assistantMessage, sources = []) {
   rememberMessage("user", userMessage);
-  return rememberMessage("assistant", assistantMessage);
+  return rememberMessage("assistant", assistantMessage, sources);
 }
 
 function updateLiveSttButton(state = "idle") {
@@ -2287,7 +2287,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
       : scoreToolFailed ? "The quiz score could not be confirmed or saved. Check saved progress before retrying."
         : payload.answer;
     const answerSources = scoredAnswer ? [scoredAnswer.result.source] : payload.sources || [];
-    const answerHistoryEntry = rememberTurn(question, answerText);
+    const answerHistoryEntry = rememberTurn(question, answerText, answerSources);
     addMessage("assistant", answerText, answerSources, "STUDY SOURCE", { historyEntry: answerHistoryEntry }, payload.trace);
     if (progressiveSpeech?.hasFailed()) markSpeechIncomplete(answerHistoryEntry);
     if (usedProgressiveSpeech && !progressiveSpeech?.hasFailed()) activeSpeechHistoryEntry = answerHistoryEntry;
