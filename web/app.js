@@ -260,16 +260,25 @@ function savedRequestTrace(trace) {
   return selected;
 }
 
-function validTutorToolEvents(events) {
+function validTutorToolEvents(events, { allowLegacyScore = false } = {}) {
   const object = (value) => value && typeof value === "object" && !Array.isArray(value);
   const text = (value, limit) => typeof value === "string" && Boolean(value.trim()) && value.length <= limit;
+  const scoreId = (value) => typeof value === "string"
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  const sameScore = (left, right) => ["question_id", "score", "complete", "feedback",
+    "minimum_concepts", "total_concepts"].every((field) => left[field] === right[field])
+    && ["matched_concepts", "missing_concepts"].every((field) => JSON.stringify(left[field]) === JSON.stringify(right[field]))
+    && ["title", "section", "url"].every((field) => left.source[field] === right.source[field]);
   if (!Array.isArray(events) || events.length > 6) return false;
+  const seenScores = new Map();
+  let startedQuiz = false;
   return events.every((event) => {
     if (!object(event) || !text(event.name, 64) || typeof event.ok !== "boolean") return false;
     if (!event.ok) return text(event.error, 4096);
     const result = event.result;
     if (!object(result)) return false;
     if (event.name === "start_quiz") {
+      if (startedQuiz || seenScores.size) return false;
       if (result.difficulty !== undefined && (typeof result.difficulty !== "string"
         || !Object.hasOwn(quizPresetLabels, result.difficulty))) return false;
       const pool = result.difficulty === "basic" ? ["art14_equality", "art21_protection"]
@@ -279,9 +288,11 @@ function validTutorToolEvents(events) {
       if (!result.questions.every((question) => object(question) && text(question.id, 128)
         && text(question.prompt, 3000) && validStudySource(question.source)
         && (!pool || pool.includes(question.id)))) return false;
-      return new Set(result.questions.map((question) => question.id)).size === result.questions.length;
+      if (new Set(result.questions.map((question) => question.id)).size !== result.questions.length) return false;
+      startedQuiz = true;
+      return true;
     }
-    if (event.name === "score_answer") {
+    if (event.name === "score_answer" || event.name === "save_progress") {
       const matched = result.matched_concepts;
       const missing = result.missing_concepts;
       if (![matched, missing].every((items) => Array.isArray(items) && items.length <= 100
@@ -304,10 +315,21 @@ function validTutorToolEvents(events) {
         if (result.score !== Math.min(100, rounded)
           || result.complete !== (matched.length >= minimum)) return false;
       }
-      return text(result.question_id, 128) && typeof result.complete === "boolean"
+      const validRubric = text(result.question_id, 128) && typeof result.complete === "boolean"
         && text(result.feedback, 4096) && typeof result.score === "number"
         && Number.isFinite(result.score) && result.score >= 0 && result.score <= 100
         && validStudySource(result.source);
+      if (!validRubric) return false;
+      if (allowLegacyScore && event.name === "score_answer"
+        && result.score_id === undefined && result.saved === undefined) return true;
+      if (!scoreId(result.score_id) || result.saved !== (event.name === "save_progress")) return false;
+      if (event.name === "score_answer") {
+        if (startedQuiz || seenScores.size) return false;
+        seenScores.set(result.score_id, result);
+        return true;
+      }
+      const preview = seenScores.get(result.score_id);
+      return Boolean(preview && sameScore(preview, result));
     }
     if (event.name === "get_weak_topics") return validSavedProgress(result);
     return false;
@@ -2251,8 +2273,22 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
     }
     activePartialMessage?.remove();
     activePartialMessage = null;
-    const answerHistoryEntry = rememberTurn(question, payload.answer);
-    addMessage("assistant", payload.answer, payload.sources || [], "STUDY SOURCE", { historyEntry: answerHistoryEntry }, payload.trace);
+    const toolEvents = payload.tool_events || [];
+    const startedQuiz = toolEvents.find((event) => event.name === "start_quiz" && event.ok);
+    const scoredAnswer = toolEvents.find((event) => event.name === "score_answer" && event.ok);
+    const savedAnswer = scoredAnswer && toolEvents.find((event) => event.name === "save_progress"
+      && event.ok && event.result.score_id === scoredAnswer.result.score_id);
+    const scoreToolFailed = toolEvents.some((event) => !event.ok
+      && ["score_answer", "save_progress"].includes(event.name));
+    const scoreStatus = savedAnswer ? "This score was saved to quiz progress."
+      : "This score is a preview and was not saved to quiz progress.";
+    const answerText = scoredAnswer
+      ? `${scoredAnswer.result.feedback} Score: ${scoredAnswer.result.score}%. ${scoreStatus}`
+      : scoreToolFailed ? "The quiz score could not be confirmed or saved. Check saved progress before retrying."
+        : payload.answer;
+    const answerSources = scoredAnswer ? [scoredAnswer.result.source] : payload.sources || [];
+    const answerHistoryEntry = rememberTurn(question, answerText);
+    addMessage("assistant", answerText, answerSources, "STUDY SOURCE", { historyEntry: answerHistoryEntry }, payload.trace);
     if (progressiveSpeech?.hasFailed()) markSpeechIncomplete(answerHistoryEntry);
     if (usedProgressiveSpeech && !progressiveSpeech?.hasFailed()) activeSpeechHistoryEntry = answerHistoryEntry;
     pendingQuestion = null;
@@ -2261,8 +2297,6 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
         ? "Answer ready; speech is finishing."
         : "Answer ready.";
     }
-    const startedQuiz = (payload.tool_events || []).find((event) => event.name === "start_quiz" && event.ok);
-    const scoredAnswer = (payload.tool_events || []).find((event) => event.name === "score_answer" && event.ok);
     if (startedQuiz && startedQuiz.result.questions?.length) {
       quizSession = {
         quizId: startedQuiz.result.quiz_id,
@@ -2273,12 +2307,14 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
         awaitingAnswer: false,
       };
       showQuizQuestion(false);
-      speak(`${payload.answer} ${quizSession.questions[0].prompt}`, "Your answer is ready when you are.", "tutor", answerHistoryEntry);
+      speak(`${answerText} ${quizSession.questions[0].prompt}`, "Your answer is ready when you are.", "tutor", answerHistoryEntry);
     } else if (scoredAnswer) {
-      const score = scoredAnswer.result;
-      addMessage("assistant", `${score.feedback} Score: ${score.score}%.`, [score.source], "STUDY SOURCE", {});
-      speak(`${payload.answer} ${score.feedback}`, "Answer ready.", "tutor", answerHistoryEntry);
-      loadProgress();
+      if (savedAnswer) loadProgress();
+      statusLine.textContent = scoreStatus;
+      speak(answerText, scoreStatus, "tutor", answerHistoryEntry);
+    } else if (scoreToolFailed) {
+      statusLine.textContent = answerText;
+      speak(answerText, answerText, "tutor", answerHistoryEntry);
     } else if (!usedProgressiveSpeech) {
       speak(payload.answer, "Ready when you are.", "tutor", answerHistoryEntry);
     }
@@ -2476,7 +2512,8 @@ async function submitQuizAnswer(answer, { preserveLive = false } = {}) {
     if (timedOut) throw new Error("Scoring timed out after 30 seconds.");
     if (!response.ok) throw new Error(result?.error || "Could not score the answer.");
     if (requestTurn !== turn) return;
-    if (!validTutorToolEvents([{ name: "score_answer", ok: true, result }]) || result.question_id !== current.id) {
+    if (!validTutorToolEvents([{ name: "score_answer", ok: true, result }], { allowLegacyScore: true })
+      || result.question_id !== current.id) {
       throw new Error("The server returned an invalid score response. Your answer remains available for retry.");
     }
     quizSession.pendingAnswer = "";

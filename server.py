@@ -338,10 +338,26 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         request_id = str(uuid.uuid4())
         started_at = datetime.now(timezone.utc).isoformat()
         started = time.perf_counter()
+        observed_source_count = 0
+        observed_tools: list[dict[str, Any]] = []
+        trace_tool_names = ("start_quiz", "score_answer", "save_progress", "get_weak_topics")
+
+        def report_sources(sources: list[dict[str, str]]) -> None:
+            nonlocal observed_source_count
+            observed_source_count = min(len(sources), 100) if isinstance(sources, list) else 0
+            self._write_ndjson({"type": "retrieved_sources", "sources": sources})
+
+        def report_tool_event(event: dict[str, Any]) -> None:
+            if (isinstance(event, dict) and event.get("name") in trace_tool_names
+                    and type(event.get("ok")) is bool and len(observed_tools) < 6):
+                observed_tools.append({"name": event["name"], "ok": event["ok"]})
 
         def turn_trace(outcome: str, result: dict[str, Any] | None = None) -> dict[str, Any]:
+            completed_result = result is not None
             result = result or {}
             mode = result.get("mode", "model" if api_is_configured() else "offline")
+            result_tools = [{"name": event["name"], "ok": event.get("ok") is True}
+                            for event in result.get("tool_events", []) if event.get("name") in trace_tool_names]
             return {
                 "request_id": request_id,
                 "started_at_utc": started_at,
@@ -350,9 +366,8 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 "mode": mode,
                 "configured_model": os.getenv("OPENAI_MODEL", "gpt-6-astra") if mode == "model" else None,
                 "provider_reported_models": result.get("provider_reported_models", [] if mode == "offline" else None),
-                "source_count": len(result.get("sources", [])),
-                "tool_outcomes": [{"name": event["name"], "ok": event.get("ok") is True}
-                                  for event in result.get("tool_events", [])],
+                "source_count": len(result.get("sources", [])) if completed_result else observed_source_count,
+                "tool_outcomes": result_tools if completed_result else list(observed_tools),
                 "usage": result.get("usage"),
                 "model_response_count": result.get("model_response_count", 0 if mode == "offline" else None),
                 "usage_response_count": result.get("usage_response_count", 0 if mode == "offline" else None),
@@ -388,7 +403,8 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 on_speech_mode=lambda progressive: self._write_ndjson(
                     {"type": "speech_mode", "progressive": progressive}
                 ),
-                on_sources=lambda sources: self._write_ndjson({"type": "retrieved_sources", "sources": sources}),
+                on_sources=report_sources,
+                on_tool_event=report_tool_event,
             )
             result["trace"] = turn_trace("completed", result)
             storage = persist(result["trace"])

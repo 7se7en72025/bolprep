@@ -3,7 +3,7 @@ import unittest
 import sqlite3
 from pathlib import Path
 
-from progress import ProgressConflict, clear_progress, create_quiz_run, ensure_session, get_progress, initialize, save_answer
+from progress import ProgressConflict, clear_progress, create_quiz_run, ensure_session, get_progress, initialize, save_answer, validate_quiz_question
 
 
 class ProgressStorageTests(unittest.TestCase):
@@ -70,6 +70,20 @@ class ProgressStorageTests(unittest.TestCase):
                 "session-two", "quiz-one", "art14_equality", "request-two", self.make_result(), self.database
             )
         self.assertEqual(get_progress("session-two", self.database)["attempt_count"], 0)
+
+    def test_validate_quiz_question_checks_owner_without_saving(self):
+        self.start_run()
+        validate_quiz_question(self.session_id, "quiz-one", "art14_equality", self.database)
+        self.assertEqual(get_progress(self.session_id, self.database)["attempt_count"], 0)
+        for session_id, quiz_id, question_id in (
+            ("session-two", "quiz-one", "art14_equality"),
+            (self.session_id, "other-quiz", "art14_equality"),
+            (self.session_id, "quiz-one", "art19_freedom"),
+        ):
+            with self.subTest(session_id=session_id, quiz_id=quiz_id, question_id=question_id):
+                with self.assertRaises(ValueError):
+                    validate_quiz_question(session_id, quiz_id, question_id, self.database)
+        self.assertEqual(get_progress(self.session_id, self.database)["attempt_count"], 0)
 
     def test_clear_removes_progress_for_only_one_session(self):
         self.start_run()

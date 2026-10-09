@@ -7,6 +7,7 @@ import os
 import re
 import sqlite3
 import uuid
+from copy import deepcopy
 from typing import Any, Callable
 
 from bolprep import MAX_MODEL_ANSWER_CHARS, api_is_configured, checked_evidence, offline_answer, offline_requested, response_instructions, require_completed_response
@@ -16,6 +17,7 @@ from progress import (
     create_quiz_run,
     get_progress,
     save_answer,
+    validate_quiz_question,
 )
 from quiz import QUIZ_PRESETS, score_answer, start_quiz
 from retrieval import is_generic_question, retrieval_query, retrieve
@@ -46,7 +48,7 @@ TOOLS: list[dict[str, Any]] = [
     {
         "type": "function",
         "name": "score_answer",
-        "description": "Score the learner's entire current submitted message with the checked deterministic rubric. The server supplies the answer; do not extract, rewrite, or supply it. Use only a question and quiz ID returned by start_quiz.",
+        "description": "Preview the learner's entire current submitted message with the checked deterministic rubric. The server supplies the answer; do not extract, rewrite, or supply it. Use only a question and quiz ID returned by start_quiz. This does not save progress; use its returned score_id with save_progress.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -55,6 +57,18 @@ TOOLS: list[dict[str, Any]] = [
                 "language": {"type": "string", "enum": ["hi-IN", "en-IN"]},
             },
             "required": ["quiz_id", "question_id", "language"],
+            "additionalProperties": False,
+        },
+        "strict": True,
+    },
+    {
+        "type": "function",
+        "name": "save_progress",
+        "description": "Save a score_answer preview for this browser session. Supply only the score_id returned by score_answer in this turn. The server retains the score and quiz IDs; never supply marks or learner text.",
+        "parameters": {
+            "type": "object",
+            "properties": {"score_id": {"type": "string"}},
+            "required": ["score_id"],
             "additionalProperties": False,
         },
         "strict": True,
@@ -90,6 +104,12 @@ REVISION_INTENT = re.compile(
     r"kamzor\s+(?:topics?|areas?)|kamzori\s+(?:batao|dikhao)|"
     r"dohra(?:o|na|ana))\b|\u0915\u092e\u091c\u094b\u0930|\u0926\u094b\u0939\u0930\u093e"
 )
+SCORE_INTENT = re.compile(
+    r"\b(?:score|grade|check)\s+(?:my|this|the)\s+(?:answer|response)\b|"
+    r"\b(?:mera|meri|mere)\s+(?:answer|jawab)\s+(?:check|score|grade)\s+karo\b|"
+    r"(?:मेरा|मेरी|मेरे)\s+जवाब\s+"
+    r"(?:जाँचो|जांचो|चेक\s+करो|स्कोर\s+करो)"
+)
 
 
 def run_agent_turn(
@@ -102,6 +122,7 @@ def run_agent_turn(
     on_speech_mode: Callable[[bool], None] | None = None,
     on_sources: Callable[[list[dict[str, str]]], None] | None = None,
     quiz_difficulty: str = "standard",
+    on_tool_event: Callable[[dict[str, Any]], None] | None = None,
 ) -> dict[str, Any]:
     """Answer a turn, using validated quiz/progress functions in model mode."""
     if not isinstance(quiz_difficulty, str) or quiz_difficulty not in QUIZ_PRESETS:
@@ -113,8 +134,12 @@ def run_agent_turn(
     if (not documents and is_generic_question(selected_query) and not _has_tool_intent(question)) or (
         offline_requested() or (responses_client is None and not api_is_configured())
     ):
-        return _offline_turn(question, documents, session_id, language, quiz_difficulty,
-                             retrieval_question=selected_query)
+        result = _offline_turn(question, documents, session_id, language, quiz_difficulty,
+                               retrieval_question=selected_query)
+        if on_tool_event is not None:
+            for event in result["tool_events"]:
+                on_tool_event({"name": event["name"], "ok": event["ok"] is True})
+        return result
 
     if responses_client is None:
         try:
@@ -126,11 +151,11 @@ def run_agent_turn(
         with OpenAI(timeout=45.0, max_retries=1) as client:
             return _model_turn(
                 question, history, session_id, language, client.responses,
-                on_text_delta, on_speech_mode, quiz_difficulty, documents,
+                on_text_delta, on_speech_mode, quiz_difficulty, documents, on_tool_event,
             )
     return _model_turn(
         question, history, session_id, language, responses_client,
-        on_text_delta, on_speech_mode, quiz_difficulty, documents,
+        on_text_delta, on_speech_mode, quiz_difficulty, documents, on_tool_event,
     )
 
 
@@ -144,6 +169,7 @@ def _model_turn(
     on_speech_mode: Callable[[bool], None] | None,
     quiz_difficulty: str,
     documents: list[dict[str, Any]],
+    on_tool_event: Callable[[dict[str, Any]], None] | None,
 ) -> dict[str, Any]:
     """Complete the tool workflow while the caller keeps its client open."""
     evidence = checked_evidence(documents, question, language)
@@ -153,10 +179,14 @@ def _model_turn(
         on_speech_mode(not tools_requested and on_text_delta is not None)
     if tools_requested:
         instructions = (
-            f"{instructions} You may use start_quiz to start a quiz, score_answer to score an answer "
-            "with the server's fixed rubric, and get_weak_topics to read this browser session's saved results. "
+            f"{instructions} You may use start_quiz to start a quiz, score_answer to preview an answer "
+            "with the server's fixed rubric, save_progress with its score_id to persist that preview, "
+            "and get_weak_topics to read this browser session's saved results. "
             "Never claim a tool succeeded unless its result says ok."
+            " A score_answer result has saved=false; say it is only a preview until save_progress returns saved=true."
+            " Score at most one answer per turn. Repeating save_progress with the same score_id is safe."
             " Start at most one successful quiz per turn; use its returned questions and quiz ID."
+            " Do not start a quiz and score an answer in the same turn; quiz answers come from a later learner turn."
             f" The current quiz preset is {quiz_difficulty}; use it unless the current question explicitly requests another preset."
         )
     input_items: list[Any] = [
@@ -187,6 +217,7 @@ def _model_turn(
 
     response = create_response()
     tool_events: list[dict[str, Any]] = []
+    pending_scores: dict[str, dict[str, Any]] = {}
     total_calls = 0
 
     for _ in range(MAX_TOOL_ROUNDS):
@@ -205,10 +236,24 @@ def _model_turn(
             name = _field(call, "name", "")
             if not isinstance(call_id, str) or not call_id or not isinstance(name, str) or not name:
                 raise RuntimeError("The model returned a tool call without its required identifiers.")
-            if name == "start_quiz" and any(
+            if name == "start_quiz" and pending_scores:
+                message = "An answer was already scored in this turn. Start a quiz in a later turn."
+                output = {"ok": False, "error": message}
+                event = {"name": name, "ok": False, "error": message}
+            elif name == "start_quiz" and any(
                 event["name"] == "start_quiz" and event["ok"] for event in tool_events
             ):
                 message = "A quiz already started in this turn. Use its returned quiz ID and questions."
+                output = {"ok": False, "error": message}
+                event = {"name": name, "ok": False, "error": message}
+            elif name == "score_answer" and any(
+                event["name"] == "start_quiz" and event["ok"] for event in tool_events
+            ):
+                message = "A quiz just started. Score its answer in a later learner turn."
+                output = {"ok": False, "error": message}
+                event = {"name": name, "ok": False, "error": message}
+            elif name == "score_answer" and pending_scores:
+                message = "An answer was already scored in this turn. Save its score ID or start a new turn."
                 output = {"ok": False, "error": message}
                 event = {"name": name, "ok": False, "error": message}
             else:
@@ -218,11 +263,14 @@ def _model_turn(
                     call_id,
                     session_id,
                     learner_answer=question.strip(),
+                    pending_scores=pending_scores,
                 )
             input_items.append(
                 {"type": "function_call_output", "call_id": call_id, "output": json.dumps(output, ensure_ascii=False)}
             )
             tool_events.append(event)
+            if on_tool_event is not None:
+                on_tool_event({"name": event["name"], "ok": event["ok"] is True})
 
         response = create_response()
     else:
@@ -231,8 +279,21 @@ def _model_turn(
 
     output_text = _field(response, "output_text", "")
     answer = output_text.strip() if isinstance(output_text, str) else ""
-    if not answer:
+    if not answer and not pending_scores:
         raise RuntimeError("The model returned an empty response. Please try again.")
+    pending_score_count = sum(not item["saved"] for item in pending_scores.values())
+    if pending_scores:
+        pending = next(iter(pending_scores.values()))
+        score = pending["result"]["score"]
+        feedback = pending["result"].get("feedback", "")
+        status = (
+            "This score was saved to quiz progress." if pending["saved"] else
+            "This score is only a preview; it was not saved to quiz progress."
+        ) if language == "en-IN" else (
+            "Yeh score quiz progress mein save hua." if pending["saved"] else
+            "Yeh score sirf preview hai; quiz progress mein save nahi hua."
+        )
+        answer = f"Score: {score}/100. {feedback}\n\n{status}".strip()
     if len(answer) > MAX_MODEL_ANSWER_CHARS:
         raise RuntimeError("The model answer exceeded 12,000 characters. Ask a narrower question.")
     sources = [_source(document) for document in documents]
@@ -247,6 +308,7 @@ def _model_turn(
         "usage": usage, "model_response_count": len(response_usages),
         "usage_response_count": len(reported_usages),
         "provider_reported_models": provider_models,
+        "pending_score_count": pending_score_count,
     }
 
 
@@ -307,7 +369,10 @@ def _unique_tool_fields(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
 
 def _execute_tool(
     name: str, arguments: str, call_id: str, session_id: str, *, learner_answer: str | None = None,
+    pending_scores: dict[str, dict[str, Any]] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
+    if pending_scores is None:
+        pending_scores = {}
     try:
         if not isinstance(arguments, str) or len(arguments) > MAX_TOOL_ARGUMENT_CHARS:
             raise ValueError("Tool arguments must be text of at most 16,000 characters.")
@@ -339,14 +404,31 @@ def _execute_tool(
                 raise ValueError("Quiz scoring requires the current learner submission.")
             if len(learner_answer) > 1000:
                 raise ValueError("Answer must contain at most 1,000 characters.")
-            result = score_answer(values["question_id"], learner_answer, values["language"])
-            result = save_answer(
-                session_id,
-                values["quiz_id"],
-                values["question_id"],
-                call_id,
-                result,
+            validate_quiz_question(session_id, values["quiz_id"], values["question_id"])
+            scored = score_answer(values["question_id"], learner_answer, values["language"])
+            score_id = str(uuid.uuid4())
+            pending_scores[score_id] = {
+                "session_id": session_id,
+                "quiz_id": values["quiz_id"],
+                "question_id": values["question_id"],
+                "result": deepcopy(scored),
+                "saved": False,
+            }
+            result = {**deepcopy(scored), "score_id": score_id, "saved": False}
+        elif name == "save_progress":
+            _check_fields(values, {"score_id"})
+            score_id = values["score_id"]
+            if not isinstance(score_id, str) or score_id not in pending_scores:
+                raise ValueError("Save a score returned by score_answer in this turn.")
+            pending = pending_scores[score_id]
+            if pending["session_id"] != session_id:
+                raise ValueError("This score belongs to another browser session.")
+            saved = save_answer(
+                session_id, pending["quiz_id"], pending["question_id"], score_id,
+                deepcopy(pending["result"]),
             )
+            pending["saved"] = True
+            result = {**deepcopy(saved), "score_id": score_id, "saved": True}
         elif name == "get_weak_topics":
             _check_fields(values, set())
             result = get_progress(session_id)
@@ -430,7 +512,8 @@ def _offline_tool_unavailable(
 
 def _has_tool_intent(question: str) -> bool:
     normalized = question.casefold()
-    return bool(QUIZ_INTENT.search(normalized) or REVISION_INTENT.search(normalized))
+    return bool(QUIZ_INTENT.search(normalized) or REVISION_INTENT.search(normalized)
+                or SCORE_INTENT.search(normalized))
 
 
 def _retrieval_query(question: str, history: list[dict[str, str]]) -> str:

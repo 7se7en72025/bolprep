@@ -129,6 +129,22 @@ def create_quiz_run(
         )
 
 
+def validate_quiz_question(
+    session_id: str, quiz_id: str, question_id: str, path: Path = DATABASE_PATH
+) -> None:
+    """Check ownership before scoring without creating a saved attempt."""
+    initialize(path)
+    with _connection(path) as connection:
+        allowed = connection.execute(
+            """SELECT 1 FROM quiz_run_questions q
+               JOIN quiz_runs r ON r.id = q.quiz_id
+               WHERE r.id = ? AND r.session_id = ? AND q.question_id = ?""",
+            (quiz_id, session_id, question_id),
+        ).fetchone()
+    if allowed is None:
+        raise ValueError("This question does not belong to an active quiz in this browser session.")
+
+
 def save_answer(
     session_id: str,
     quiz_id: str,

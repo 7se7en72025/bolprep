@@ -206,6 +206,112 @@ test("saved tutor diagnostics require opt-in and stay with their browser cookie"
   }
 });
 
+test("model quiz scoring distinguishes preview, saved, failed save, and malformed save", { skip: !baseURL }, async () => {
+  const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
+  try {
+    const scoreId = "693f4437-98b8-46bd-8b42-b920519c481d";
+    const source = { title: "Constitution of India", section: "Article 14", url: "https://www.legislative.gov.in/" };
+    const preview = {
+      question_id: "art14_equality", score: 100, complete: true, feedback: "Good answer!",
+      matched_concepts: ["equality"], missing_concepts: [], minimum_concepts: 1, total_concepts: 1,
+      source, score_id: scoreId, saved: false,
+    };
+    const saved = { ...preview, saved: true };
+    const start = { name: "start_quiz", ok: true, result: {
+      quiz_id: "mock-quiz", difficulty: "basic",
+      questions: [{ id: "art14_equality", prompt: "What does Article 14 provide?", source }],
+    } };
+    const altered = {
+      ...saved, score: 0, complete: false, feedback: "Try again.",
+      matched_concepts: [], missing_concepts: ["equality"],
+    };
+    for (const scenario of [
+      { label: "preview only", events: [{ name: "score_answer", ok: true, result: preview }], saved: false },
+      { label: "saved", events: [{ name: "score_answer", ok: true, result: preview },
+        { name: "save_progress", ok: true, result: saved }], saved: true },
+      { label: "repeated save", events: [{ name: "score_answer", ok: true, result: preview },
+        { name: "save_progress", ok: true, result: saved },
+        { name: "save_progress", ok: true, result: saved }], saved: true },
+      { label: "failed save", events: [{ name: "score_answer", ok: true, result: preview },
+        { name: "save_progress", ok: false, error: "Storage unavailable." }], saved: false },
+      { label: "failed score then preview", events: [{ name: "score_answer", ok: false, error: "Retry scoring." },
+        { name: "score_answer", ok: true, result: preview }], saved: false },
+      { label: "failed save without score", events: [
+        { name: "save_progress", ok: false, error: "Unknown score ID." }], toolFailure: true },
+      { label: "altered save", events: [{ name: "score_answer", ok: true, result: preview },
+        { name: "save_progress", ok: true, result: altered }], invalid: true },
+      { label: "second successful score", events: [{ name: "score_answer", ok: true, result: preview },
+        { name: "score_answer", ok: true, result: { ...preview,
+          score_id: "72fe6b31-5c89-4254-b9ef-1c0d7fc98862" } }], invalid: true },
+      { label: "start then score", events: [start,
+        { name: "score_answer", ok: true, result: preview }], invalid: true },
+      { label: "score then start", events: [{ name: "score_answer", ok: true, result: preview },
+        start], invalid: true },
+      { label: "start then failed score", events: [start,
+        { name: "score_answer", ok: false, error: "Retry scoring." }], toolFailure: true, startedQuiz: true },
+    ]) {
+      const page = await browser.newPage();
+      const pageErrors = [];
+      let progressReads = 0;
+      page.on("pageerror", (error) => pageErrors.push(error.message));
+      page.on("request", (request) => {
+        if (new URL(request.url()).pathname === "/api/progress") progressReads += 1;
+      });
+      try {
+        await openOfflinePage(page, {
+          displayedMode: "Model answers enabled",
+          configure: async (health) => {
+            await page.route("**/health", (route) => route.fulfill({ json: {
+              ...health, mode: "model", model_name: "mock-browser",
+            } }));
+            await page.route("**/api/agent/turn", (route) => {
+              const answer = "MODEL CLAIM: the score was saved.";
+              const payload = { mode: "model", answer, sources: [], tool_events: scenario.events };
+              const body = [
+                { type: "delta", text: answer }, { type: "complete", payload },
+              ].map((event) => JSON.stringify(event)).join("\n") + "\n";
+              return route.fulfill({ status: 200, contentType: "application/x-ndjson", body });
+            });
+          },
+        });
+        await page.waitForFunction(() => !document.querySelector("#progress-summary")?.textContent.includes("Loading"));
+        const initialReads = progressReads;
+        await page.locator("#question-input").fill("Check my quiz answer");
+        await page.locator("#send-button").click();
+        await page.waitForFunction(() => !document.querySelector("#send-button").disabled);
+        const conversation = await page.locator("#conversation").innerText();
+        if (scenario.invalid) {
+          assert.match(conversation, /invalid completed response/i, scenario.label);
+          assert.doesNotMatch(conversation, /MODEL CLAIM|Good answer|score was saved/i, scenario.label);
+        } else if (scenario.toolFailure) {
+          assert.match(conversation, /score could not be confirmed or saved/i, scenario.label);
+          assert.doesNotMatch(conversation, /MODEL CLAIM|score was saved/i, scenario.label);
+          if (scenario.startedQuiz) {
+            assert.match(conversation, /What does Article 14 provide\?/i, scenario.label);
+            assert.equal(await page.locator("#end-quiz").isHidden(), false, scenario.label);
+          }
+        } else {
+          assert.match(conversation, /Good answer! Score: 100%/, scenario.label);
+          assert.doesNotMatch(conversation, /MODEL CLAIM/, scenario.label);
+          assert.match(conversation, scenario.saved ? /This score was saved to quiz progress/
+            : /This score is a preview and was not saved to quiz progress/, scenario.label);
+        }
+        if (scenario.saved) {
+          await page.waitForTimeout(100);
+          assert.equal(progressReads, initialReads + 1, scenario.label);
+        } else {
+          assert.equal(progressReads, initialReads, scenario.label);
+        }
+        assert.deepEqual(pageErrors, [], scenario.label);
+      } finally {
+        await page.close();
+      }
+    }
+  } finally {
+    await browser.close();
+  }
+});
+
 test("Stop keeps a delayed tutor answer from appearing", { skip: !baseURL }, async () => {
   const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
   try {

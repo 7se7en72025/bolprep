@@ -168,6 +168,37 @@ class RequestTraceHttpTests(unittest.TestCase):
         self.assertEqual(events[-1]["payload"]["trace_storage"], "unavailable")
         self.assertEqual(len(self.traces(owner)), 1)
 
+    def test_failed_turn_retains_server_observed_score_save_and_source_count(self):
+        owner = self.cookie()
+
+        def fail_after_save(*args, **kwargs):
+            kwargs["on_sources"]([{"title": "Checked source", "url": "https://example.test", "section": "14"}])
+            kwargs["on_tool_event"]({"name": "score_answer", "ok": True,
+                                     "result": {"answer": "PRIVATE_TOOL_RESULT_MARKER"}})
+            kwargs["on_tool_event"]({"name": "save_progress", "ok": True,
+                                     "result": {"answer": "PRIVATE_SAVE_RESULT_MARKER"}})
+            raise RuntimeError("PRIVATE_PROVIDER_ERROR_MARKER")
+
+        with patch.object(server, "run_agent_turn", fail_after_save), patch.object(
+            server, "api_is_configured", return_value=True
+        ):
+            status, events = self.turn(owner, True)
+        self.assertEqual(status, 200)
+        self.assertEqual(events[-1]["type"], "error")
+        trace = events[-1]["trace"]
+        self.assertEqual(trace["outcome"], "failed")
+        self.assertEqual(trace["source_count"], 1)
+        self.assertEqual(trace["tool_outcomes"], [
+            {"name": "score_answer", "ok": True}, {"name": "save_progress", "ok": True},
+        ])
+        self.assertIsNone(trace["usage"])
+        self.assertIsNone(trace["model_response_count"])
+        self.assertEqual(self.traces(owner), [trace])
+        stored = self.database.read_bytes()
+        for marker in (b"PRIVATE_TOOL_RESULT_MARKER", b"PRIVATE_SAVE_RESULT_MARKER",
+                       b"PRIVATE_PROVIDER_ERROR_MARKER", b"PRIVATE_QUESTION_MARKER"):
+            self.assertNotIn(marker, stored)
+
     def test_observed_write_failure_preserves_known_usage(self):
         owner = self.cookie()
 
