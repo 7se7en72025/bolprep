@@ -44,7 +44,16 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Run headless offline browser flow
         shell: pwsh
-        run: .\tools\check-browser.ps1
+        run: |
+          $browserLog = @()
+          try {
+            .\tools\check-browser.ps1 2>&1 | Tee-Object -Variable browserLog
+          } catch {
+            $details = (($browserLog | Select-Object -Last 100 | ForEach-Object { "$_" }) -join "`n")
+            $details = $details.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Offline browser failure::$details"
+            throw
+          }
       - name: Save retrieval report
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
