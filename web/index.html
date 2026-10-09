@@ -141,6 +141,26 @@
         <ol id="tutor-trace-list" class="tutor-trace-list"></ol>
       </details>
 
+      <section class="progress-card" aria-labelledby="saved-traces-title">
+        <div class="progress-head">
+          <div><p class="eyebrow">OPTIONAL LOCAL RECORD</p><h2 id="saved-traces-title">Saved tutor request diagnostics</h2></div>
+          <div class="progress-actions">
+            <button class="text-button" id="refresh-request-traces" type="button">Refresh</button>
+            <button class="text-button" id="clear-request-traces" type="button">Delete diagnostics</button>
+          </div>
+        </div>
+        <label class="speech-input-setting" for="retain-request-traces"><input id="retain-request-traces" type="checkbox" autocomplete="off"> Keep request diagnostics for new tutor turns on this computer</label>
+        <p class="progress-summary">Off by default. When checked, the server stores request IDs, times, outcome, model IDs, source/tool counts, and available token usage for this browser cookie. It saves no question, answer, transcript, or audio. The newest 100 records are retained; records older than seven days are removed when diagnostics are read or written. Unchecking applies to new turns. Delete diagnostics removes existing records; a pending opted-in turn may still save afterward.</p>
+        <p id="saved-traces-status" class="progress-summary" role="status">Choose Refresh to view saved diagnostics.</p>
+        <div class="diagnostics-table-scroll" tabindex="0" role="region" aria-label="Saved tutor request diagnostics table">
+          <table class="diagnostics-table">
+            <caption>Saved tutor request metadata</caption>
+            <thead><tr><th scope="col">Started / request ID</th><th scope="col">Outcome / mode</th><th scope="col">Model IDs</th><th scope="col">Duration / sources</th><th scope="col">Tools / reported tokens</th></tr></thead>
+            <tbody id="saved-traces-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
       <section class="progress-card" aria-labelledby="progress-title">
         <div class="progress-head">
           <div><p class="eyebrow">YOUR PRACTICE</p><h2 id="progress-title">Saved progress</h2></div>
@@ -172,6 +192,7 @@
     <script src="/access.js" defer></script>
     <script src="/live-stt.js" defer></script>
     <script src="/session-history.js" defer></script>
+    <script src="/request-traces.js" defer></script>
     <script src="/app.js" defer></script>
   </body>
 </html>

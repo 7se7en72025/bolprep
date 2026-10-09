@@ -75,6 +75,137 @@ test("offline browser flow: tutor, saved conversation, quiz, and diagnostics", {
   }
 });
 
+test("restored conversation keeps the latest article context through a language switch", { skip: !baseURL }, async () => {
+  const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
+  try {
+    const page = await browser.newPage();
+    const pageErrors = [];
+    const turns = [];
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+    page.on("request", (request) => {
+      if (new URL(request.url()).pathname === "/api/agent/turn") turns.push(request.postDataJSON());
+    });
+    await openOfflinePage(page);
+    const ask = async (question) => {
+      await page.locator("#question-input").fill(question);
+      await page.locator("#send-button").click();
+      await page.waitForFunction(() => !document.querySelector("#send-button").disabled);
+      return page.locator("#conversation .tutor-message").last().innerText();
+    };
+
+    assert.match(await ask("Explain Article 14"), /Article 14/i);
+    await page.locator("#save-conversation").click();
+    await page.waitForFunction(() => document.querySelector("#history-status")?.textContent.includes("Text saved. Audio was not stored."));
+    await page.locator("#clear-button").click();
+    await page.locator("#saved-conversations button").first().click();
+    await page.waitForFunction(() => document.querySelector("#history-status")?.textContent.includes("Saved text opened"));
+
+    assert.match(await ask("Give an example"), /Article 14/i);
+    assert.equal(turns.at(-1).language, "hi-IN");
+    assert.ok(turns.at(-1).history.some((message) => message.role === "user" && message.content === "Explain Article 14"));
+    await page.locator("#speech-language").selectOption("en-IN");
+    assert.match(await ask("Explain Article 21"), /Article 21/i);
+    assert.equal(turns.at(-1).language, "en-IN");
+    const latestFollowUp = await ask("Give an example");
+    assert.match(latestFollowUp, /Article 21/i);
+    assert.doesNotMatch(latestFollowUp, /Article 14/i);
+    assert.equal(turns.at(-1).language, "en-IN");
+    assert.ok(turns.at(-1).history.some((message) => message.role === "user" && message.content === "Explain Article 21"));
+    assert.deepEqual(pageErrors, []);
+  } finally {
+    await browser.close();
+  }
+});
+
+test("saved tutor diagnostics require opt-in and stay with their browser cookie", { skip: !baseURL }, async () => {
+  const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
+  try {
+    const owner = await browser.newContext();
+    const page = await owner.newPage();
+    const pageErrors = [];
+    const turns = [];
+    let traceGets = 0;
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+    page.on("request", (request) => {
+      const path = new URL(request.url()).pathname;
+      if (path === "/api/agent/turn") turns.push(request.postDataJSON());
+      if (path === "/api/traces") traceGets += 1;
+    });
+    await openOfflinePage(page);
+    const ask = async (question) => {
+      await page.locator("#question-input").fill(question);
+      await page.locator("#send-button").click();
+      await page.waitForFunction(() => !document.querySelector("#send-button").disabled);
+    };
+    assert.equal(await page.locator("#retain-request-traces").isChecked(), false);
+    assert.equal(traceGets, 0);
+    await ask("Explain Article 14");
+    assert.equal(turns.at(-1).retain_trace, false);
+    await page.locator("#refresh-request-traces").click();
+    await page.waitForFunction(() => document.querySelector("#saved-traces-status")?.textContent.includes("No saved request diagnostics"));
+    assert.equal(await page.locator("#saved-traces-rows tr").count(), 0);
+
+    await page.locator("#retain-request-traces").check();
+    await ask("Explain Article 21");
+    assert.equal(turns.at(-1).retain_trace, true);
+    assert.match(await page.locator("#saved-traces-status").textContent(), /diagnostics saved/i);
+    await page.locator("#refresh-request-traces").click();
+    await page.waitForFunction(() => document.querySelectorAll("#saved-traces-rows tr").length === 1);
+    const row = await page.locator("#saved-traces-rows tr").innerText();
+    assert.match(row, /completed \/ offline/);
+    assert.doesNotMatch(row, /Explain Article|Offline study notes/);
+
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => document.querySelector("#mode-label")?.textContent.includes("Offline practice mode"));
+    assert.equal(await page.locator("#retain-request-traces").isChecked(), false);
+    assert.equal(await page.locator("#saved-traces-rows tr").count(), 0);
+    assert.equal(traceGets, 2);
+    await ask("Explain Article 19");
+    assert.equal(turns.at(-1).retain_trace, false);
+    await page.locator("#refresh-request-traces").click();
+    await page.waitForFunction(() => document.querySelectorAll("#saved-traces-rows tr").length === 1);
+
+    const other = await browser.newContext();
+    const otherPage = await other.newPage();
+    await openOfflinePage(otherPage);
+    await otherPage.locator("#refresh-request-traces").click();
+    await otherPage.waitForFunction(() => document.querySelector("#saved-traces-status")?.textContent.includes("No saved request diagnostics"));
+    assert.equal(await otherPage.locator("#saved-traces-rows tr").count(), 0);
+    otherPage.once("dialog", (dialog) => dialog.accept());
+    await otherPage.locator("#clear-request-traces").click();
+    await otherPage.waitForFunction(() => document.querySelector("#saved-traces-status")?.textContent.includes("diagnostics deleted"));
+    await page.locator("#refresh-request-traces").click();
+    await page.waitForFunction(() => document.querySelector("#saved-traces-status")?.textContent.includes("1 saved request diagnostics"));
+
+    const malformed = (route) => route.fulfill({ json: { traces: [{ request_id: "<script>alert(1)</script>" }] } });
+    await page.route("**/api/traces", malformed);
+    await page.locator("#refresh-request-traces").click();
+    await page.waitForFunction(() => document.querySelector("#saved-traces-status")?.textContent.includes("response was invalid"));
+    assert.equal(await page.locator("#saved-traces-rows tr").count(), 1);
+    assert.equal(await page.locator("#saved-traces-rows script").count(), 0);
+    await page.unroute("**/api/traces", malformed);
+
+    const oversized = (route) => route.fulfill({ contentType: "application/json", body: `{"traces":[],"padding":"${"x".repeat(1024 * 1024)}"}` });
+    await page.route("**/api/traces", oversized);
+    await page.locator("#refresh-request-traces").click();
+    await page.waitForFunction(() => document.querySelector("#saved-traces-status")?.textContent.includes("could not be read or changed"));
+    assert.equal(await page.locator("#saved-traces-rows tr").count(), 1);
+    await page.unroute("**/api/traces", oversized);
+
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.locator("#clear-request-traces").click();
+    await page.waitForFunction(() => document.querySelector("#saved-traces-status")?.textContent.includes("diagnostics deleted"));
+    assert.equal(await page.locator("#saved-traces-rows tr").count(), 0);
+    await page.locator("#refresh-request-traces").click();
+    await page.waitForFunction(() => document.querySelector("#saved-traces-status")?.textContent.includes("No saved request diagnostics"));
+    assert.deepEqual(pageErrors, []);
+    await other.close();
+    await owner.close();
+  } finally {
+    await browser.close();
+  }
+});
+
 test("Stop keeps a delayed tutor answer from appearing", { skip: !baseURL }, async () => {
   const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
   try {

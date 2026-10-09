@@ -26,6 +26,7 @@ from retrieval import load_corpus, retrieval_query, retrieve
 from request_limits import RequestLimiter
 from access import ACCESS_COOKIE, ACCESS_LIFETIME_SECONDS, AccessGate
 from session_history import HistoryConflict, clear_conversations, get_conversation, list_conversations, save_conversation
+from trace_store import clear_traces, list_traces, save_trace
 
 
 ROOT = Path(__file__).resolve().parent
@@ -48,6 +49,7 @@ POST_QUOTAS = {
     "/api/quiz/score": "quiz-write",
     "/api/history": "history-save",
     "/api/history/load": "history-read",
+    "/api/traces/clear": "trace-delete",
 }
 # All local browsers share these quotas. Cookie changes cannot reset a quota.
 REQUEST_LIMITER = RequestLimiter({
@@ -55,6 +57,7 @@ REQUEST_LIMITER = RequestLimiter({
     "quiz-write": 60, "progress-read": 60, "progress-delete": 6,
     "login": 6, "logout": 30,
     "history-save": 10, "history-read": 60, "history-delete": 6,
+    "trace-read": 60, "trace-delete": 6,
 })
 ACCESS_GATE = AccessGate(os.getenv("BOLPREP_ACCESS_PASSWORD", ""))
 MAX_ACTIVE_TUTOR_OR_SPEECH_REQUESTS = 4
@@ -124,14 +127,21 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             )
             return
 
-        if self.path in {"/api/progress", "/api/history"}:
+        if self.path in {"/api/progress", "/api/history", "/api/traces"}:
             if not self._require_access():
                 return
-            if not self._permit_api_request("history-read" if self.path == "/api/history" else "progress-read"):
+            quota = {"/api/history": "history-read", "/api/progress": "progress-read",
+                     "/api/traces": "trace-read"}[self.path]
+            if not self._permit_api_request(quota):
                 return
             self._ensure_browser_session()
             if self.path == "/api/history":
                 self._handle_saved_history()
+            elif self.path == "/api/traces":
+                try:
+                    self._send_json(200, list_traces(self.session_id))
+                except (sqlite3.Error, RuntimeError, OSError, ValueError):
+                    self._send_json(503, {"error": "Request trace storage is unavailable. Try again later."})
             else:
                 try:
                     progress = get_progress(self.session_id)
@@ -150,6 +160,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
             "/": (WEB_ROOT / "index.html", "text/html; charset=utf-8"),
             "/app.js": (WEB_ROOT / "app.js", "text/javascript; charset=utf-8"),
             "/session-history.js": (WEB_ROOT / "session-history.js", "text/javascript; charset=utf-8"),
+            "/request-traces.js": (WEB_ROOT / "request-traces.js", "text/javascript; charset=utf-8"),
             "/live-stt.js": (WEB_ROOT / "live-stt.js", "text/javascript; charset=utf-8"),
             "/styles.css": (WEB_ROOT / "styles.css", "text/css; charset=utf-8"),
             "/login": (WEB_ROOT / "login.html", "text/html; charset=utf-8"),
@@ -232,6 +243,17 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         if self.path in {"/api/history", "/api/history/load"}:
             self._handle_saved_history(body)
             return
+        if self.path == "/api/traces/clear":
+            if body:
+                self._send_json(400, {"error": "Request body must be empty."})
+                return
+            try:
+                clear_traces(self.session_id)
+            except (sqlite3.Error, RuntimeError, OSError):
+                self._send_json(503, {"error": "Request trace storage is unavailable. Try again later."})
+                return
+            self._send_json(200, {"ok": True})
+            return
         if self.path == "/api/transcription/session":
             self._handle_transcription_session(body)
             return
@@ -292,6 +314,10 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         history = body.get("history", [])
         language = body.get("language", "hi-IN")
         quiz_difficulty = body.get("quiz_difficulty", "standard")
+        retain_trace = body.get("retain_trace", False)
+        if type(retain_trace) is not bool:
+            self._send_json(400, {"error": "Choose whether to save request diagnostics."})
+            return
         if not isinstance(quiz_difficulty, str) or quiz_difficulty not in QUIZ_PRESETS:
             self._send_json(400, {"error": "Choose basic, standard, or challenge quiz difficulty."})
             return
@@ -330,17 +356,28 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 "usage": result.get("usage"),
                 "model_response_count": result.get("model_response_count", 0 if mode == "offline" else None),
                 "usage_response_count": result.get("usage_response_count", 0 if mode == "offline" else None),
+                "failure_reason": {"failed": "agent-error", "disconnected": "http-write-failed"}.get(outcome),
             }
 
-        self.send_response(200)
-        self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
-        self.send_header("X-Request-ID", request_id)
-        self.send_header("Transfer-Encoding", "chunked")
-        self.send_header("Cache-Control", "no-store")
-        self.send_header("X-Content-Type-Options", "nosniff")
-        self._send_session_cookie_if_needed()
-        self.end_headers()
+        def persist(trace: dict[str, Any]) -> str | None:
+            if not retain_trace:
+                return None
+            try:
+                save_trace(self.session_id, trace)
+                return "saved"
+            except (sqlite3.Error, RuntimeError, OSError, ValueError):
+                return "unavailable"
+
+        result = None
         try:
+            self.send_response(200)
+            self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
+            self.send_header("X-Request-ID", request_id)
+            self.send_header("Transfer-Encoding", "chunked")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self._send_session_cookie_if_needed()
+            self.end_headers()
             result = run_agent_turn(
                 question.strip(),
                 cleaned_history,
@@ -354,18 +391,28 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                 on_sources=lambda sources: self._write_ndjson({"type": "retrieved_sources", "sources": sources}),
             )
             result["trace"] = turn_trace("completed", result)
+            storage = persist(result["trace"])
+            if storage is not None:
+                result["trace_storage"] = storage
             self._write_ndjson({"type": "complete", "payload": result})
             self._finish_chunked_response()
         except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
             self.close_connection = True
+            persist(turn_trace("disconnected", result))
         except Exception as exc:
             print(f"Tutor agent request {request_id} failed: {type(exc).__name__}")
+            failed_trace = turn_trace("failed")
+            storage = persist(failed_trace)
             try:
-                self._write_ndjson({"type": "error", "error": "Tutor request failed. Check the server terminal and try again.",
-                                   "trace": turn_trace("failed")})
+                event = {"type": "error", "error": "Tutor request failed. Check the server terminal and try again.",
+                         "trace": failed_trace}
+                if storage is not None:
+                    event["trace_storage"] = storage
+                self._write_ndjson(event)
                 self._finish_chunked_response()
             except (BrokenPipeError, ConnectionAbortedError, ConnectionResetError):
                 self.close_connection = True
+                persist(turn_trace("disconnected", result))
 
     def _write_ndjson(self, event: dict[str, Any]) -> None:
         encoded = (json.dumps(event, ensure_ascii=False) + "\n").encode("utf-8")

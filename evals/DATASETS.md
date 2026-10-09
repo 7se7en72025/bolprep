@@ -18,6 +18,10 @@ The exporter parses and validates the same byte snapshot it hashes. It inventori
 
 Current provider-free before/after runs are archived in [reports/README.md](reports/README.md), including source hashes, failures, denominators, and the distinction between constructed labels and real learner/voice evidence. Both scorers match the same 180 authored cases after the fixes; these cases informed the changes and are not an independent held-out evaluation.
 
+## Planned speech collection
+
+[speech_prompts.json](speech_prompts.json) has 30 self-authored questions in ten English/Hindi/Hinglish scenario groups. Six groups are planned development inputs and four are planned held-out inputs; translations cannot cross splits. The file is visible to developers, so this does not establish an independent held-out benchmark. [prepare_speech_eval.py](prepare_speech_eval.py) creates private unobserved rows, freezes manifest/config/planner hashes, rejects changed pairing or unobserved selected rows, and exports scorer inputs with provenance sidecars. See [SPEECH_COLLECTION.md](SPEECH_COLLECTION.md). All evals/local-speech-*.json inputs, plans, exports, and sidecars are ignored. No recordings or human ratings have been collected in these tracked inputs.
+
 ## Private speech and review observations
 
 | Input | Procedure / runner | Coverage and limits |

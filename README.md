@@ -12,7 +12,7 @@ See [PROJECT_STATUS.md](PROJECT_STATUS.md) for the acceptance audit and [ARCHITE
 
 ## Quick start on Windows
 
-Requirements: Python 3.11 or newer, a modern browser, and internet access to install dependencies. Node.js is optional for diagnostic report scripts.
+Requirements: Python 3.11 or newer, a modern browser, and internet access to install dependencies. Node.js is optional for running the app; full verification requires Node.js (observed version 24) and installed Chrome or Edge.
 
 From the repository directory:
 
@@ -86,6 +86,8 @@ Quiz questions currently cover Articles 14, 19, 21, and 22. Basic selects 14/21,
 
 ## Saved data and local limits
 
+**Saved tutor request diagnostics** are optional and off on each page load. Check the option before a new tutor turn to retain server-generated request IDs, timestamps, outcomes, model labels, source/tool counts, and available token usage. Refresh reads records for the current browser cookie; Delete diagnostics removes them independently of quiz results and conversations. The option is captured when a turn starts; unchecking applies to new turns, and pending opted-in turns may still save after deletion. No question, answer, transcript, audio, or provider error text is stored in this table. The newest 100 records per cookie are kept; records older than seven days are pruned when diagnostics are read or written, so an idle database can retain expired rows until its next access. Storage failure leaves the tutor result intact and reports diagnostics unavailable. A disconnected outcome records an observed HTTP write failure, not proof of provider cancellation.
+
 Quiz results and explicitly saved conversations use local SQLite storage, scoped by a browser cookie. Scores with a matching retry key return the retained result; older migrated scores without a key reject new submissions and require a new quiz, while remaining visible in progress. This is not a learner account system; stored text is not encrypted. Losing the cookie can make earlier records inaccessible. Cookie identity and ordinary text/speech setup do not open SQLite. Quiz creation establishes its persisted owner in the same transaction; progress/quiz storage errors return a generic 503. An unavailable database can block persistence while leaving ordinary tutoring available, subject to its other dependencies. A failed response does not prove a score or deletion was rolled back; refresh saved progress before retrying.
 
 Snapshots contain up to 20 recent messages, bounded text, citations, and supported request metadata. Audio, unsent drafts, and partial transcription deltas are not saved. Opening a snapshot cancels active work and restores context without automatically resuming a quiz or playing speech. Conversation deletion and quiz-progress deletion are separate actions.
@@ -113,6 +115,10 @@ Retrieval evaluation commands:
 
 Reports include dataset/corpus hashes, retrieval/evaluator source hashes, Python version, scorer, and UTC generation time. Code or input changes invalidate a comparison; archive the actual JSON and repository commit when running an authorized evaluation. These are instructions, not evidence of a fresh run. Older constructed-set results in the archive predate retrieval changes and do not establish learner or voice quality. Current measured retrieval reports are archived in [evals/reports](evals/reports/README.md): both scorers match 180/180 authored cases after fixes, versus 175/180 before. This same-set result is not held-out performance or answer/voice quality. Local tests and the offline HTTP smoke run now pass. The existing tools/check-local.ps1 smoke utility now checks Windows TCP listener ownership before health and each later request, and launches its child with --offline. Use -Port to select another local port. Listener ownership accepts the spawned interpreter and its direct Windows venv interpreter child; foreign ownership stops requests. Get-NetTCPConnection and Get-CimInstance must be available. Ownership checks are observations before requests, not an atomic guarantee against a process exiting and the port being rebound during a request. The smoke utility passed on port 18080 with a temporary database after fixing Windows venv child ownership.
 
+## Prepare paired speech evaluation
+
+[Speech collection instructions](evals/SPEECH_COLLECTION.md) and the [30-prompt manifest](evals/speech_prompts.json) prepare private STT/TTS trials with frozen configuration and source hashes. Language variants stay together across the planned development/held-out split. The preparation CLI records blank trials as unobserved and refuses to export incomplete selected coverage to the scorers. Actual consented speech and human ratings still need collection; prompt files and prepared rows are not benchmark results.
+
 ## Verification
 
 See [VERIFICATION.md](VERIFICATION.md) for the actual environment, results, fixed defects, and remaining gates.
@@ -126,7 +132,7 @@ npm run test:eval
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\check-browser.ps1
 ```
 
-The smoke check owns a temporary offline server/database and removes them afterward. The Python suite currently contains 53 passing tests, including loopback HTTP/origin checks and actual HTTP saved-data ownership, retry, restart, and deletion checks. Protocol tests use mocked transcription events; they do not prove microphone or provider behavior. Five headless browser checks include continuous-quiz retry-draft recovery. Four synthetic TTS report checks distinguish unavailable pairing from unequal coverage; they are not listener observations.
+The smoke check owns a temporary offline server/database and removes them afterward. The Python suite currently contains 67 passing tests, including loopback HTTP/origin checks and actual HTTP saved-data ownership, retry, restart, and deletion checks. Protocol tests use mocked transcription events; they do not prove microphone or provider behavior. Seven headless browser checks include continuous-quiz retry-draft recovery, saved-context language switching, and optional server-owned diagnostics. Four synthetic TTS report checks distinguish unavailable pairing from unequal coverage; they are not listener observations.
 
 The browser runner above selects a free local port, starts its own offline server with a disposable database, runs all four Chrome/Edge checks, and restores environment/process state afterward. Microphone/recording/speech callbacks in its race tests are mocked; no real audio is collected. To run the browser checks manually, start a separate offline server with a disposable database in one terminal, then run the checks in another:
 

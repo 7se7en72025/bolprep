@@ -27,6 +27,11 @@ const inputLabel = document.querySelector('label[for="question-input"]');
 const previewVoiceButton = document.querySelector("#preview-voice");
 const copySpeechDiagnosticsButton = document.querySelector("#copy-speech-diagnostics");
 const downloadSpeechDiagnosticsButton = document.querySelector("#download-speech-diagnostics");
+const retainRequestTraces = document.querySelector("#retain-request-traces");
+retainRequestTraces.checked = false;
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) retainRequestTraces.checked = false;
+});
 const speechPreferencesKey = "bolprep-speech-preferences";
 let speechPreferences = {};
 try {
@@ -122,6 +127,7 @@ let progressRequestId = 0;
 let activeProgressController = null;
 let clearingProgress = false;
 let quizSession = null;
+let savedRequestTraces = null;
 
 function speechLanguageLabel(language) {
   return language === "hi-IN" ? "Hindi/Hinglish" : "English";
@@ -428,6 +434,7 @@ async function readAgentStream(response, onTextDelta, onSpeechMode, onActivity, 
     } else if (event.type === "error") {
       const error = new Error(typeof event.error === "string" ? event.error : "Tutor request failed.");
       error.trace = event.trace;
+      error.traceStorage = event.trace_storage;
       throw error;
     } else {
       throw new Error("The tutor sent an unsupported or malformed response event.");
@@ -2132,6 +2139,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
   activeRequest = new AbortController();
   const controller = activeRequest;
   const requestLanguage = speechLanguage.value;
+  const retainTrace = retainRequestTraces.checked === true;
   const requestStartedAt = performance.now();
   const clientStartedAtUtc = new Date().toISOString();
   let timeoutReason = null;
@@ -2192,7 +2200,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ question, history: history.slice(-20), language: requestLanguage,
-        quiz_difficulty: quizDifficulty.value }),
+        quiz_difficulty: quizDifficulty.value, retain_trace: retainTrace }),
       signal: controller.signal,
     });
     requestId = response.headers.get("X-Request-ID");
@@ -2229,6 +2237,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
       return;
     }
     recordTrace("completed", payload.trace);
+    if (retainTrace) savedRequestTraces?.notice(payload.trace_storage);
     const usedProgressiveSpeech = progressiveSpeech?.finish() || false;
     if (activeProgressiveSpeech === progressiveSpeech && !progressiveSpeech?.keepUntilPlaybackEnds) activeProgressiveSpeech = null;
     if (payload.mode === "model") {
@@ -2277,6 +2286,7 @@ async function sendQuestion(question, { preserveLive = false } = {}) {
     const cancelled = requestTurn !== turn || (error.name === "AbortError" && !timeoutReason);
     controller.abort();
     recordTrace(cancelled ? "cancelled" : "failed", error.trace);
+    if (retainTrace && !cancelled) savedRequestTraces?.notice(error.traceStorage);
     if (progressiveSpeech && requestTurn === turn && !cancelled) stopSpeechOutput("request-failed");
     if (modelModeAvailable) {
       modelStreamFailures.push({
@@ -3215,4 +3225,5 @@ savedConversations = window.BolPrepSavedConversations({
   revision: () => JSON.stringify([conversationRevision, turn, speechTurn, liveSttRun,
     serverRecordingRun, recognitionRun, input.value, speechLanguage.value]),
 });
+savedRequestTraces = window.BolPrepRequestTraces({ apiFetch });
 loadProgress();
