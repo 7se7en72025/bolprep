@@ -129,17 +129,43 @@ class BolPrepLiveTranscription {
     this.listeningAt = undefined;
   }
 
-  beginListening(reused = false) {
-    if (this.closed) return;
-    if (this.state !== "clearing") this.resetTurn(reused);
-    this.state = "listening";
-    this.listeningAt = performance.now();
-    this.stream.getAudioTracks().forEach((track) => { track.enabled = true; });
-    this.callbacks.status(`Live listening. Tap Done when you finish (${this.captureLimitMs / 1000}-second speech limit).`, this.state);
-    this.captureTimer = this.continuous
-      ? this.later(() => this.fail("No speech detected for 60 seconds. Start Live mic again when ready.", "no-speech"), 60000)
-      : this.later(() => this.finish("capture-limit"), this.captureLimitMs);
-    this.startSpeechDetection();
+  async waitForDetectionResume() {
+    await new Promise((resolve) => {
+      let timer;
+      const finish = () => {
+        clearTimeout(timer);
+        this.controller.signal.removeEventListener("abort", finish);
+        resolve();
+      };
+      timer = setTimeout(finish, 3000);
+      this.controller.signal.addEventListener("abort", finish, { once: true });
+      this.detectionResumePromise.then(finish, finish);
+    });
+  }
+
+  async beginListening(reused = false) {
+    if (this.closed || this.beginningListening) return;
+    this.beginningListening = true;
+    try {
+      // An AudioContext resumed during the button gesture may still be suspended
+      // when a fast data channel opens. Give that pending resume a bounded chance
+      // to finish before deciding whether pause detection is unavailable.
+      if (this.autoFinish && this.detectionContext?.state !== "running" && this.detectionResumePromise) {
+        await this.waitForDetectionResume();
+        if (this.closed) return;
+      }
+      if (this.state !== "clearing") this.resetTurn(reused);
+      this.state = "listening";
+      this.listeningAt = performance.now();
+      this.stream.getAudioTracks().forEach((track) => { track.enabled = true; });
+      this.callbacks.status(`Live listening. Tap Done when you finish (${this.captureLimitMs / 1000}-second speech limit).`, this.state);
+      this.captureTimer = this.continuous
+        ? this.later(() => this.fail("No speech detected for 60 seconds. Start Live mic again when ready.", "no-speech"), 60000)
+        : this.later(() => this.finish("capture-limit"), this.captureLimitMs);
+      this.startSpeechDetection();
+    } finally {
+      this.beginningListening = false;
+    }
   }
 
   finish(reason = "manual") {
@@ -377,7 +403,7 @@ class BolPrepLiveTranscription {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (AudioContext) {
           this.detectionContext = new AudioContext();
-          void this.detectionContext.resume().catch(() => {});
+          this.detectionResumePromise = Promise.resolve(this.detectionContext.resume()).catch(() => {});
         }
       } catch {
         this.stopSpeechDetection();
@@ -424,7 +450,7 @@ class BolPrepLiveTranscription {
       channel.addEventListener("close", () => this.fail("Live transcription ended before a final transcript arrived.", "connection-closed"));
       channel.addEventListener("error", () => this.fail("Live transcription connection failed. Try Record or type.", "connection-failed"));
       channel.addEventListener("open", () => {
-        if (this.closed) return;
+        if (this.closed || this.state !== "connecting") return;
         this.timers.forEach(clearTimeout);
         this.timers.clear();
         if (this.continuous) {

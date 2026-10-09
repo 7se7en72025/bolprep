@@ -11,12 +11,17 @@ function captureHarness(continuous = false) {
   const finals = [];
   const failures = [];
   const metrics = [];
+  const statuses = [];
   const sent = [];
-  const track = { enabled: true, stops: 0, stop() { this.stops += 1; } };
-  const channel = { readyState: "open", send(data) { sent.push(JSON.parse(data)); }, close() {} };
+  const track = { enabled: true, readyState: "live", stops: 0,
+    stop() { this.stops += 1; this.readyState = "ended"; },
+    addEventListener() {}, removeEventListener() {} };
+  const channelListeners = {};
+  const channel = { readyState: "open", send(data) { sent.push(JSON.parse(data)); }, close() {},
+    addEventListener(name, callback) { channelListeners[name] = callback; } };
   const window = { crypto: { randomUUID: () => "attempt-id" } };
   const context = vm.createContext({
-    window, AbortController, performance, Date, JSON, Float32Array,
+    window, AbortController, performance, Date, JSON, Float32Array, TextDecoder,
     setTimeout(callback, delay) { const id = ++nextTimer; scheduled.set(id, { callback, delay }); return id; },
     clearTimeout(id) { scheduled.delete(id); },
   });
@@ -26,7 +31,7 @@ function captureHarness(continuous = false) {
     final: (text) => finals.push(text),
     error: (message) => failures.push(message),
     metrics: (sample) => metrics.push(sample),
-    status() {}, partial() {}, closed() {},
+    status: (text, state) => statuses.push({ text, state }), partial() {}, closed() {},
   }, { continuous });
   capture.stream = { getTracks: () => [track], getAudioTracks: () => [track] };
   capture.channel = channel;
@@ -45,8 +50,120 @@ function captureHarness(continuous = false) {
     }
   };
   const event = (type, item_id, extra = {}) => capture.event(JSON.stringify({ type, item_id, ...extra }));
-  return { capture, finals, failures, metrics, sent, track, event, flushDelay };
+  return { context, window, capture, finals, failures, metrics, statuses,
+    sent, track, channel, channelListeners, event, flushDelay };
 }
+
+async function pendingResumeHarness() {
+  const h = captureHarness(true);
+  let resolveResume;
+  let rejectResume;
+  let audioContext;
+  class FakeAudioContext {
+    state = "suspended";
+    constructor() { audioContext = this; }
+    resume() {
+      return new Promise((resolve, reject) => {
+        resolveResume = resolve;
+        rejectResume = reject;
+      });
+    }
+    createAnalyser() {
+      return { fftSize: 2048, disconnect() {}, getFloatTimeDomainData() {} };
+    }
+    createMediaStreamSource() { return { connect() {}, disconnect() {} }; }
+    close() { this.state = "closed"; return Promise.resolve(); }
+  }
+  h.window.AudioContext = FakeAudioContext;
+  h.window.BolPrepFetch = async () => new Response(JSON.stringify({
+    client_secret: "mock-ephemeral-token", expires_at: Math.floor(Date.now() / 1000) + 60,
+  }));
+  h.context.navigator = { mediaDevices: { getUserMedia: async () => ({
+    getTracks: () => [h.track], getAudioTracks: () => [h.track],
+  }) } };
+  h.context.RTCPeerConnection = class {
+    addTrack() {}
+    addEventListener() {}
+    createDataChannel() { return h.channel; }
+    createOffer() { return Promise.resolve({ sdp: "mock-offer" }); }
+    setLocalDescription() { return Promise.resolve(); }
+    setRemoteDescription() { return Promise.resolve(); }
+    close() {}
+  };
+  h.context.fetch = async () => new Response("mock-answer");
+  h.capture.autoFinish = true;
+  h.capture.state = "connecting";
+  await h.capture.start("hi-IN");
+  assert.equal(h.capture.closed, false, JSON.stringify({ failures: h.failures, metrics: h.metrics }));
+  return {
+    h, audioContext,
+    finishResume: () => { audioContext.state = "running"; resolveResume(); },
+    rejectResume: () => rejectResume(new Error("Mock resume denied.")),
+  };
+}
+
+test("continuous mode waits for a pending audio context resume before judging detection unavailable", async () => {
+  const { h, finishResume } = await pendingResumeHarness();
+  h.channelListeners.open();
+  assert.equal(h.capture.closed, false);
+  assert.equal(h.capture.state, "connecting");
+  finishResume();
+  await new Promise(setImmediate);
+  assert.equal(h.capture.state, "listening");
+  assert.deepEqual(h.failures, []);
+  h.capture.cancel();
+});
+
+test("cancellation during pending resume cannot enable a released microphone", async () => {
+  const { h, finishResume } = await pendingResumeHarness();
+  h.channelListeners.open();
+  h.capture.cancel();
+  finishResume();
+  await new Promise(setImmediate);
+  assert.equal(h.capture.closed, true);
+  assert.equal(h.track.enabled, false);
+  assert.equal(h.track.stops, 1);
+  assert.equal(h.statuses.some((status) => status.state === "listening"), false);
+  assert.equal(h.metrics[0].outcome, "cancelled");
+});
+
+test("rejected or unresolved resume falls back within the bounded startup wait", async () => {
+  for (const outcome of ["rejected", "unresolved"]) {
+    const { h, rejectResume } = await pendingResumeHarness();
+    h.channelListeners.open();
+    if (outcome === "rejected") rejectResume();
+    else h.flushDelay(3000);
+    await new Promise(setImmediate);
+    assert.equal(h.capture.closed, true, outcome);
+    assert.match(h.failures[0], /needs working speech detection/, outcome);
+    assert.equal(h.metrics[0].failure_reason, "analysis-unavailable", outcome);
+    assert.equal(h.track.stops, 1, outcome);
+  }
+});
+
+test("duplicate clear acknowledgements cannot start a turn twice while resume is pending", async () => {
+  const { h, audioContext, finishResume } = await pendingResumeHarness();
+  h.channelListeners.open();
+  finishResume();
+  await new Promise(setImmediate);
+  h.capture.finish();
+  h.flushDelay(250);
+  h.event("conversation.item.input_audio_transcription.completed", "item-1", { transcript: "First turn" });
+  assert.equal(h.capture.state, "clearing");
+  audioContext.state = "suspended";
+  let releaseNext;
+  h.capture.detectionResumePromise = new Promise((resolve) => { releaseNext = resolve; });
+  h.event("input_audio_buffer.cleared");
+  h.event("input_audio_buffer.cleared");
+  assert.equal(h.capture.state, "clearing");
+  audioContext.state = "running";
+  releaseNext();
+  await new Promise(setImmediate);
+  assert.equal(h.capture.state, "listening");
+  assert.equal(h.statuses.filter((status) => status.text.startsWith("Live listening.")).length, 2);
+  assert.deepEqual(h.failures, []);
+  h.capture.cancel();
+});
 
 test("manual finish commits once and ignores a late or duplicate final", () => {
   const h = captureHarness();

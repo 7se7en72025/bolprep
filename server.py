@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import hashlib
+from itertools import chain
 import math
 import os
 import re
@@ -475,6 +476,14 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                     instructions=instructions,
                     response_format="pcm",
                 ) as response:
+                    chunks = iter(response.iter_bytes(chunk_size=4096))
+                    first_chunk = next((chunk for chunk in chunks if chunk), None)
+                    if first_chunk is None:
+                        raise RuntimeError("The speech provider returned no audio.")
+                    if not isinstance(first_chunk, (bytes, bytearray, memoryview)):
+                        raise RuntimeError("The speech provider returned invalid audio.")
+                    if len(first_chunk) > MAX_SPEECH_PCM_BYTES:
+                        raise RuntimeError("Speech audio exceeded the per-request limit.")
                     self.send_response(200)
                     self.send_header("Content-Type", "audio/pcm")
                     self.send_header("X-Audio-Sample-Rate", "24000")
@@ -485,9 +494,11 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                     self.end_headers()
                     response_started = True
                     audio_bytes = 0
-                    for chunk in response.iter_bytes(chunk_size=4096):
+                    for chunk in chain((first_chunk,), chunks):
                         if not chunk:
                             continue
+                        if not isinstance(chunk, (bytes, bytearray, memoryview)):
+                            raise RuntimeError("The speech provider returned invalid audio.")
                         audio_bytes += len(chunk)
                         if audio_bytes > MAX_SPEECH_PCM_BYTES:
                             raise RuntimeError("Speech audio exceeded the per-request limit.")

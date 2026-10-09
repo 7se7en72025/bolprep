@@ -79,3 +79,13 @@ TTS report tests use fabricated metadata only to check null/true/false pairing s
 - The preceding score/save integration and CI diagnostic commit passed GitHub Actions run 37992508289 at 862c837. Earlier run 37992063632 failed its browser step without accessible detail; the follow-up and local Chrome/Edge checks passed, so its cause is unresolved rather than a demonstrated application defect.
 
 - Root verification passed 83 Python tests, eight isolated offline Chrome checks, and the isolated offline smoke. Whitespace checks passed. No actual provider calls, microphone recordings, or human evaluations were performed; those acceptance gates remain open. Cloud execution of this new commit remains to be observed after push.
+
+
+## Repair voice startup failures - 2026-10-10
+
+- Reproduced continuous input closing when a fast live channel opened before AudioContext.resume finished. Listening now gives the pending resume up to three seconds, releases the wait on cancellation, and checks closed state before enabling tracks. Duplicate startup/clear events cannot begin two listening turns. Mocked success, cancellation/late resume, rejection, stalled resume, and duplicate acknowledgement checks pass; real device timing remains unobserved.
+- Provider speech previously sent HTTP 200 before its first PCM read, so empty or immediately failing streams could not report a structured failure. It now prefetches a nonempty bounded valid chunk before committing success. Five actual loopback HTTP checks use a fake provider to verify empty/early failure/oversized-first JSON 502, preserved normal bytes, later incomplete-stream failure, and provider/client cleanup. No provider requests or real audio were collected.
+- Root Python verification passed 88 tests and mocked live-STT verification passed eight checks; source syntax and whitespace checks passed. Browser verification is recorded below after the disposable runner finishes.
+- The preceding migration commit a5eda3d passed GitHub Actions run 37993422312. Real microphone/provider sessions, human reviews, source permission, and recorded demo remain open.
+
+- Root disposable Chrome verification finished with all eight checks passing; four synthetic TTS report checks also passed. Cloud execution of this new commit remains pending until push.
