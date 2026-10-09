@@ -396,6 +396,8 @@ test("mocked browser speech counts pending cancellation once and rejects stale c
     await page.locator("#stop-button").click();
     await page.locator("#stop-button").click();
     let diagnostic = await page.evaluate(() => buildSpeechDiagnostics());
+    assert.equal(diagnostic.schema_version, 14);
+    assert.equal(diagnostic.tts[0].requested_model, null);
     assert.equal(diagnostic.tts[0].cancellation_count, 1);
     assert.equal(diagnostic.tts[0].completed_count, 0);
     assert.equal(diagnostic.tts[0].cancellation_reasons["stop-button"], 1);
@@ -432,6 +434,115 @@ test("mocked browser speech counts pending cancellation once and rejects stale c
     assert.equal(diagnostic.tts[0].completed_count, 1);
     assert.equal(diagnostic.tts[0].cancellation_count, 2);
     assert.equal(diagnostic.speech_stops.length, 2);
+    assert.deepEqual(pageErrors, []);
+  } finally {
+    await browser.close();
+  }
+});
+
+test("mocked streamed TTS groups requested models without adopting missing or invalid headers", { skip: !baseURL }, async () => {
+  const browser = await chromium.launch({ executablePath, headless: true, args: ["--mute-audio"] });
+  try {
+    const page = await browser.newPage();
+    const pageErrors = [];
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+    await page.addInitScript(() => {
+      const probe = { started: 0, autoEnd: true };
+      window.__ttsAudioProbe = probe;
+      window.AudioContext = class {
+        currentTime = 0;
+        destination = {};
+        resume() { return Promise.resolve(); }
+        createBuffer(_channels, count, rate) {
+          return { duration: count / rate, copyToChannel() {} };
+        }
+        createBufferSource() {
+          const context = this;
+          return {
+            onended: null, connect() {},
+            start(at) {
+              probe.started += 1;
+              if (probe.autoEnd) window.setTimeout(() => {
+                context.currentTime = at + this.buffer.duration;
+                this.onended?.();
+              }, 35);
+            },
+            stop() { this.onended?.(); },
+          };
+        }
+      };
+    });
+    await openOfflinePage(page);
+    await page.evaluate(() => { document.querySelector("#streamed-tts").checked = true; });
+    const requests = [];
+    let responseMode = { model: "mock-tts-a", pcm: Buffer.from([0, 0]) };
+    let signalPendingHeader;
+    let releasePendingHeader;
+    await page.route("**/api/speech", async (route) => {
+      requests.push(route.request().postDataJSON());
+      const mode = responseMode;
+      if (mode.waitForRelease) {
+        signalPendingHeader();
+        await new Promise((resolve) => { releasePendingHeader = resolve; });
+      }
+      const headers = { "Content-Type": "audio/pcm", "X-Audio-Sample-Rate": "24000",
+        ...(mode.model === undefined ? {} : { "X-TTS-Requested-Model": mode.model }),
+        "X-Debug-Secret": "PRIVATE_TTS_SECRET_MARKER" };
+      try { await route.fulfill({ status: 200, headers, body: mode.pcm }); }
+      catch { /* A pre-header Stop may already have aborted this route. */ }
+    });
+    const say = () => page.evaluate(() => speakStreamed(
+      "PRIVATE_TTS_TEXT_MARKER", "Mocked playback done.", "preview", speechTurn,
+      { language: "en-IN", voice: "coral", allowFallback: false },
+    ));
+    for (const mode of [
+      { model: "mock-tts-a", pcm: Buffer.from([0, 0]) },
+      { model: "mock-tts-b", pcm: Buffer.from([0, 0]) },
+      { model: undefined, pcm: Buffer.from([0, 0]) },
+      { model: "bad model", pcm: Buffer.from([0, 0]) },
+      { model: "mock-tts-a", pcm: Buffer.from([0]) },
+    ]) {
+      responseMode = mode;
+      await say();
+    }
+
+    responseMode = { model: "mock-tts-b", pcm: Buffer.from([0, 0]) };
+    await page.evaluate(() => { window.__ttsAudioProbe.autoEnd = false; });
+    const startsBeforeCancel = await page.evaluate(() => window.__ttsAudioProbe.started);
+    const afterHeader = say();
+    await page.waitForFunction((count) => window.__ttsAudioProbe.started > count, startsBeforeCancel);
+    await page.locator("#stop-button").click();
+    await afterHeader;
+
+    responseMode = { model: "mock-tts-a", pcm: Buffer.from([0, 0]), waitForRelease: true };
+    const pendingHeader = new Promise((resolve) => { signalPendingHeader = resolve; });
+    const beforeHeader = say();
+    await pendingHeader;
+    await page.locator("#stop-button").click();
+    releasePendingHeader();
+    await beforeHeader;
+
+    const diagnostic = await page.evaluate(() => buildSpeechDiagnostics());
+    const groups = diagnostic.tts.filter((group) => group.voice === "OpenAI coral" && group.sample_type === "preview");
+    assert.equal(diagnostic.schema_version, 14);
+    assert.equal(groups.length, 3);
+    assert.deepEqual(groups.map((group) => group.requested_model), ["mock-tts-a", "mock-tts-b", null]);
+    const byModel = (model) => groups.find((group) => group.requested_model === model);
+    assert.equal(byModel("mock-tts-a").completed_count, 1);
+    assert.equal(byModel("mock-tts-a").failure_count, 1);
+    assert.equal(byModel("mock-tts-b").completed_count, 1);
+    assert.equal(byModel("mock-tts-b").cancellation_count, 1);
+    assert.equal(byModel(null).completed_count, 2);
+    assert.equal(byModel(null).cancellation_count, 1);
+    assert.equal(requests.length, 7);
+    assert.ok(requests.every((request) => request.text === "PRIVATE_TTS_TEXT_MARKER"));
+    assert.doesNotMatch(JSON.stringify(diagnostic), /PRIVATE_TTS_TEXT_MARKER|PRIVATE_TTS_SECRET_MARKER/);
+    await page.locator("#speech-diagnostics-panel summary").click();
+    await page.locator("#refresh-speech-diagnostics").click();
+    const dashboard = await page.locator("#speech-dashboard-rows").innerText();
+    assert.match(dashboard, /requested mock-tts-a/);
+    assert.match(dashboard, /requested mock-tts-b/);
+    assert.match(dashboard, /requested unknown/);
     assert.deepEqual(pageErrors, []);
   } finally {
     await browser.close();

@@ -91,9 +91,9 @@ function summarize(paths) {
     } catch {
       throw new Error(`${label} must be a readable JSON file no larger than 4 MiB.`);
     }
-    if (!document || ![8, 9, 10, 11, 12, 13].includes(document.schema_version)
+    if (!document || ![8, 9, 10, 11, 12, 13, 14].includes(document.schema_version)
       || !Array.isArray(document.live_stt_attempts) || document.live_stt_attempts.length > 500) {
-      throw new Error(`${label} must be a schema 8-13 diagnostics export with at most 500 live attempts.`);
+      throw new Error(`${label} must be a schema 8-14 diagnostics export with at most 500 live attempts.`);
     }
     schemas.add(document.schema_version);
     document.live_stt_attempts.forEach((raw, index) => {
@@ -164,7 +164,7 @@ function summarize(paths) {
 
 const paths = process.argv.slice(2);
 if (paths.length === 1 && paths[0] === "--help") {
-  console.log("Usage: node evals/summarize_live_stt.js export1.json [export2.json ...]\nLocal schema 8-12 live-STT diagnostics summary; JSON report on stdout, no provider calls.");
+  console.log("Usage: node evals/summarize_live_stt.js export1.json [export2.json ...]\nLocal schema 8-14 live-STT diagnostics summary; JSON report on stdout, no provider calls.");
 } else if (!paths.length || paths.length > 100) {
   console.error("Provide 1-100 diagnostics exports. Use --help for usage.");
   process.exitCode = 1;

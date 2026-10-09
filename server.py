@@ -38,6 +38,7 @@ MAX_BODY_BYTES = 256 * 1024
 MAX_AUDIO_BYTES = 5 * 1024 * 1024
 MAX_RECORDED_TRANSCRIPT_CHARS = 6000
 MAX_SPEECH_PCM_BYTES = 24000 * 2 * 300  # Mono 16-bit PCM, five minutes per request.
+STREAMED_TTS_MODEL = "gpt-4o-mini-tts"
 POST_QUOTAS = {
     "/api/login": "login",
     "/api/logout": "logout",
@@ -470,7 +471,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                     else "Speak clearly in Indian English with a conversational pace."
                 )
                 with client.audio.speech.with_streaming_response.create(
-                    model="gpt-4o-mini-tts",
+                    model=STREAMED_TTS_MODEL,
                     voice=voice,
                     input=text.strip(),
                     instructions=instructions,
@@ -487,6 +488,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                     self.send_response(200)
                     self.send_header("Content-Type", "audio/pcm")
                     self.send_header("X-Audio-Sample-Rate", "24000")
+                    self.send_header("X-TTS-Requested-Model", STREAMED_TTS_MODEL)
                     self.send_header("Transfer-Encoding", "chunked")
                     self.send_header("Cache-Control", "no-store")
                     self.send_header("X-Content-Type-Options", "nosniff")

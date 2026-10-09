@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "test:voice": "node --test tests/test_live_stt.js",
-    "test:eval": "node --test tests/test_tts_eval.js",
+    "test:eval": "node --test tests/test_tts_eval.js tests/test_diagnostics_readers.js",
     "test:browser": "node --test tests/test_browser.js"
   },
   "devDependencies": {

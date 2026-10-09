@@ -2093,3 +2093,13 @@
 - Previous voice-startup commit 6268dc1 passed GitHub Actions run 37994263900. Current root verification is recorded below after the isolated checks finish. Real voice sessions, independent human reviews, source permission, and recorded demo remain open.
 
 - Root verification passed all 88 Python tests and eight isolated offline Chrome flows, including the extended repeated-follow-up scenario. Source syntax and whitespace checks passed. Cloud execution for this new commit remains pending until push.
+
+
+## Retain requested TTS models in diagnostics - 2026-10-10
+
+- Speech success headers now declare X-TTS-Requested-Model from the same constant passed to the provider request. An isolated fake-provider HTTP check changes that constant and confirms request/header agreement. This is the requested label, not an authenticated resolved provider version.
+- Schema 14 TTS groups, timing summaries, and dashboard separate requested-model identity. Missing/malformed headers and failures/stops before headers remain unknown; known labels survive later failures or stops. Browser speech remains null. A provider-free Chrome check exercises two fake model labels, missing/invalid labels, late invalid PCM, and pre/post-header cancellation, and confirms diagnostics contain no supplied text or unrelated secret header.
+- Live/tutor/stop CLI readers now accept schema 14. Three synthetic compatibility checks also verify schema 13 remains accepted and schema 15/malformed records fail; the evaluation suite now runs seven checks. No real speech ratings or comparisons were generated.
+- Previous context commit 7abae57 passed GitHub Actions run 37994732048. Current root checks are recorded below after their runners finish; real voice sessions, human reviews, source permission, and recorded demo remain open.
+
+- Root verification passed 89 Python tests, nine isolated offline Chrome flows, eight mocked live-STT checks, and seven synthetic evaluation/reader checks. Syntax and whitespace checks passed. No actual provider/microphone or human-review observations were made; cloud execution of this commit remains pending until push.

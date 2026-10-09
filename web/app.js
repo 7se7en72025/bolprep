@@ -1100,10 +1100,12 @@ function speechTimingSummary(sample) {
   const matchingSamples = speechSamples.filter((item) =>
     item.language === sample.language && item.voice === sample.voice && item.kind === sample.kind
       && (item.rate ?? null) === (sample.rate ?? null)
+      && (item.requestedModel ?? null) === (sample.requestedModel ?? null)
   );
   const matchingFailures = speechFailures.filter((item) =>
     item.language === sample.language && item.voice === sample.voice && item.kind === sample.kind
       && (item.rate ?? null) === (sample.rate ?? null)
+      && (item.requestedModel ?? null) === (sample.requestedModel ?? null)
   );
   let summary = "no completed utterances";
   if (matchingSamples.length) {
@@ -1186,13 +1188,15 @@ function buildSpeechDiagnostics() {
   const ttsGroups = new Map();
   const getTtsGroup = (sample) => {
     const browserRate = sample.rate ?? null;
-    const key = JSON.stringify([sample.language, sample.voice, sample.kind, browserRate]);
+    const requestedModel = sample.requestedModel ?? null;
+    const key = JSON.stringify([sample.language, sample.voice, sample.kind, browserRate, requestedModel]);
     if (!ttsGroups.has(key)) {
       ttsGroups.set(key, {
         language: sample.language,
         voice: sample.voice,
         sample_type: sample.kind,
         browser_rate: browserRate,
+        requested_model: requestedModel,
         start_event: sample.startEvent || "speech_synthesis_onstart",
         completed: [],
         failures: 0,
@@ -1235,13 +1239,14 @@ function buildSpeechDiagnostics() {
     }
     : { p50_s: null, p95_s: null };
   const tts = [...ttsGroups.values()]
-    .sort((left, right) => `${left.language}|${left.sample_type}|${left.voice}|${left.browser_rate}`
-      .localeCompare(`${right.language}|${right.sample_type}|${right.voice}|${right.browser_rate}`))
+    .sort((left, right) => `${left.language}|${left.sample_type}|${left.voice}|${left.browser_rate}|${left.requested_model}`
+      .localeCompare(`${right.language}|${right.sample_type}|${right.voice}|${right.browser_rate}|${right.requested_model}`))
     .map((group) => ({
       language: group.language,
       voice: group.voice,
       sample_type: group.sample_type,
       browser_rate: group.browser_rate,
+      requested_model: group.requested_model,
       start_event: group.start_event,
       completed_count: group.completed.length,
       failure_count: group.failures,
@@ -1397,7 +1402,7 @@ function buildSpeechDiagnostics() {
       recognition_end_to_start: percentiles(group.samples),
     }));
   return {
-    schema_version: 13,
+    schema_version: 14,
     generated_at_utc: new Date().toISOString(),
     scope: "Current page only",
     privacy: "Diagnostics metadata only; no learner text, audio, cookies, or credentials.",
@@ -1436,7 +1441,9 @@ function renderSpeechDashboard() {
     rows.appendChild(row);
   };
   snapshot.tts.forEach((group) => {
-    const config = `TTS | ${group.language} | ${group.sample_type} | ${group.voice} | rate ${group.browser_rate ?? "provider"} | ${group.start_event}`;
+    const model = group.requested_model ?? (group.start_event === "first_pcm_buffer_scheduled"
+      ? "unknown" : "none (browser)");
+    const config = `TTS | ${group.language} | ${group.sample_type} | ${group.voice} | rate ${group.browser_rate ?? "provider"} | requested ${model} | ${group.start_event}`;
     const reasons = { ...group.failure_reasons };
     Object.entries(group.cancellation_reasons).forEach(([reason, count]) => {
       reasons[`cancelled/${reason}`] = count;
@@ -1602,6 +1609,7 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
     language,
     voice: `OpenAI ${voice}`,
     kind,
+    requestedModel: null,
     startEvent: "first_pcm_buffer_scheduled",
   };
   const attempt = beginSpeechAttempt(sample);
@@ -1644,6 +1652,10 @@ async function speakStreamed(text, completionText, kind, requestSpeechTurn, opti
     });
     if (!response.ok) {
       throw new Error(await readBoundedErrorMessage(response, controller.signal, "Streamed speech is unavailable."));
+    }
+    const requestedModel = response.headers.get("X-TTS-Requested-Model");
+    if (requestedModel && /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}$/.test(requestedModel)) {
+      sample.requestedModel = requestedModel;
     }
     const contentType = (response.headers.get("Content-Type") || "").split(";", 1)[0].trim().toLowerCase();
     const sampleRate = Number(response.headers.get("X-Audio-Sample-Rate"));
@@ -1939,6 +1951,7 @@ function speakWithBrowser(text, completionText = "Ready when you are.", kind = "
     voice: selectedVoice ? `${selectedVoice.name} (${selectedVoice.lang})` : "browser default",
     rate: speechRate,
     kind,
+    requestedModel: null,
     startEvent: "speech_synthesis_onstart",
   };
   const attempt = beginSpeechAttempt(sample);
@@ -2020,6 +2033,7 @@ function createProgressiveBrowserSpeech(completionText = "Answer ready.") {
     voice: selectedVoice ? `${selectedVoice.name} (${selectedVoice.lang})` : "browser default",
     rate: speechRate,
     kind: "tutor",
+    requestedModel: null,
     startEvent: "speech_synthesis_onstart",
   };
   let buffer = "";

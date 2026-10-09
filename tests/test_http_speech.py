@@ -134,8 +134,17 @@ class SpeechTransportHttpTests(unittest.TestCase):
         self.assertEqual(headers["X-Audio-Sample-Rate"], "24000")
         self.assertEqual(body, b"\x01\x00\x02\x00")
         self.assertEqual(provider.request["model"], "gpt-4o-mini-tts")
+        self.assertEqual(headers["X-TTS-Requested-Model"], provider.request["model"])
         self.assertTrue(provider.response.closed)
         self.assertTrue(provider.client_closed)
+
+    def test_requested_model_header_matches_the_model_sent_to_provider(self):
+        provider = FakeProvider([b"\x01\x00"])
+        with patch.object(server, "STREAMED_TTS_MODEL", "mock-tts-config"):
+            status, headers, _ = self.send(provider)
+        self.assertEqual(status, 200)
+        self.assertEqual(provider.request["model"], "mock-tts-config")
+        self.assertEqual(headers["X-TTS-Requested-Model"], provider.request["model"])
 
     def test_oversized_first_chunk_returns_502_before_audio_headers(self):
         provider = FakeProvider([b"12345"])
