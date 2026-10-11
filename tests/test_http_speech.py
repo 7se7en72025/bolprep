@@ -2,6 +2,7 @@
 
 import http.client
 import json
+import os
 import sys
 import threading
 import unittest
@@ -75,6 +76,8 @@ class SpeechTransportHttpTests(unittest.TestCase):
             bucket: 100 for bucket in server.REQUEST_LIMITER.limits
         })))
         self._patch(patch.object(server, "api_is_configured", return_value=True))
+        self._patch(patch.dict(os.environ))
+        os.environ.pop("BOLPREP_TTS_MODEL", None)
         self.http = ThreadingHTTPServer(("127.0.0.1", 0), QuietHandler)
         self.http.daemon_threads = True
         self.port = self.http.server_address[1]
@@ -96,7 +99,7 @@ class SpeechTransportHttpTests(unittest.TestCase):
         self.worker.join(timeout=3)
         self.assertFalse(self.worker.is_alive())
 
-    def send(self, provider):
+    def send(self, provider, expect_provider=True):
         self._patch(patch.dict(sys.modules, {"openai": SimpleNamespace(OpenAI=provider.openai)}))
         connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=5)
         body = json.dumps({"text": "PRIVATE_SPEECH_TEXT", "language": "en-IN", "voice": "alloy"})
@@ -110,7 +113,8 @@ class SpeechTransportHttpTests(unittest.TestCase):
             connection.close()
             # Receiving the terminal HTTP chunk can precede context cleanup
             # on the server thread. Observe completion before asserting it.
-            self.assertTrue(provider.cleaned_up.wait(3), "Provider cleanup did not finish.")
+            if expect_provider:
+                self.assertTrue(provider.cleaned_up.wait(3), "Provider cleanup did not finish.")
 
     def test_empty_stream_returns_json_failure_before_audio_headers(self):
         provider = FakeProvider([b"", b""])
@@ -145,11 +149,23 @@ class SpeechTransportHttpTests(unittest.TestCase):
 
     def test_requested_model_header_matches_the_model_sent_to_provider(self):
         provider = FakeProvider([b"\x01\x00"])
-        with patch.object(server, "STREAMED_TTS_MODEL", "mock-tts-config"):
+        with patch.dict(os.environ, {"BOLPREP_TTS_MODEL": "mock-tts-config"}):
             status, headers, _ = self.send(provider)
         self.assertEqual(status, 200)
         self.assertEqual(provider.request["model"], "mock-tts-config")
         self.assertEqual(headers["X-TTS-Requested-Model"], provider.request["model"])
+
+    def test_invalid_model_configuration_never_calls_provider(self):
+        for model in ("", "bad model", "bad\r\nInjected: yes", "x" * 129, "\u0939\u093f"):
+            with self.subTest(model=model), patch.dict(os.environ, {"BOLPREP_TTS_MODEL": model}):
+                provider = FakeProvider([b"\x01\x00"])
+                status, headers, body = self.send(provider, expect_provider=False)
+                self.assertEqual(status, 503)
+                self.assertIn("BOLPREP_TTS_MODEL", json.loads(body)["error"])
+                self.assertNotIn("X-TTS-Requested-Model", headers)
+                self.assertNotIn("Transfer-Encoding", headers)
+                self.assertIsNone(provider.request)
+                self.assertFalse(provider.cleaned_up.is_set())
 
     def test_oversized_first_chunk_returns_502_before_audio_headers(self):
         provider = FakeProvider([b"12345"])

@@ -6,6 +6,8 @@ The tracked [`speech_prompts.json`](speech_prompts.json) contains 30 self-author
 
 ## Freeze configuration metadata
 
+For streamed TTS model comparisons, set `BOLPREP_TTS_MODEL` in your private `.env` and restart the server between configurations. Use a model compatible with the existing instructions/voice/24 kHz PCM request; model names are syntax-validated, but compatibility is not established locally. The `X-TTS-Requested-Model` response header supplies the requested model to browser diagnostics. Keep voice, language, input, and playback conditions fixed when comparing models. Unknown or failed attempts remain failures; a configured label is not proof of an actual provider run.
+
 Create a private `evals/local-speech-configs.json` file with settings for the actual device and configurations you intend to compare. Fill in at least two configurations for STT and two for TTS; labels and settings are supplied by you and do not prove provider or device identity. Keep secrets, names, and contact details out. The `Fill in...` strings below are rejected until replaced. Example **structure only**:
 
 ```json

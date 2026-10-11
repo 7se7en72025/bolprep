@@ -136,3 +136,11 @@ TTS report tests use fabricated metadata only to check null/true/false pairing s
 - Live metadata commit 0618e3d passed GitHub Actions run 38002914451. Real voice, independent reviews, applicable reuse clearance, and the actual demonstration remain open.
 
 - Verification: exporter JSON matches the tracked manifest exactly; all 48 document records and the corpus SHA-256 match the preceding commit. Edition-review and per-note check dates remain unchanged, policy-review date is separate, and reuse_status remains unresolved. Python syntax and git diff --check passed. No benchmark, provider, microphone, or learner-data run was performed for this documentation task.
+
+
+## Configurable streamed TTS model - 2026-10-12
+
+- Re-audited the roadmap after the request to complete the project. Found streamed TTS still using a fixed requested model, limiting the planned configuration comparisons. Added BOLPREP_TTS_MODEL with the existing default, bounded ASCII model-label validation, and one per-request value shared by the provider request and diagnostics header. Invalid/empty configuration returns 503 before provider creation, without echoing the configured value.
+- Updated the secret-free environment example, README, collection procedure, and status inventory. Alternatives must support the existing instructions/voice/24 kHz PCM contract; syntax acceptance does not establish provider/account or voice compatibility. Live STT configuration and exported schema are unchanged.
+- Verification: 95 Python tests passed, including seven streamed-speech HTTP checks with a fake provider. Nine ordinary offline browser flows and one protected flow passed in separate invocations; ten mocked live-STT and eight synthetic evaluation/reader checks passed. git diff --check passed. No external model calls or real audio observations were made.
+- Actual microphone/provider sessions, paired speech benchmarks, independent reviews, applicable corpus reuse permission, and a demonstration video remain unresolved. This focused implementation change does not establish full roadmap completion.

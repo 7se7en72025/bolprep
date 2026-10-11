@@ -460,6 +460,10 @@ class BolPrepHandler(BaseHTTPRequestHandler):
         if not api_is_configured():
             self._send_json(503, {"error": "Streamed speech needs an API key. Browser speech remains available."})
             return
+        configured_model = os.getenv("BOLPREP_TTS_MODEL", STREAMED_TTS_MODEL)
+        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}", configured_model):
+            self._send_json(503, {"error": "Streamed speech model configuration is invalid. Check BOLPREP_TTS_MODEL and restart the server."})
+            return
         response_started = False
         try:
             from openai import OpenAI
@@ -471,7 +475,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                     else "Speak clearly in Indian English with a conversational pace."
                 )
                 with client.audio.speech.with_streaming_response.create(
-                    model=STREAMED_TTS_MODEL,
+                    model=configured_model,
                     voice=voice,
                     input=text.strip(),
                     instructions=instructions,
@@ -488,7 +492,7 @@ class BolPrepHandler(BaseHTTPRequestHandler):
                     self.send_response(200)
                     self.send_header("Content-Type", "audio/pcm")
                     self.send_header("X-Audio-Sample-Rate", "24000")
-                    self.send_header("X-TTS-Requested-Model", STREAMED_TTS_MODEL)
+                    self.send_header("X-TTS-Requested-Model", configured_model)
                     self.send_header("Transfer-Encoding", "chunked")
                     self.send_header("Cache-Control", "no-store")
                     self.send_header("X-Content-Type-Options", "nosniff")
