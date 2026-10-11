@@ -1,5 +1,10 @@
 // Score manually paired STT transcripts without uploading or printing their text.
 const fs = require("node:fs");
+const crypto = require("node:crypto");
+const { TextDecoder } = require("node:util");
+const maxInputBytes = 16 * 1024 * 1024;
+const maxTrials = 10000;
+const maxTextLength = 6000;
 const failureReasons = new Set([
   "no-speech", "permission-denied", "device-error", "network-error",
   "unsupported-language", "empty-transcript", "other",
@@ -31,7 +36,9 @@ function editDistance(reference, transcript) {
 }
 
 function score(trials) {
-  if (!Array.isArray(trials) || !trials.length) throw new Error("Expected a nonempty JSON array of trials.");
+  if (!Array.isArray(trials) || !trials.length || trials.length > maxTrials) {
+    throw new Error("Expected between 1 and 10,000 STT trials.");
+  }
   const groups = new Map();
   const promptReferences = new Map();
   for (const [index, trial] of trials.entries()) {
@@ -39,11 +46,11 @@ function score(trials) {
       throw new Error(`Trial ${index + 1} must be an object.`);
     }
     const { config, language, prompt_id: promptId, reference, transcript, failure_reason: failureReason } = trial;
-    if (typeof config !== "string" || !config.trim()
+    if (typeof config !== "string" || !config.trim() || config.length > 128
       || !["Hindi", "Hinglish", "English"].includes(language)
-      || typeof promptId !== "string" || !promptId.trim()
-      || typeof reference !== "string" || !words(reference).length
-      || (transcript !== null && typeof transcript !== "string")) {
+      || typeof promptId !== "string" || !promptId.trim() || promptId.length > 128
+      || typeof reference !== "string" || reference.length > maxTextLength || !words(reference).length
+      || (transcript !== null && (typeof transcript !== "string" || transcript.length > maxTextLength))) {
       throw new Error(`Trial ${index + 1} needs config, language, prompt_id, nonempty reference, and transcript (string or null).`);
     }
     const failed = !transcript || !words(transcript).length;
@@ -53,7 +60,7 @@ function score(trials) {
     const promptKey = JSON.stringify([language, promptId.trim()]);
     const normalizedReference = words(reference).join(" ");
     if (promptReferences.has(promptKey) && promptReferences.get(promptKey) !== normalizedReference) {
-      throw new Error(`Trial ${index + 1} has a different reference for prompt_id ${promptId.trim()} in ${language}.`);
+      throw new Error(`Trial ${index + 1} has a conflicting reference for the same prompt and language.`);
     }
     promptReferences.set(promptKey, normalizedReference);
     const key = JSON.stringify([config.trim(), language]);
@@ -152,16 +159,66 @@ function score(trials) {
     });
 }
 
-if (process.argv.length !== 3) {
-  console.error("Usage: node evals/score_stt.js path/to/local-stt-trials.json");
-  process.exitCode = 1;
-} else {
+function sha256(bytes) {
+  return crypto.createHash("sha256").update(bytes).digest("hex");
+}
+
+function buildReport(inputBytes, scorerBytes = fs.readFileSync(__filename)) {
+  if (inputBytes.length > maxInputBytes) throw new Error("Input exceeds 16 MiB.");
+  const trials = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(inputBytes));
+  return {
+    schema_version: 1,
+    generated_at: new Date().toISOString(),
+    input_sha256: sha256(inputBytes),
+    scorer_sha256: sha256(scorerBytes),
+    runtime: { node: process.version, platform: process.platform, arch: process.arch, icu: process.versions.icu },
+    normalization: "Unicode NFC; lowercase; punctuation/symbols replaced by spaces; whitespace collapsed. No transliteration or number-word normalization.",
+    failure_policy: "Empty/null transcripts count as full reference deletion in all-attempts rates and are excluded from successful-only rates.",
+    limits: { input_bytes: maxInputBytes, trials: maxTrials, text_utf16_units: maxTextLength },
+    limitations: [
+      "Input hashes identify supplied bytes, not authenticated recordings, provider results, or reviewer identity.",
+      "Configuration and prompt labels are supplied metadata and require review before publishing.",
+      "Paired prompt IDs, references, and repeat counts do not verify identical audio or completed-attempt pairing.",
+      "WER/CER are transcript edit rates, not pronunciation quality, acoustic latency, or significance tests.",
+    ],
+    groups: score(trials),
+  };
+}
+
+function readBounded(path) {
+  const descriptor = fs.openSync(path, "r");
   try {
-    const trials = JSON.parse(fs.readFileSync(process.argv[2], "utf8"));
-    console.log(JSON.stringify(score(trials), null, 2));
-  } catch (error) {
-    const message = error instanceof SyntaxError ? "Input is not valid JSON." : error.message;
-    console.error(`Could not score STT trials: ${message}`);
+    if (!fs.fstatSync(descriptor).isFile()) throw new Error("Input must be a regular file.");
+    const bytes = Buffer.alloc(maxInputBytes + 1);
+    let count = 0;
+    while (count < bytes.length) {
+      const read = fs.readSync(descriptor, bytes, count, bytes.length - count, null);
+      if (!read) break;
+      count += read;
+    }
+    if (count > maxInputBytes) throw new Error("Input exceeds 16 MiB.");
+    return bytes.subarray(0, count);
+  } finally {
+    fs.closeSync(descriptor);
+  }
+}
+
+function main(args) {
+  const versioned = args.length === 2 && args[0] === "--report";
+  if (!(args.length === 1 && !args[0].startsWith("--")) && !versioned) {
+    console.error("Usage: node evals/score_stt.js [--report] path/to/local-stt-trials.json");
+    process.exitCode = 1;
+    return;
+  }
+  try {
+    const report = buildReport(readBounded(args[versioned ? 1 : 0]));
+    console.log(JSON.stringify(versioned ? report : report.groups, null, 2));
+  } catch {
+    // Parse errors and file-system messages can contain private text or paths.
+    console.error("Could not score STT trials: check the private input format, size, and field limits.");
     process.exitCode = 1;
   }
 }
+
+if (require.main === module) main(process.argv.slice(2));
+module.exports = { score, buildReport };

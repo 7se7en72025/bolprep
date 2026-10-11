@@ -26,7 +26,7 @@ Current provider-free before/after runs are archived in [reports/README.md](repo
 
 | Input | Procedure / runner | Coverage and limits |
 | --- | --- | --- |
-| `local-stt-*.json` | Voice run sheet / `score_stt.js` | Self-authored reference/transcript pairs; WER/CER and failures. Text normalization is not pronunciation or meaning. |
+| `local-stt-*.json` | Voice run sheet / `score_stt.js --report` | Self-authored reference/transcript pairs; versioned report with input/scorer hashes, runtime, WER/CER, pairing counts and failures. Hashes do not authenticate observations; text normalization is not pronunciation or meaning. |
 | `local-live-*.json` | Browser diagnostics / `summarize_live_stt.js` | Live timings/configurations/attempt outcomes; software events are not acoustic latency. |
 | `local-tts-*.json` | `TTS_RUBRIC.md` / `score_tts.js` | Anonymous independent human ratings and matched listener/prompt coverage; no actual ratings collected here. |
 | `local-tutor-*.json` | Browser diagnostics / tutor/stop summarizers | Turn outcomes and software timings; missing metadata and collisions require inspection. |
