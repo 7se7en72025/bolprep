@@ -260,6 +260,7 @@ test("saved tutor diagnostics require opt-in and stay with their browser cookie"
       await page.locator("#send-button").click();
       await page.waitForFunction(() => !document.querySelector("#send-button").disabled);
     };
+    await page.locator(".technical-details > summary").click();
     assert.equal(await page.locator("#retain-request-traces").isChecked(), false);
     assert.equal(traceGets, 0);
     await ask("Explain Article 14");
@@ -280,6 +281,7 @@ test("saved tutor diagnostics require opt-in and stay with their browser cookie"
 
     await page.reload({ waitUntil: "domcontentloaded" });
     await page.waitForFunction(() => document.querySelector("#mode-label")?.textContent.includes("Offline practice mode"));
+    await page.locator(".technical-details > summary").click();
     assert.equal(await page.locator("#retain-request-traces").isChecked(), false);
     assert.equal(await page.locator("#saved-traces-rows tr").count(), 0);
     assert.equal(traceGets, 2);
@@ -291,6 +293,7 @@ test("saved tutor diagnostics require opt-in and stay with their browser cookie"
     const other = await browser.newContext();
     const otherPage = await other.newPage();
     await openOfflinePage(otherPage);
+    await otherPage.locator(".technical-details > summary").click();
     await otherPage.locator("#refresh-request-traces").click();
     await otherPage.waitForFunction(() => document.querySelector("#saved-traces-status")?.textContent.includes("No saved request diagnostics"));
     assert.equal(await otherPage.locator("#saved-traces-rows tr").count(), 0);
@@ -818,6 +821,7 @@ test("continuous quiz voice keeps an interrupted answer until replacement or ret
         await page.locator("#quiz-difficulty").selectOption("basic");
         await page.locator("#quiz-button").click();
         await page.waitForFunction(() => !document.querySelector("#end-quiz").hidden);
+        await page.locator(".voice-preferences > summary").click();
         await page.locator("#live-conversation").check();
         await page.locator("#live-stt-button").click();
         await page.waitForFunction(() => window.__liveCaptures[0]?.state === "listening");

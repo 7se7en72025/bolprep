@@ -55,6 +55,8 @@ Browser speech availability varies by browser and operating system. Browser spee
 
 For reproducible STT review, run `node evals/score_stt.js --report evals/local-stt-trials.json` on privately collected reference/transcript pairs. The versioned report records exact input/scorer hashes, runtime, normalization, failure policy, and comparison groups. It does not collect speech or authenticate observations. See [the voice run sheet](evals/voice-run-sheet.md) for fields and limits.
 
+The study desk puts the conversation first, with a chapter sidebar on desktop and stacked controls on phones. Open **Voice & listening** for voice selection and listening preferences, **Behind the conversation** for tutor request diagnostics, and **What gets saved?** for conversation-storage details.
+
 ## Try a study session
 
 1. Choose Hindi, Hinglish, or English and ask `Explain Article 14` or `Article 21 samjhao`.

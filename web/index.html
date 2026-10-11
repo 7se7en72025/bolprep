@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#f6f3eb">
+    <meta name="theme-color" content="#f4f0e8">
     <title>BolPrep — Voice study tutor</title>
     <link rel="stylesheet" href="/styles.css">
   </head>
@@ -11,18 +11,32 @@
     <main class="shell">
       <header class="topbar">
         <a class="brand" href="/" aria-label="BolPrep home"><span class="brand-mark">ब</span> BolPrep</a>
-        <span class="topic">INDIAN POLITY <span aria-hidden="true">/</span> FUNDAMENTAL RIGHTS</span>
+        <span class="topic">A little practice, every day.</span>
       </header>
 
+      <div class="study-layout">
+        <aside class="study-rail" aria-label="Study chapter">
+          <p class="rail-label">ON YOUR DESK</p>
+          <div class="chapter-number" aria-hidden="true">01<span>/</span></div>
+          <h2>Fundamental<br> Rights</h2>
+          <p class="rail-description">The rights we live with.<br>The ideas behind them.</p>
+          <nav class="desk-nav" aria-label="Study navigation">
+            <a href="#page-title" class="desk-link">Let's understand <span aria-hidden="true">↗</span></a>
+            <a href="#progress-title" class="desk-link">Your practice <span aria-hidden="true">↗</span></a>
+            <a href="#history-title" class="desk-link">Pick up where you left off <span aria-hidden="true">↗</span></a>
+          </nav>
+          <div class="margin-note"><span class="note-heading">One thing at a time.</span><p>An explanation. An example.<br>Then a question back to you.</p><svg viewBox="0 0 130 24" width="130" height="24" aria-hidden="true"><path d="M3 14 Q30 5 62 13 T125 9 M79 20 Q102 15 125 17" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+        </aside>
+        <div class="study-workspace">
       <section class="intro" aria-labelledby="page-title">
-        <p class="eyebrow">YOUR STUDY SPACE</p>
-        <h1 id="page-title">Learn it. Say it back.</h1>
-        <p class="lede">Ask a question in Hindi, English, or Hinglish. Keep it simple; we’ll build from here.</p>
+        <p class="eyebrow">YOUR STUDY DESK</p>
+        <h1 id="page-title">Chalo, samajhte hain.</h1>
+        <p class="lede">Ask in Hindi, English, or a little of both. We can start with an explanation, then try a question together.</p>
       </section>
 
       <section class="tutor-card" aria-label="Tutor conversation">
         <div class="card-head">
-          <div class="tutor-id"><span class="status-dot" aria-hidden="true"></span><div><strong>Your tutor</strong><small id="mode-label">Checking setup…</small></div></div>
+          <div class="tutor-id"><span class="status-dot" aria-hidden="true"></span><div><strong>BolPrep</strong><small id="mode-label">Checking setup…</small></div></div>
           <div class="head-actions">
             <label class="sr-only" for="quiz-difficulty">Quiz preset for the next quiz</label>
             <select id="quiz-difficulty" class="language-select quiz-difficulty" title="Author-assigned question groups; applies to the next quiz">
@@ -41,13 +55,13 @@
         <div class="conversation" id="conversation" aria-live="polite" aria-relevant="additions text">
           <article class="message tutor-message">
             <span class="speaker">BOLPREP</span>
-            <p>Namaste! Fundamental Rights ke baare mein kya jaan-na hai?</p>
+            <p>Namaste! Kahan se shuru karein? Ask me about a right, or try a short quiz.</p>
           </article>
         </div>
 
         <form id="question-form" class="composer">
           <label class="sr-only" for="question-input">Your question</label>
-          <textarea id="question-input" rows="2" maxlength="1200" placeholder="Type a question… e.g. Right to Equality kya hai?" required></textarea>
+          <textarea id="question-input" rows="2" maxlength="1200" placeholder="Right to Equality kya hai? Or ask whatever’s on your mind…" required></textarea>
           <div class="composer-actions">
             <div class="voice-actions">
               <label class="sr-only" for="speech-language">Speech language</label>
@@ -55,11 +69,6 @@
                 <option value="hi-IN">Hindi / Hinglish</option>
                 <option value="en-IN">English</option>
               </select>
-              <label class="sr-only" for="speech-voice">Spoken voice</label>
-              <select class="language-select voice-select" id="speech-voice" aria-label="Spoken voice" title="Choose an installed voice">
-                <option value="">Browser default</option>
-              </select>
-              <button class="icon-button" id="preview-voice" type="button" aria-label="Preview selected voice" title="Preview selected voice"><span aria-hidden="true">♫</span><span class="button-label">Preview</span></button>
               <button class="icon-button" id="mic-button" type="button" aria-label="Start voice input" title="Start voice input"><span aria-hidden="true">●</span><span class="button-label">Speak</span></button>
               <button class="icon-button server-transcribe-button" id="server-transcribe-button" type="button" aria-label="Record a question for server transcription" title="Record up to 20 seconds; audio is sent for transcription when you stop" hidden disabled><span aria-hidden="true">●</span><span class="button-label">Record</span></button>
               <button class="icon-button" id="live-stt-button" type="button" aria-label="Start live transcription" hidden disabled><span aria-hidden="true">●</span><span class="button-label">Live mic</span></button>
@@ -68,6 +77,15 @@
             <button class="send-button" id="send-button" type="submit"><span id="send-label">Ask tutor</span><span aria-hidden="true">↗</span></button>
           </div>
         </form>
+        <details class="voice-preferences">
+          <summary>Voice &amp; listening <span>Your preferences</span></summary>
+          <div class="preferences-body">
+            <div class="voice-choice">              <label class="sr-only" for="speech-voice">Spoken voice</label>
+              <select class="language-select voice-select" id="speech-voice" aria-label="Spoken voice" title="Choose an installed voice">
+                <option value="">Browser default</option>
+              </select>
+              <button class="icon-button" id="preview-voice" type="button" aria-label="Preview selected voice" title="Preview selected voice"><span aria-hidden="true">♫</span><span class="button-label">Preview</span></button>
+            </div>
         <label class="speech-input-setting" for="auto-submit-speech"><input id="auto-submit-speech" type="checkbox" disabled> Automatically submit a final browser transcript (skip review)</label>
         <label class="speech-input-setting" for="live-auto-finish"><input id="live-auto-finish" type="checkbox" disabled> Finish Live mic after a quiet pause (experimental; review before sending)</label>
         <label class="speech-input-setting" for="live-quiet-pause">Quiet pause before finishing
@@ -109,6 +127,8 @@
             <option value="cedar">cedar</option>
           </select>
         </label>
+          </div>
+        </details>
         <p id="server-stt-note" class="server-stt-note" hidden>When you stop recording, the audio is sent to the configured transcription provider. BolPrep does not save the recording; review the transcript before asking.</p>
         <p id="live-stt-note" class="server-stt-note" hidden>Live mic sends audio to OpenAI while you speak (API usage may be billed). Tap Done for the final transcript; review it before sending. BolPrep does not save audio.</p>
         <p id="status" class="status" role="status">Ready when you are.</p>
@@ -134,6 +154,8 @@
         </details>
       </section>
 
+      <details class="technical-details">
+        <summary>Behind the conversation <span>Request details &amp; saved diagnostics</span></summary>
       <details class="progress-card tutor-traces">
         <summary>Tutor turn diagnostics</summary>
         <p class="progress-summary" id="tutor-trace-summary" role="status">No tutor turns recorded on this page.</p>
@@ -161,6 +183,8 @@
         </div>
       </section>
 
+      </details>
+      <div class="study-records">
       <section class="progress-card" aria-labelledby="progress-title">
         <div class="progress-head">
           <div><p class="eyebrow">YOUR PRACTICE</p><h2 id="progress-title">Saved progress</h2></div>
@@ -182,11 +206,16 @@
             <button class="text-button" id="clear-history" type="button">Delete saved conversations</button>
           </div>
         </div>
+        <details class="save-explanation"><summary>What gets saved?</summary>
         <p class="progress-summary">Saving stores up to 20 recent text messages, source references, and available request diagnostics on this computer, without audio. Long text is shortened to 1,200 characters per question and 3,000 per tutor message. The newest 20 saves are kept. Open replaces the current conversation; quiz state is not resumed. Nothing is saved automatically.</p>
+        </details>
         <p id="history-status" class="progress-summary" role="status">Loading saved conversations...</p>
         <ol id="saved-conversations" class="saved-conversations"></ol>
       </section>
 
+      </div>
+        </div>
+      </div>
       <footer><span>Start with one question. Follow-ups are welcome.</span><span class="privacy-note">The microphone starts only when you choose Speak, Record, or Live mic. Speech services may process audio; questions and recent conversation text go to the configured AI provider in model mode.</span></footer>
     </main>
     <script src="/access.js" defer></script>

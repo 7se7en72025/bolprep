@@ -2441,7 +2441,7 @@ function resetTutorComposer() {
   sendLabel.textContent = "Ask tutor";
   inputLabel.textContent = "Your question";
   input.maxLength = 1200;
-  input.placeholder = "Type a question… e.g. Right to Equality kya hai?";
+  input.placeholder = "Right to Equality kya hai? Or ask whatever’s on your mind…";
 }
 
 function endQuiz({ preserveLive = false, clearDraft = false } = {}) {
@@ -2653,7 +2653,7 @@ document.querySelector("#clear-button").addEventListener("click", () => {
   conversationMessages.length = 0;
   input.value = "";
   conversation.replaceChildren();
-  addMessage("assistant", "Namaste! Fundamental Rights ke baare mein kya jaan-na hai?");
+  addMessage("assistant", "Namaste! Kahan se shuru karein? Ask me about a right, or try a short quiz.");
   resetTutorComposer();
   statusLine.textContent = "New session started.";
   input.focus();
